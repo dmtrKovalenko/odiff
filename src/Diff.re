@@ -9,13 +9,9 @@ let redPixel: Rgba32.elt = {
   },
 };
 
-let compare = (aname, bname, diffname) => {
+let compare = (a, b, diff) => {
   let diffCount = ref(0);
-  let a = ImageIO.loadImage(aname);
-  let b = ImageIO.loadImage(bname);
-
   let (base, comp) = calcSize(a) > calcSize(b) ? (a, b) : (b, a);
-  let diff = Rgba32.copy(base)
 
   for (x in 0 to base.width - 1) {
     for (y in 0 to base.height - 1) {
@@ -32,6 +28,6 @@ let compare = (aname, bname, diffname) => {
     };
   };
 
-  Images.Rgba32(diff) |> Png.save(diffname, []);
+  
   Console.log(diffCount.contents)
 };
