@@ -1,0 +1,40 @@
+opam-version: "2.0"
+maintainer: "Zach Shipko <zachshipko@gmail.com>"
+authors: ["Zach Shipko <zachshipko@gmail.com>"]
+homepage: "https://github.com/zshipko/ocaml-bimage"
+doc: "https://zshipko.github.io/ocaml-bimage/doc"
+license: "ISC"
+dev-repo: "git+https://github.com/zshipko/ocaml-bimage.git"
+bug-reports: "https://github.com/zshipko/ocaml-bimage/issues"
+tags: ["image processing"]
+
+depends:
+[
+    "ocaml" {>= "4.07.0"}
+    "dune" {>= "2.0"}
+    "bimage" {= version}
+    "ctypes" {>= "0.14"}
+    "ctypes-foreign" {>= "0.4"}
+]
+
+build: [
+    ["dune" "build" "-p" name "-j" jobs]
+    ["dune" "runtest" "-p" name] {with-test}
+]
+
+synopsis: """
+Bimage_unix provides methods for encoding/decoding images in many formats using ImageMagick/stb_image
+"""
+
+description: """
+An image processing library for OCaml providing efficient, composable operations.
+Additionally, bimage supports most types supported by Bigarray.
+"""
+url {
+  src:
+    "https://github.com/zshipko/ocaml-bimage/releases/download/v0.2.1/bimage-v0.2.1.tbz"
+  checksum: [
+    "sha256=edc83c7f2749277376a070df72e7b654b963e85f630ec56353b4ea53445d5e3a"
+    "sha512=2d92eb3e3518910fe16d1f4cb4b5b75dd49cfaf3fd06c2f6dbcf2dea1ff5457f85978649042e3ada0978fb149cfa16da2da910693b0cb1390d48174bcb7b8643"
+  ]
+}

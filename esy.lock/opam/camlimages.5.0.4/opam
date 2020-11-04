@@ -1,0 +1,33 @@
+opam-version: "2.0"
+version: "5.0.4"
+maintainer: "jun.furuse@gmail.com"
+authors: ["Jun Furuse" "François Pessaux" "Pierre Weis"]
+homepage: "https://gitlab.com/camlspotter/camlimages"
+bug-reports:
+  "https://gitlab.com/camlspotter/camlimages/-/issues"
+license: "LGPL-2.1-only with OCaml-LGPL-linking-exception"
+dev-repo: "git+https://gitlab.com/camlspotter/camlimages"
+build: ["dune" "build" "-p" name "-j" jobs]
+depends: [
+  "base"
+  "cppo" {build}
+  "dune" {>= "1.11"}
+  "dune-configurator" {build & >= "2.0.0"}
+  "ocaml" {>= "4.07.0"}
+  "ocamlfind" {build}
+  "stdio"
+]
+depopts: ["lablgtk" "graphics"]
+conflicts: [
+  "lablgtk" {< "2.18.6"}
+]
+synopsis: "Image processing library"
+description: """
+An image processing library, which provides loading and saving various
+image formats with an interface for the Caml graphics library. It has
+also an interface with the freetype library to draw texts using
+truetype fonts."""
+url {
+  src: "https://gitlab.com/camlspotter/camlimages/-/archive/5.0.4/camlimages-5.0.4.tar.bz2"
+  checksum: "md5=1ddba74d210b86a899b5d6565f45c2dc"
+}

@@ -1,0 +1,6 @@
+{
+  "build": "true",
+  "dependencies": {
+    "esy-libffi": "esy-ocaml/libffi#c61127dba57b18713039ab9c1892c9f2563e280c" 
+  }
+}

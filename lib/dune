@@ -1,0 +1,6 @@
+(library
+ (name odiff)
+ (flags
+  (-w -40 -w +26))
+ (public_name odiff)
+ (libraries pastel.lib console.lib lwt camlimages.jpeg camlimages.png bimage bimage-unix))

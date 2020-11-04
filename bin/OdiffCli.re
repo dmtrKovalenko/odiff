@@ -1,0 +1,1 @@
+Odiff.Diff.compare("aa.png", "aa-2.png", "diff.png")

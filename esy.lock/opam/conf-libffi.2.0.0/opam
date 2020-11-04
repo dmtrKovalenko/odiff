@@ -1,0 +1,22 @@
+opam-version: "2.0"
+maintainer: "blue-prawn"
+authors: ["Anthony Green"]
+homepage: "http://sourceware.org/libffi/"
+license: "MIT"
+build: ["pkg-config" "libffi"]
+depexts: [
+  ["libffi"] {os = "macos" & os-distribution = "homebrew"}
+  ["libffi"] {os = "macos" & os-distribution = "macports"}
+  ["libffi-dev"] {os-distribution = "alpine"}
+  ["libffi-dev"] {os-family = "debian"}
+  ["libffi-devel"] {os-distribution = "centos"}
+  ["libffi-devel"] {os-distribution = "fedora"}
+  ["libffi-devel"] {os-distribution = "mageia"}
+  ["libffi-devel"] {os-distribution = "ol"}
+  ["libffi-devel"] {os-family = "suse"}
+]
+synopsis: "Virtual package relying on libffi system installation"
+description: "This package can only install if libffi is installed on the system."
+depends: ["conf-pkg-config" {build}]
+bug-reports: "https://github.com/ocaml/opam-repository/issues"
+flags: conf
