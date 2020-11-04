@@ -4,7 +4,7 @@ variables:
   esy__ci_cache_version: v1    # this is available to all jobs in env as $ESY__CI_CACHE_VERSION or in azure config as $(esy__ci_cache_version)
 
 trigger:
-  - master
+  - main
   - global
   - release-*
   - releases-*
