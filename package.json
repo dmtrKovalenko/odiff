@@ -12,7 +12,8 @@
     "buildEnv": { "ODOC_SYNTAX": "re" }
   },
   "scripts": {
-    "test": "esy x ODiffBin",
+    "run": "esy x ODiffBin",
+    "test": "esy x RunTests.exe",
     "format": "esy dune build @fmt --auto-promote",
     "doc": "esy dune build @doc"
   },

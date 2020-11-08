@@ -9,9 +9,12 @@ let redPixel: Rgba32.elt = {
   },
 };
 
+let maxYIQPossibleDelta = 35215.
+
 let compare = (a, b, diff, ~threshold=0.1, ()) => {
   let diffCount = ref(0);
   let (base, comp) = calcSize(a) > calcSize(b) ? (a, b) : (b, a);
+  let maxDelta = maxYIQPossibleDelta *. threshold *. threshold
 
   for (x in 0 to base.width - 1) {
     for (y in 0 to base.height - 1) {
@@ -21,11 +24,11 @@ let compare = (a, b, diff, ~threshold=0.1, ()) => {
       if (r != r1 || g != g1 || b != b1 || a != a1) {
         let delta =
           ColorDelta.calculatePixelColorDelta(
-            (r, b, g, a),
-            (r1, b1, g1, a1),
+            (r, g, b, a),
+            (r1, g1, b1, a1),
           );
 
-        if (delta > threshold) {
+        if (delta > maxDelta) {
           diffCount := diffCount^ + 1;
           Rgba32.set(diff, x, y, redPixel);
         };

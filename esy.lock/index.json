@@ -33,7 +33,8 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.10.1002@d41d8cd9", "@reason-native/pastel@0.3.0@d41d8cd9",
+        "ocaml@4.10.1002@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
+        "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
         "@opam/ppx_let@opam:v0.14.0@eb9b93e0",
         "@opam/dune@opam:2.7.1@f5f493bc", "@opam/core@opam:v0.14.0@7f87deba",

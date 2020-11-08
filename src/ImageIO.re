@@ -11,6 +11,9 @@ let loadImage = filename => {
   };
 };
 
+let saveImage = (filename, imageBuffer) =>
+  Images.Rgba32(imageBuffer) |> Png.save(filename, []);
+
 let readImgColor = (x, y, img) => {
   let (bytes, position) = Rgba32.unsafe_access(img, x, y);
 

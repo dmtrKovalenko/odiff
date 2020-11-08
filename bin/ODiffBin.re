@@ -21,7 +21,7 @@ let main =
       </Pastel>,
     );
 
-    Images.Rgba32(diff) |> Png.save(diffPath, []);
+    Odiff.ImageIO.saveImage(diffPath, diff)
     exit(1);
   } else {
     Console.log(
