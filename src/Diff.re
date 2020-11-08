@@ -9,25 +9,29 @@ let redPixel: Rgba32.elt = {
   },
 };
 
-let compare = (a, b, diff) => {
+let compare = (a, b, diff, ~threshold=0.1, ()) => {
   let diffCount = ref(0);
   let (base, comp) = calcSize(a) > calcSize(b) ? (a, b) : (b, a);
 
   for (x in 0 to base.width - 1) {
     for (y in 0 to base.height - 1) {
-      let pixelA = Rgba32.get(base, x, y);
-      let pixelB = Rgba32.get(comp, x, y);
+      let (r, g, b, a) = base |> ImageIO.readImgColor(x, y);
+      let (r1, g1, b1, a1) = comp |> ImageIO.readImgColor(x, y);
 
-      let delta = ColorDelta.calculatePixelColorDelta(pixelA, pixelB);
+      if (r !== r1 || g !== g1 || b !== b1 || a !== a1) {
+        let delta =
+          ColorDelta.calculatePixelColorDelta(
+            (r, b, g, a),
+            (r1, b1, g1, a1),
+          );
 
-      if (delta > 0.) {
-        diffCount.contents = diffCount.contents + 1;
-        Rgba32.set(diff, x, y, redPixel);
+        if (delta > threshold) {
+          diffCount := diffCount^ + 1;
+          Rgba32.set(diff, x, y, redPixel);
+        };
       };
-      ();
     };
   };
 
-  
-  Console.log(diffCount.contents)
+  diffCount^;
 };
