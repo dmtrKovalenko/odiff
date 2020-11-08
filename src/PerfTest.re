@@ -7,3 +7,12 @@ let cycle = ((name, timepoint)) => {
     (Unix.gettimeofday() -. timepoint) *. 1000.,
   );
 };
+
+let ifTimeMore = (amount, (name, timepoint)) => {
+  (Unix.gettimeofday() -. timepoint) *. 1000. > amount;
+};
+
+let cycleIf = (point, predicate) =>
+  if (predicate(point)) {
+    cycle(point);
+  };

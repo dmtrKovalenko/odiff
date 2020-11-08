@@ -18,7 +18,7 @@ let compare = (a, b, diff, ~threshold=0.1, ()) => {
       let (r, g, b, a) = base |> ImageIO.readImgColor(x, y);
       let (r1, g1, b1, a1) = comp |> ImageIO.readImgColor(x, y);
 
-      if (r !== r1 || g !== g1 || b !== b1 || a !== a1) {
+      if (r != r1 || g != g1 || b != b1 || a != a1) {
         let delta =
           ColorDelta.calculatePixelColorDelta(
             (r, b, g, a),
