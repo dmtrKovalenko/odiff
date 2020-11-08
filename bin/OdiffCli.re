@@ -1,74 +1,79 @@
-exception ImagesArgsRequired;
+open Core;
+open Pastel;
 
-type options = {
-  fullDiff: bool,
-  threshold: option(float),
-  diffColor: option((int, int, int)),
-};
+let main =
+    (img1Path, img2Path, diffPath, ~diffImage=false, ~threshold=0.1, ()) => {
+  let img1 = Odiff.ImageIO.loadImage(img1Path);
+  let img2 = Odiff.ImageIO.loadImage(img2Path);
 
-let rec reduce = (fn, acc, list) =>
-  switch (list) {
-  | [] => acc
-  | [n, ...ns] => fn(n, reduce(fn, acc, ns))
-  };
+  let diff =
+    diffImage ? Rgba32.copy(img1) : Rgba32.create(img1.width, img1.height);
 
-let defaultOptions = {fullDiff: false, threshold: None, diffColor: None};
+  let diffCount = Odiff.Diff.compare(img1, img2, diff, ~threshold, ());
 
-let matchValuableArg = (arg, value, options) => {
-  switch (arg) {
-  | "--threshold"
-  | "-t" => {...options, threshold: Some(value |> Float.of_string)}
-  | _ => raise(Invalid_argument(arg))
-  };
-};
-
-let matchBoolArgs = (arg, options) =>
-  switch (arg) {
-  | "--diff-image" => {...options, fullDiff: true}
-  | _ => raise(Invalid_argument(arg))
-  };
-
-let processOptions =
-  reduce(
-    (rawArg, options) => {
-      switch (rawArg |> String.split_on_char('=')) {
-      | [] => raise(Invalid_argument(rawArg))
-      | [boolArg] => matchBoolArgs(boolArg, options)
-      | [valueArg, value] => matchValuableArg(valueArg, value, options)
-      | _ => raise(Invalid_argument(rawArg))
-      }
-    },
-    defaultOptions,
-  );
-
-let processArgs =
-  fun
-  | [] => raise(ImagesArgsRequired)
-  | [_] => raise(ImagesArgsRequired)
-  | [_, _] => raise(ImagesArgsRequired)
-  | [img1, img2, diffPath] => (img1, img2, diffPath, defaultOptions)
-  | [img1, img2, diffPath, ...tail] => (
-      img1,
-      img2,
-      diffPath,
-      processOptions(tail),
+  if (diffCount > 0) {
+    Console.log(
+      <Pastel>
+        <Pastel color=Red bold=true> "Failure! " </Pastel>
+        "Images are different.\n"
+        "Different pixels: "
+        <Pastel color=Red bold=true> {Int.to_string(diffCount)} </Pastel>
+      </Pastel>,
     );
 
-Sys.argv
-|> Array.to_list
-|> List.tl
-|> processArgs
-|> (
-  ((img1Path, img2Path, diffPath, options)) => {
-    let img1 = Odiff.ImageIO.loadImage(img1Path);
-    let img2 = Odiff.ImageIO.loadImage(img2Path);
-
-    let diff =
-      options.fullDiff
-        ? Rgba32.copy(img1) : Rgba32.create(img1.width, img1.height);
-    let t = Odiff.PerfTest.now("kek");
-    Odiff.Diff.compare(img1, img2, diff);
-    Odiff.PerfTest.cycle(t);
     Images.Rgba32(diff) |> Png.save(diffPath, []);
+    exit(1)
+  } else {
+    Console.log(
+      <Pastel>
+        <Pastel color=Green bold=true> "Success! " </Pastel>
+        "Images are equal.\n" <Pastel dim=true> "No diff output created." </Pastel>
+      </Pastel>,
+    );
   }
-);
+}
+
+let () = {
+  open Command.Let_syntax;
+
+  let command =
+    Command.basic(
+      ~summary=
+        <Pastel>
+          "\nFind "
+          <Pastel color=GreenBright> "difference" </Pastel>
+          " between 2 images. \nSupported image types: .jpeg, .jpg, .png"
+        </Pastel>,
+      {
+        let%map_open img1Path = anon("[image 1 path]" %: string)
+        and img2Path = anon("[image 2 path]" %: string)
+        and diffPath =
+          anon(
+            <Pastel>
+              "[diff "
+              <Pastel bold=true underline=true> "png" </Pastel>
+              " output path]"
+            </Pastel>
+            %: string,
+          )
+        and diffImage =
+          flag(~doc="render diff over the base image", "-diff-image", no_arg)
+        and baseThreshold =
+          flag(
+            "-threshold",
+            optional(float),
+            ~doc="0.1 color difference threshold (from 0 to 1)",
+          );
+
+        let threshold =
+          switch (baseThreshold) {
+          | Some(baseFloat) => Base.Float.to_float(baseFloat)
+          | None => 0.1
+          };
+
+        () => main(img1Path, img2Path, diffPath, ~diffImage, ~threshold, ());
+      },
+    );
+
+  Command.run(command);
+};
