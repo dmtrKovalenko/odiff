@@ -22,16 +22,17 @@ let main =
     );
 
     Images.Rgba32(diff) |> Png.save(diffPath, []);
-    exit(1)
+    exit(1);
   } else {
     Console.log(
       <Pastel>
         <Pastel color=Green bold=true> "Success! " </Pastel>
-        "Images are equal.\n" <Pastel dim=true> "No diff output created." </Pastel>
+        "Images are equal.\n"
+        <Pastel dim=true> "No diff output created." </Pastel>
       </Pastel>,
     );
-  }
-}
+  };
+};
 
 let () = {
   open Command.Let_syntax;
@@ -41,8 +42,8 @@ let () = {
       ~summary=
         <Pastel>
           "\nFind "
-          <Pastel color=GreenBright> "difference" </Pastel>
-          " between 2 images. \nSupported image types: .jpeg, .jpg, .png"
+          <Pastel bold=true color=Cyan> "difference" </Pastel>
+          " between 2 images. \nSupported image types: .png, .jpeg, .jpg."
         </Pastel>,
       {
         let%map_open img1Path = anon("[image 1 path]" %: string)
@@ -75,5 +76,5 @@ let () = {
       },
     );
 
-  Command.run(command);
+  Command.run(command, ~version="0.1");
 };

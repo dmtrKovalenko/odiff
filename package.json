@@ -8,11 +8,11 @@
     "buildDev":
       "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "NOTE": "Optional release Section. Customizes result of `esy release`",
-    "release": { "rewritePrefix": true, "bin": [ "ODiffCli" ] },
+    "release": { "rewritePrefix": true, "bin": [ "ODiffBin" ] },
     "buildEnv": { "ODOC_SYNTAX": "re" }
   },
   "scripts": {
-    "test": "esy x OdiffCli",
+    "test": "esy x ODiffBin",
     "format": "esy dune build @fmt --auto-promote",
     "doc": "esy dune build @doc"
   },
