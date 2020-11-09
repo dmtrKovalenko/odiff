@@ -24,11 +24,11 @@
     "@opam/dune": ">=2.6",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
+    "@reason-native/rely": "^3.2.1",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
     "@opam/merlin": "*",
-    "@reason-native/rely": "*",
     "refmterr": "*",
     "@opam/odoc": "*"
   }
