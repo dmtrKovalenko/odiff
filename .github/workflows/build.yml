@@ -72,6 +72,7 @@ jobs:
 
       - name: Test
         run: esy test
+        if: matrix.os != 'windows-latest'
 
       - name: Build docs
         run: esy doc
