@@ -1,6 +1,4 @@
 (executable
  (name ODiffBin)
  (public_name ODiffBin)
- (preprocess
-  (pps ppx_let ppx_inline_test))
- (libraries core console.lib pastel.lib odiff))
+ (libraries console.lib pastel.lib odiff cmdliner))

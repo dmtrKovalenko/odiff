@@ -1,8 +1,7 @@
-open Core;
 open Pastel;
+open Cmdliner;
 
-let main =
-    (img1Path, img2Path, diffPath, ~diffImage=false, ~threshold=0.1, ()) => {
+let main = (img1Path, img2Path, diffPath, threshold, diffImage) => {
   let img1 = Odiff.ImageIO.loadImage(img1Path);
   let img2 = Odiff.ImageIO.loadImage(img2Path);
 
@@ -21,7 +20,7 @@ let main =
       </Pastel>,
     );
 
-    Odiff.ImageIO.saveImage(diffPath, diff)
+    Odiff.ImageIO.saveImage(diffPath, diff);
     exit(1);
   } else {
     Console.log(
@@ -34,47 +33,68 @@ let main =
   };
 };
 
-let () = {
-  open Command.Let_syntax;
+let diff =
+  Arg.(
+    value
+    & pos(2, file, "")
+    & info([], ~docv="DIFF", ~doc="Diff output path (.png only)")
+  );
 
-  let command =
-    Command.basic(
-      ~summary=
-        <Pastel>
-          "\nFind "
-          <Pastel bold=true color=Cyan> "difference" </Pastel>
-          " between 2 images. \nSupported image types: .png, .jpeg, .jpg."
-        </Pastel>,
-      {
-        let%map_open img1Path = anon("[image 1 path]" %: string)
-        and img2Path = anon("[image 2 path]" %: string)
-        and diffPath =
-          anon(
-            <Pastel>
-              "[diff "
-              <Pastel bold=true underline=true> "png" </Pastel>
-              " output path]"
-            </Pastel>
-            %: string,
-          )
-        and diffImage =
-          flag(~doc="render diff over the base image", "-diff-image", no_arg)
-        and baseThreshold =
-          flag(
-            "-threshold",
-            optional(float),
-            ~doc="0.1 color difference threshold (from 0 to 1)",
-          );
+let image1 =
+  Arg.(
+    value
+    & pos(0, file, "")
+    & info([], ~docv="IMAGE1", ~doc="Path to first image")
+  );
 
-        let threshold =
-          switch (baseThreshold) {
-          | Some(baseFloat) => Base.Float.to_float(baseFloat)
-          | None => 0.1
-          };
+let image2 =
+  Arg.(
+    value
+    & pos(1, file, "")
+    & info([], ~docv="IMAGE2", ~doc="Path to second image")
+  );
 
-        () => main(img1Path, img2Path, diffPath, ~diffImage, ~threshold, ());
-      },
-    );
-
-  Command.run(command, ~version="0.1");
+let threshold = {
+  Arg.(
+    value
+    & opt(float, 0.1)
+    & info(
+        ["t", "threshold"],
+        ~docv="THRESHOLD",
+        ~doc="Color difference threshold (from 0 to 1). Less more precise.",
+      )
+  );
 };
+
+let diffImage = {
+  Arg.(
+    value
+    & flag
+    & info(
+        ["di", "diff-image"],
+        ~docv="DIFF_IMAGE",
+        ~doc=
+          "Render image to the diff output instead of transparent background.",
+      )
+  );
+};
+
+let cmd = {
+  let man = [
+    `S(Manpage.s_description),
+    `P("$(tname) is the fastest pixel-by-pixel image comparison tool."),
+    `P("Supported image types: .png, .jpg, .jpg"),
+  ];
+
+  (
+    Term.(const(main) $ image1 $ image2 $ diff $ threshold $ diffImage),
+    Term.info(
+      "odiff",
+      ~version="v1.0.4",
+      ~doc="Find difference between 2 images.",
+      ~man,
+    ),
+  );
+};
+
+let () = Term.exit @@ Term.eval(cmd);

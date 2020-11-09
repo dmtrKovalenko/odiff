@@ -20,9 +20,8 @@
   "dependencies": {
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
     "@opam/camlimages": "5.0.4",
-    "@opam/core": "v0.14.0",
+    "@opam/cmdliner": "1.0.4",
     "@opam/dune": ">=2.6",
-    "@opam/ppx_let": "v0.14.0",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "ocaml": "~4.10.0"
