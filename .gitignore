@@ -6,4 +6,4 @@ _release
 *.byte
 *.native
 *.install
-images
+images/diff.png
