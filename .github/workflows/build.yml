@@ -74,5 +74,11 @@ jobs:
         run: esy test
         if: matrix.os != 'windows-latest'
 
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: orange_diff_generated
+          path: test/test-images
+
       - name: Build docs
         run: esy doc
