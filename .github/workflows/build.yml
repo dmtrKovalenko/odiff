@@ -39,8 +39,8 @@ jobs:
         uses: actions/cache@v2.1.1
         with:
           path: ${{ steps.print_esy_cache.outputs.esy_cache }}
-          key: build-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
-          restore-keys: build-${{ matrix.os }}-
+          key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
+          restore-keys: build-odiff-${{ matrix.os }}-
 
       # Here we use a low-level command. In real situation you don't have to
       # but it is useful in CI as it split the log in GitHub UI.
