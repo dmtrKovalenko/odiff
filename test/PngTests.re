@@ -25,8 +25,13 @@ describe("Png comparing", ({test, _}) => {
 
     let originalDiff =
       Odiff.ImageIO.loadImage("test/test-images/orange_diff.png");
-    let (_diffMaskOfDiff, diffOfDiffPixels) =
+    let (diffMaskOfDiff, diffOfDiffPixels) =
       Odiff.Diff.compare(originalDiff, diffOutput, ());
+
+    if (diffOfDiffPixels > 0) {
+      diffMaskOfDiff
+      |> Odiff.ImageIO.saveImage("test/test-images/orange_diff_generated.png");
+    };
 
     expect.int(diffOfDiffPixels).toBe(0);
   });
