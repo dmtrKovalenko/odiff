@@ -5,6 +5,15 @@ let redPixel = (
   255 |> char_of_int,
 );
 
+let transparentPixel: Rgba32.elt = {
+  color: {
+    r: 0,
+    g: 0,
+    b: 0,
+  },
+  alpha: 0,
+};
+
 let maxYIQPossibleDelta = 35215.;
 
 type diffVariant =
@@ -16,7 +25,9 @@ let compare =
   let diffCount = ref(0);
 
   let diff =
-    diffImage ? Rgba32.copy(base) : Rgba32.create(base.width, base.height);
+    diffImage
+      ? Rgba32.copy(base)
+      : Rgba32.make(base.width, base.height, transparentPixel);
 
   let maxDelta = maxYIQPossibleDelta *. threshold *. threshold;
 

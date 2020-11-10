@@ -17,7 +17,7 @@ describe("Png comparing", ({test, _}) => {
     expect.int(diffPixels).toBe(222);
   });
 
-  test("create right diff mask", ({expect, _}) => {
+  test("creates the right diff output image", ({expect, _}) => {
     let img1 = Odiff.ImageIO.loadImage("test/test-images/orange.png");
     let img2 = Odiff.ImageIO.loadImage("test/test-images/orange_changed.png");
 
@@ -25,8 +25,15 @@ describe("Png comparing", ({test, _}) => {
 
     let originalDiff =
       Odiff.ImageIO.loadImage("test/test-images/orange_diff.png");
-    let (_diffMaskOfDiff, diffOfDiffPixels) =
+    let (diffMaskOfDiff, diffOfDiffPixels) =
       Odiff.Diff.compare(originalDiff, diffOutput, ());
+
+    if (diffOfDiffPixels > 0) {
+      diffOutput
+      |> Odiff.ImageIO.saveImage("test/test-images/diff-output.png");
+      diffMaskOfDiff
+      |> Odiff.ImageIO.saveImage("test/test-images/diff-of-diff.png");
+    };
 
     expect.int(diffOfDiffPixels).toBe(0);
   });
