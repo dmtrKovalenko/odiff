@@ -51,7 +51,7 @@ let main =
 let diffPath =
   Arg.(
     value
-    & pos(2, file, "")
+    & pos(2, string, "")
     & info([], ~docv="DIFF", ~doc="Diff output path (.png only)")
   );
 

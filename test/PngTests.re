@@ -24,7 +24,7 @@ describe("Png comparing", ({test, _}) => {
     let (diffOutput, _) = Odiff.Diff.compare(img1, img2, ());
 
     let originalDiff =
-      Odiff.ImageIO.loadImage("test/test-images/orange-diff.png");
+      Odiff.ImageIO.loadImage("test/test-images/orange_diff.png");
     let (_diffMaskOfDiff, diffOfDiffPixels) =
       Odiff.Diff.compare(originalDiff, diffOutput, ());
 
