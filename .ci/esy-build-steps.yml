@@ -13,10 +13,11 @@ steps:
     displayName: "Test command"
     condition: ne(variables['AGENT.OS'], 'Windows_NT')
   - task: PublishBuildArtifacts@1
-    displayName: "Publish Artifact: Release"
+    displayName: "Publish Artifact: Tests"
+    condition: failed()
     inputs:
-      PathtoPublish: "test/test-images/orange_diff_generated.png"
-      ArtifactName: orange_diff_generated.png
+      PathtoPublish: "test/test-images"
+      ArtifactName: orange_diff_generated
 
   - script: "esy release"
     displayName: "esy release"

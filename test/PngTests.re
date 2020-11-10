@@ -29,8 +29,10 @@ describe("Png comparing", ({test, _}) => {
       Odiff.Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {
+      diffOutput
+      |> Odiff.ImageIO.saveImage("test/test-images/diff-output.png");
       diffMaskOfDiff
-      |> Odiff.ImageIO.saveImage("test/test-images/orange_diff_generated.png");
+      |> Odiff.ImageIO.saveImage("test/test-images/diff-of-diff.png");
     };
 
     expect.int(diffOfDiffPixels).toBe(0);
