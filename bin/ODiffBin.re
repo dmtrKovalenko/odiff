@@ -1,16 +1,39 @@
 open Pastel;
 open Cmdliner;
 
-let main = (img1Path, img2Path, diffPath, threshold, diffImage) => {
+let main =
+    (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
   let img1 = Odiff.ImageIO.loadImage(img1Path);
   let img2 = Odiff.ImageIO.loadImage(img2Path);
 
-  let diff =
-    diffImage ? Rgba32.copy(img1) : Rgba32.create(img1.width, img1.height);
-
-  let diffCount = Odiff.Diff.compare(img1, img2, diff, ~threshold, ());
-
-  if (diffCount > 0) {
+  switch (
+    Odiff.Diff.diff(
+      img1,
+      img2,
+      ~diffImage,
+      ~threshold,
+      ~failOnLayoutChange,
+      (),
+    )
+  ) {
+  | Layout =>
+    Console.log(
+      <Pastel>
+        <Pastel color=Red bold=true> "Failure! " </Pastel>
+        "Images have different layout.\n"
+      </Pastel>,
+    );
+    exit(65);
+  | Pixel((_, diffCount)) when diffCount == 0 =>
+    Console.log(
+      <Pastel>
+        <Pastel color=Green bold=true> "Success! " </Pastel>
+        "Images are equal.\n"
+        <Pastel dim=true> "No diff output created." </Pastel>
+      </Pastel>,
+    );
+    exit(0);
+  | Pixel((diffOutput, diffCount)) =>
     Console.log(
       <Pastel>
         <Pastel color=Red bold=true> "Failure! " </Pastel>
@@ -20,38 +43,30 @@ let main = (img1Path, img2Path, diffPath, threshold, diffImage) => {
       </Pastel>,
     );
 
-    Odiff.ImageIO.saveImage(diffPath, diff);
+    Odiff.ImageIO.saveImage(diffPath, diffOutput);
     exit(1);
-  } else {
-    Console.log(
-      <Pastel>
-        <Pastel color=Green bold=true> "Success! " </Pastel>
-        "Images are equal.\n"
-        <Pastel dim=true> "No diff output created." </Pastel>
-      </Pastel>,
-    );
   };
 };
 
-let diff =
+let diffPath =
   Arg.(
     value
     & pos(2, file, "")
     & info([], ~docv="DIFF", ~doc="Diff output path (.png only)")
   );
 
-let image1 =
+let base =
   Arg.(
     value
     & pos(0, file, "")
-    & info([], ~docv="IMAGE1", ~doc="Path to first image")
+    & info([], ~docv="BASE", ~doc="Path to base image")
   );
 
-let image2 =
+let comp =
   Arg.(
     value
     & pos(1, file, "")
-    & info([], ~docv="IMAGE2", ~doc="Path to second image")
+    & info([], ~docv="COMPARING", ~doc="Path to comparing image")
   );
 
 let threshold = {
@@ -79,15 +94,34 @@ let diffImage = {
   );
 };
 
+let failOnLayout =
+  Arg.(
+    value
+    & flag
+    & info(
+        ["fail-on-layout"],
+        ~docv="FAIL_ON_LAYOUT",
+        ~doc="Fail and exit if images layouts are different",
+      )
+  );
+
 let cmd = {
   let man = [
     `S(Manpage.s_description),
     `P("$(tname) is the fastest pixel-by-pixel image comparison tool."),
-    `P("Supported image types: .png, .jpg, .jpg"),
+    `P("Supported image types: .png, .jpg, .jpeg, .bitmap"),
   ];
 
   (
-    Term.(const(main) $ image1 $ image2 $ diff $ threshold $ diffImage),
+    Term.(
+      const(main)
+      $ base
+      $ comp
+      $ diffPath
+      $ threshold
+      $ diffImage
+      $ failOnLayout
+    ),
     Term.info(
       "odiff",
       ~version="v1.0.4",

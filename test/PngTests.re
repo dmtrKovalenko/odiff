@@ -5,9 +5,7 @@ describe("Png comparing", ({test, _}) => {
     let img1 = Odiff.ImageIO.loadImage("test/test-images/orange.png");
     let img2 = Odiff.ImageIO.loadImage("test/test-images/orange_changed.png");
 
-    let diffOutput = Rgba32.copy(img1);
-
-    let diffPixels = Odiff.Diff.compare(img1, img2, diffOutput, ());
+    let (_, diffPixels) = Odiff.Diff.compare(img1, img2, ());
     expect.int(diffPixels).toBe(1430);
   });
 
@@ -15,10 +13,7 @@ describe("Png comparing", ({test, _}) => {
     let img1 = Odiff.ImageIO.loadImage("test/test-images/orange.png");
     let img2 = Odiff.ImageIO.loadImage("test/test-images/orange_changed.png");
 
-    let diffOutput = Rgba32.copy(img1);
-
-    let diffPixels =
-      Odiff.Diff.compare(img1, img2, diffOutput, ~threshold=1.0, ());
+    let (_, diffPixels) = Odiff.Diff.compare(img1, img2, ~threshold=1.0, ());
     expect.int(diffPixels).toBe(184);
   });
 
@@ -26,16 +21,12 @@ describe("Png comparing", ({test, _}) => {
     let img1 = Odiff.ImageIO.loadImage("test/test-images/orange.png");
     let img2 = Odiff.ImageIO.loadImage("test/test-images/orange_changed.png");
 
-    let diffOutput = Rgba32.create(img1.width, img1.height);
-    Odiff.Diff.compare(img1, img2, diffOutput, ()) |> ignore;
+    let (diffOutput, _) = Odiff.Diff.compare(img1, img2, ());
 
     let originalDiff =
       Odiff.ImageIO.loadImage("test/test-images/orange-diff.png");
-    let diffMaskOfDiff =
-      Rgba32.create(originalDiff.width, originalDiff.height);
-
-    let diffOfDiffPixels =
-      Odiff.Diff.compare(originalDiff, diffOutput, diffMaskOfDiff, ());
+    let (_diffMaskOfDiff, diffOfDiffPixels) =
+      Odiff.Diff.compare(originalDiff, diffOutput, ());
 
     expect.int(diffOfDiffPixels).toBe(0);
   });
