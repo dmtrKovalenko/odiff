@@ -131,4 +131,4 @@ let cmd = {
   );
 };
 
-let () = Term.exit @@ Term.eval(cmd);
+let () = Term.eval(cmd) |> Term.exit;

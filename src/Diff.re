@@ -1,4 +1,9 @@
-let redPixel = (255, 0, 0, 255);
+let redPixel = (
+  255 |> char_of_int,
+  0 |> char_of_int,
+  0 |> char_of_int,
+  255 |> char_of_int,
+);
 
 let maxYIQPossibleDelta = 35215.;
 

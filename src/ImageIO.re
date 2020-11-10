@@ -18,18 +18,18 @@ let readImgColor = (x, y, img) => {
   let (bytes, position) = Rgba32.unsafe_access(img, x, y);
 
   (
-    bytes @% position,
-    bytes @% position + 1,
-    bytes @% position + 2,
-    bytes @% position + 3,
+    Bytes.unsafe_get(bytes, position) |> Char.code,
+    Bytes.unsafe_get(bytes, position + 1) |> Char.code,
+    Bytes.unsafe_get(bytes, position + 2) |> Char.code,
+    Bytes.unsafe_get(bytes, position + 3) |> Char.code,
   );
 };
 
 let setImgColor = (x, y, (r, g, b, a), img) => {
   let (bytes, position) = Rgba32.unsafe_access(img, x, y);
 
-  bytes << position & char_of_int(r);
-  bytes << position + 1 & char_of_int(g);
-  bytes << position + 2 & char_of_int(b);
-  bytes << position + 3 & char_of_int(a);
+  Bytes.unsafe_set(bytes, position, r);
+  Bytes.unsafe_set(bytes, position + 1, g);
+  Bytes.unsafe_set(bytes, position + 2, b);
+  Bytes.unsafe_set(bytes, position + 3, a);
 };
