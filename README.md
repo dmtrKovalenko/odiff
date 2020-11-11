@@ -63,11 +63,11 @@ const { match, reason } = await compare(
 
 ## Api
 
-In order to get the cli
+Here is an api reference:
 
 ### CLI
 
-The best way to get up-to-date cli interface just type the
+The best way to get up-to-date cli interface is just to type the
 
 ```
 odiff --help
@@ -75,7 +75,7 @@ odiff --help
 
 ### Node.js
 
-NodeJS Api is pretty tiny. Here is a typescript interface we have:
+NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
 ```ts
 type ODiffOptions = {
