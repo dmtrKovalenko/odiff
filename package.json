@@ -1,7 +1,7 @@
 {
   "name": "odiff",
-  "version": "0.1.0",
-  "description": "The fastest image difference comparison CLI",
+  "version": "1.0.0",
+  "description": "The fastest image difference tool.",
   "license": "MIT",
   "esy": {
     "build": "dune build -p #{self.name}",
