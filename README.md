@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center"> ODIFF </h1>
-<h3 align="center"> The fastest* in the world pixel-by-pixel image difference tool. </h3>
+<h3 align="center"> The fastest in the world pixel-by-pixel image difference tool. </h3>
 
 <div align="center">
     <img src="https://forthebadge.com/images/badges/made-with-reason.svg" alt="made with reason">
