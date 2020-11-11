@@ -13,7 +13,7 @@
 
 ## Why Odiff?
 
-ODiff is blazing fast image comparison tool. Check [benchmarks](#benchmark) for the results, but it compares visual difference between 2 images in **milliseconds**. Thanks to [Ocaml](https://ocaml.org/) and it's blazing fast and predictable compiler we produce pretty fast and memory-efficient code, that can significantly speedup your CI pipeline.
+ODiff is a blazing fast image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was designed to handle the "big" images. Thanks to [Ocaml](https://ocaml.org/) and its speedy and predictable compiler we produce pretty fast and memory-efficient code, that can significantly speed up your CI pipeline.
 
 ## Demo
 
@@ -54,12 +54,52 @@ We also provides direct node.js binding for the `odiff`. Run the `odiff` from no
 ```js
 const { compare } = require("odiff-bin");
 
-const { matched, reason } = await compare(
+const { match, reason } = await compare(
   "path/to/first/image.png",
   "path/to/second/image.png",
   "path/to/diff.png"
 );
 ```
+
+## Api
+
+In order to get the cli
+
+### CLI
+
+The best way to get up-to-date cli interface just type the
+
+```
+odiff --help
+```
+
+### Node.js
+
+NodeJS Api is pretty tiny. Here is a typescript interface we have:
+
+```ts
+type ODiffOptions = {
+  /** Output full diff image. */
+  diffImage: boolean;
+  /** Do not compare images and produce output if images layout is different. */
+  failOnLayoutDiff: boolean;
+  /** Color difference threshold (from 0 to 1). Less more precise. */
+  threshold: number;
+};
+
+declare function compare(
+  basePath: string,
+  comparePath: string,
+  diffPath: string,
+  options?: ODiffOptions
+): Promise<
+  { match: true } | { match: false; reason: "layout-diff" | "pixel-diff" }
+>;
+```
+
+Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: true }` with a reason why images were different.
+
+> Make sure that diff output file will be created only if images have pixel difference we can see 👀
 
 ## Installation
 
@@ -67,7 +107,9 @@ const { matched, reason } = await compare(
 
 ### Cross-platform
 
-Recommended and cross-platform way to install this lib is npm and node.js. Make sure that this package is compiled directly to the platform binary executable, so npm package contains all binaries and `post-install` script will automatically link the right one for current platform.
+The recommended and cross-platform way to install this lib is npm and node.js. Make sure that this package is compiled directly to the platform binary executable, so the npm package contains all binaries and `post-install` script will automatically link the right one for the current platform.
+
+> **Important**: package name is **odiff-bin**. But the binary itself is **odiff**
 
 ```
 npm install odiff-bin
@@ -80,6 +122,8 @@ odiff --help
 ```
 
 ### MacOS
+
+> ⛔️ Doesn't work. Waiting for brew approve ⛔️ 
 
 ```
 brew install odiff
@@ -99,13 +143,17 @@ Download the binaries for your platform from [release](https://github.com/dmtrKo
 
 > Run the benchmarks by yourself. Instructions of how to run the benchmark is [here](./images)
 
-Performance matters. If you are running 25000 image snapshots per month you can save **20 hours** of CI time per month by speeding up comparison time in just **3 seconds** per snapshot.
+![benchmark](images/benchmarks.png)
+
+Performance matters. At least for sort of tasks like visual regression. For example, if you are running 25000 image snapshots per month you can save **20 hours** of CI time per month by speeding up comparison time in just **3 seconds** per snapshot.
 
 ```
 3s * 25000 / 3600 = 20,83333 hours
 ```
 
-Here is `odiff` comparison with other popular visual difference solutions. We are going to compare a real-world use cases. Lets compare 2 screenshots of full-size [https://cypress.io](cypress.io) page:
+Here is `odiff` performance comparison with other popular visual difference solutions. We are going to compare some real-world use cases. 
+
+Lets compare 2 screenshots of full-size [https://cypress.io](cypress.io) page:
 
 | Command                                                                                    |      Mean [s] | Min [s] | Max [s] |    Relative |
 | :----------------------------------------------------------------------------------------- | ------------: | ------: | ------: | ----------: |
@@ -130,6 +178,10 @@ If you have recently updated, please read the [changelog](https://github.com/dmt
 ## License
 
 The project is licensed under the terms of [MIT license](./LICENSE)
+
+## Thanks
+
+This project was highly inspired by [pixelmatch](https://github.com/mapbox/pixelmatch) and [imagemagick](https://github.com/ImageMagick/ImageMagick).
 
 ## Support the project
 
