@@ -23,7 +23,7 @@ let main =
         "Images have different layout.\n"
       </Pastel>,
     );
-    exit(65);
+    exit(21);
   | Pixel((_, diffCount)) when diffCount == 0 =>
     Console.log(
       <Pastel>
@@ -44,7 +44,7 @@ let main =
     );
 
     Odiff.ImageIO.saveImage(diffPath, diffOutput);
-    exit(1);
+    exit(22);
   };
 };
 
@@ -101,7 +101,8 @@ let failOnLayout =
     & info(
         ["fail-on-layout"],
         ~docv="FAIL_ON_LAYOUT",
-        ~doc="Fail and exit if images layouts are different",
+        ~doc=
+          "Do not compare images and produce output if images layout is different.",
       )
   );
 
@@ -126,9 +127,15 @@ let cmd = {
       "odiff",
       ~version="v1.0.4",
       ~doc="Find difference between 2 images.",
+      ~exits=[
+        Term.exit_info(0, ~doc="on image match"),
+        Term.exit_info(21, ~doc="on layout diff when --fail-on-layout"),
+        Term.exit_info(22, ~doc="on image pixel difference"),
+        ...Term.default_error_exits,
+      ],
       ~man,
     ),
   );
 };
 
-let () = Term.eval(cmd) |> ignore;
+let () = Term.eval(cmd) |> Term.exit;

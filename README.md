@@ -5,6 +5,12 @@
 <h1 align="center"> ODIFF </h1>
 <h3 align="center"> The fastest* in the world pixel-by-pixel image difference tool. </h3>
 
+<div align="center">
+    <img src="https://forthebadge.com/images/badges/made-with-reason.svg" alt="made with reason">
+    <img src="https://forthebadge.com/images/badges/gluten-free.svg" alt="npm"/>
+    <img src="https://forthebadge.com/images/badges/powered-by-overtime.svg">
+</div>
+
 ## Why Odiff?
 
 ODiff is blazing fast image comparison tool. Check [benchmarks](#benchmark) for the results, but it compares visual difference between 2 images in **milliseconds**. Thanks to [Ocaml](https://ocaml.org/) and it's blazing fast and predictable compiler we produce pretty fast and memory-efficient code, that can significantly speedup your CI pipeline.
@@ -25,21 +31,17 @@ ODiff is blazing fast image comparison tool. Check [benchmarks](#benchmark) for 
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference
 - ✅ Zero dependencies for unix. Requires [libpng](http://www.libpng.org/pub/png/libpng.html) **only** for windows
-- [ ] Anti-aliasing support is going to appear in the nearest future
+
+### Coming in the nearest future:
+
+- ⏹ Anti-aliasing support
+- ⏹ Remote images compare
 
 ## Usage
 
-### Basic benchmark
+### Basic comparison
 
 Run the simple comparison. Image paths can be one of supported formats, diff output can only be `.png`.
-
-```
-odiff <IMG1 path> <IMG2 path> <DIFF output path>
-```
-
-### Diff image
-
-Copies IMG1 into the diff and renders different pixels over the IMG1. Useful for snapshot tests results.
 
 ```
 odiff <IMG1 path> <IMG2 path> <DIFF output path>
@@ -50,7 +52,13 @@ odiff <IMG1 path> <IMG2 path> <DIFF output path>
 We also provides direct node.js binding for the `odiff`. Run the `odiff` from nodejs:
 
 ```js
+const { compare } = require("odiff-bin");
 
+const { matched, reason } = await compare(
+  "path/to/first/image.png",
+  "path/to/second/image.png",
+  "path/to/diff.png"
+);
 ```
 
 ## Installation
@@ -59,7 +67,7 @@ We also provides direct node.js binding for the `odiff`. Run the `odiff` from no
 
 ### Cross-platform
 
-Use npm and node.js to install the binary. Make sure that this package is compiled directly to the platform binary executable, so npm script will load the all binaries and automatically install the right one for current platform.
+Recommended and cross-platform way to install this lib is npm and node.js. Make sure that this package is compiled directly to the platform binary executable, so npm package contains all binaries and `post-install` script will automatically link the right one for current platform.
 
 ```
 npm install odiff-bin
@@ -114,3 +122,15 @@ Wow. Odiff is mostly 2 times faster than imagemagick and pixelmatch. And this wi
 | Imagemagick `compare water-4k.png water-4k-2.png -compose src water-diff.png` |  9.326 ± 0.436 |   8.819 |  10.394 | 1.91 ± 0.10 |
 
 Yes it is significant improvement. And the produced difference will be the same for all 3 commands.
+
+## Changelog
+
+If you have recently updated, please read the [changelog](https://github.com/dmtrKovalenko/odiff/releases) for details of what has changed.
+
+## License
+
+The project is licensed under the terms of [MIT license](./LICENSE)
+
+## Support the project
+
+...one day a donation button will appear here. But for now you can follow [author's twitter](https://twitter.com/dmtrKovalenko) :)
