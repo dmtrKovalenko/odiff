@@ -97,7 +97,7 @@ declare function compare(
 >;
 ```
 
-Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: true }` with a reason why images were different.
+Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
 
 > Make sure that diff output file will be created only if images have pixel difference we can see 👀
 
