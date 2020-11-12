@@ -8,8 +8,6 @@ steps:
   - template: utils/restore-build-cache.yml
   - script: "esy build --release"
     displayName: "esy build --release"
-  - script: "esy post-release"
-    displayName: "Adjust produced release files"
   - template: utils/create-docs.yml
   - script: "esy test"
     displayName: "Test command"
