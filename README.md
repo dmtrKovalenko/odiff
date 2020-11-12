@@ -25,8 +25,8 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 
 ## Features
 
-- ✅ .png, .jpg, .jpg, .btm – Files supported.
-- ✅ Cross-format comparison. Yes .jpg vs .png comparison.
+- ✅ .png, .jpg, .jpeg, .bmp – Files supported.
+- ✅ Cross-format comparison - Yes .jpg vs .png comparison is real.
 - ✅ Supports comparison of images with different layouts
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference
