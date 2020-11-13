@@ -1,5 +1,5 @@
 parameters:
-  platform: "macOS"
+  platform: "MacOS"
   folder: "platform-darwin"
 
 steps:
@@ -14,3 +14,7 @@ steps:
 
   - script: "cp -r $(Build.StagingDirectory)/${{ parameters.platform }}/ _release/${{ parameters.folder }}"
     displayName: "cp ${{ parameters.platform }}"
+
+  - script: "node .ci/copy-binary-executable.js ${{ parameters.platform }} ${{ parameters.folder }}"
+    displayName: "node .ci/copy-binary-executable.js"
+    continueOnError: true
