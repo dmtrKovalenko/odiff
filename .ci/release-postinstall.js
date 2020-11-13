@@ -1,8 +1,6 @@
 /**
  * release-postinstall.js
  *
- * XXX: We want to keep this script installable at least with node 4.x.
- *
  * This script is bundled with the `npm` package and executed on release.
  * Since we have a 'fat' NPM package (with all platform binaries bundled),
  * this postinstall script extracts them and puts the current platform's
