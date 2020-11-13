@@ -11,12 +11,12 @@ steps:
 
   - template: release-platform-setup.yml
     parameters:
-      platform: "macOS"
+      platform: "MacOS"
       folder: "platform-darwin"
 
   - template: release-platform-setup.yml
     parameters:
-      platform: "Windows"
+      platform: "Windows_x64"
       folder: "platform-windows-x64"
 
   - script: "node .ci/pipelines-release.js"

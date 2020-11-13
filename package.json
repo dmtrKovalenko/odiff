@@ -6,12 +6,11 @@
   "esy": {
     "build": "dune build -p #{self.name}",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
-    "NOTE": "Optional release Section. Customizes result of `esy release`",
     "release": {
       "rewritePrefix": true,
-      "bin": [
-        "ODiffBin"
-      ]
+      "bin": {
+        "odiff": "ODiffBin"
+      }
     },
     "buildEnv": {
       "ODOC_SYNTAX": "re"
@@ -22,7 +21,7 @@
     "test": "esy x RunTests.exe",
     "format": "esy dune build @fmt --auto-promote",
     "doc": "esy dune build @doc",
-    "post-release": "node scripts/post-release.js"
+    "post-release": "node .ci/pipelines-release.js"
   },
   "dependencies": {
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
@@ -38,5 +37,14 @@
     "@opam/merlin": "*",
     "refmterr": "*",
     "@opam/odoc": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmtrKovalenko/odiff"
+  },
+  "author": {
+    "email": "dmtr.kovalenko@outlook.com",
+    "name": "Dmitriy Kovalenko",
+    "url": "https://dmtrkovalenko.dev"
   }
 }

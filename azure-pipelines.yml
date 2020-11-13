@@ -18,7 +18,7 @@ jobs:
 
   - template: .ci/build-platform.yml
     parameters:
-      platform: macOS
+      platform: MacOS
       vmImage: macOS-10.14
 
   # Need windows-2019 to do esy import/export-dependencies
@@ -27,7 +27,7 @@ jobs:
   # understand drives like D:/ (thinks it's an scp path).
   - template: .ci/build-platform.yml
     parameters:
-      platform: Windows
+      platform: Windows_x64
       vmImage: windows-2019
 
   # This job is kept here as we want to have the platform names in the same file
@@ -35,8 +35,8 @@ jobs:
     displayName: Release
     dependsOn:
       - Linux
-      - macOS
-      - Windows
+      - MacOS
+      - Windows_x64
     pool:
       vmImage: macOS-10.14
       demands: node.js

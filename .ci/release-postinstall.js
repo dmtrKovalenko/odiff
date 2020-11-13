@@ -1,8 +1,6 @@
 /**
  * release-postinstall.js
  *
- * XXX: We want to keep this script installable at least with node 4.x.
- *
  * This script is bundled with the `npm` package and executed on release.
  * Since we have a 'fat' NPM package (with all platform binaries bundled),
  * this postinstall script extracts them and puts the current platform's
@@ -15,9 +13,13 @@ var fs = require("fs");
 var os = require("os");
 var platform = process.platform;
 
+process.env["OCAML_VERSION"] = "ocaml";
+process.env["OCAML_PKG_NAME"] = "n.00.0000";
+process.env["ESY_RELEASE_REWRITE_PREFIX"] = true;
+
 var packageJson = require("./package.json");
 var binariesToCopy = Object.keys(packageJson.bin)
-  .map(function(name) {
+  .map(function (name) {
     return packageJson.bin[name];
   })
   .concat(["esyInstallRelease.js"]);
@@ -27,7 +29,7 @@ function copyRecursive(srcDir, dstDir) {
   var results = [];
   var list = fs.readdirSync(srcDir);
   var src, dst;
-  list.forEach(function(file) {
+  list.forEach(function (file) {
     src = path.join(srcDir, file);
     dst = path.join(dstDir, file);
 
@@ -128,17 +130,17 @@ function copyFileSync(sourcePath, destPath) {
   fs.chmodSync(destPath, stat.mode);
 }
 
-var copyPlatformBinaries = platformPath => {
+var copyPlatformBinaries = (platformPath) => {
   var platformBuildPath = path.join(__dirname, "platform-" + platformPath);
 
-  foldersToCopy.forEach(folderPath => {
+  foldersToCopy.forEach((folderPath) => {
     var sourcePath = path.join(platformBuildPath, folderPath);
     var destPath = path.join(__dirname, folderPath);
 
     copyRecursive(sourcePath, destPath);
   });
 
-  binariesToCopy.forEach(binaryPath => {
+  binariesToCopy.forEach((binaryPath) => {
     var sourcePath = path.join(platformBuildPath, binaryPath);
     var destPath = path.join(__dirname, binaryPath);
     if (fs.existsSync(destPath)) {
