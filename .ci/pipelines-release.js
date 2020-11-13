@@ -3,57 +3,41 @@ const path = require("path");
 
 console.log("Creating package.json");
 
-// From the project root pwd
-const mainPackageJsonPath =
-  fs.existsSync('esy.json') ?
-  'esy.json' : 'package.json';
-
-const exists = fs.existsSync(mainPackageJsonPath);
+const exists = fs.existsSync("package.json");
 if (!exists) {
-  console.error("No package.json or esy.json at " + mainPackageJsonPath);
+  console.error("No package.json or esy.json at " + "package.json");
   process.exit(1);
 }
 // Now require from this script's location.
-const mainPackageJson = require(path.join('..', mainPackageJsonPath));
-const bins =
-  Array.isArray(mainPackageJson.esy.release.bin) ?
-  mainPackageJson.esy.release.bin.reduce(
-    (acc, curr) => Object.assign({ [curr]: "bin/" + curr }, acc),
-    {}
-  ) :
-  Object.keys(mainPackageJson.esy.release.bin).reduce(
-    (acc, currKey) => Object.assign({ [currKey]: "bin/" + mainPackageJson.esy.release.bin[currKey] }, acc),
-    {}
-  );
-
-const rewritePrefix =
-  mainPackageJson.esy &&
-  mainPackageJson.esy.release &&
-  mainPackageJson.esy.release.rewritePrefix;
+const mainPackageJson = require(path.join("..", "package.json"));
+const bins = Array.isArray(mainPackageJson.esy.release.bin)
+  ? mainPackageJson.esy.release.bin.reduce(
+      (acc, curr) => Object.assign({ [curr]: "bin/" + curr }, acc),
+      {}
+    )
+  : Object.keys(mainPackageJson.esy.release.bin).reduce(
+      (acc, currKey) =>
+        Object.assign(
+          { [currKey]: "bin/" + mainPackageJson.esy.release.bin[currKey] },
+          acc
+        ),
+      {}
+    );
 
 const packageJson = JSON.stringify(
   {
-    name: mainPackageJson.name,
+    name: "odiff-bin",
     version: mainPackageJson.version,
     license: mainPackageJson.license,
     description: mainPackageJson.description,
     repository: mainPackageJson.repository,
+    author: mainPackageJson.author,
+    typings: "./odiff.d.ts",
+    module: "./odiff.js",
     scripts: {
-      postinstall:
-        rewritePrefix ?
-        "ESY_RELEASE_REWRITE_PREFIX=true node ./postinstall.js" :
-        "node ./postinstall.js"
+      "postinstall": "node ./postinstall.js"
     },
     bin: bins,
-    files: [
-      "_export/",
-      "bin/",
-      "postinstall.js",
-      "esyInstallRelease.js",
-      "platform-linux/",
-      "platform-darwin/",
-      "platform-windows-x64/"
-    ]
   },
   null,
   2
@@ -63,7 +47,7 @@ fs.writeFileSync(
   path.join(__dirname, "..", "_release", "package.json"),
   packageJson,
   {
-    encoding: "utf8"
+    encoding: "utf8",
   }
 );
 
@@ -89,26 +73,32 @@ fs.copyFileSync(
   path.join(__dirname, "..", "_release", "postinstall.js")
 );
 
-console.log("Creating placeholder files");
-const placeholderFile = `:; echo "You need to have postinstall enabled"; exit $?
-@ECHO OFF
-ECHO You need to have postinstall enabled`;
-fs.mkdirSync(path.join(__dirname, "..", "_release", "bin"));
+console.log("Copying node bindings");
+fs.copyFileSync(
+  path.join(__dirname, "..", "bin", "node-bindings", "odiff.js"),
+  path.join(__dirname, "..", "_release", "odiff.js")
+);
 
-Object.keys(bins).forEach(
-  name => {
-    if(bins[name]) {
-      const binPath = path.join(
-        __dirname,
-        "..",
-        "_release",
-        bins[name]
-      );
+fs.copyFileSync(
+  path.join(__dirname, "..", "bin", "node-bindings", "odiff.d.ts"),
+  path.join(__dirname, "..", "_release", "odiff.d.ts")
+);
+
+if (!fs.existsSync(path.join(__dirname, "..", "_release", "bin"))) {
+  console.log("Creating placeholder files");
+  const placeholderFile = `:; echo "Binary was not linked. You need to have postinstall enabled. Please rerun 'npm install'"; exit $?
+@ECHO OFF
+ECHO Binary was not linked. You need to have postinstall enabled. Please rerun 'npm install'`;
+  fs.mkdirSync(path.join(__dirname, "..", "_release", "bin"));
+
+  Object.keys(bins).forEach((name) => {
+    if (bins[name]) {
+      const binPath = path.join(__dirname, "..", "_release", bins[name]);
       fs.writeFileSync(binPath, placeholderFile);
       fs.chmodSync(binPath, 0777);
     } else {
       console.log("bins[name] name=" + name + " was empty. Weird.");
       console.log(bins);
     }
-  }
-);
+  });
+}
