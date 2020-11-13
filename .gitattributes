@@ -1,1 +1,2 @@
-.ci/* linguist-detectable=true
+*.yaml linguist-detectable=false
+.ci/* linguist-vendored
