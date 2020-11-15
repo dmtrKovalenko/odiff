@@ -1,4 +1,4 @@
-let blend = (c, a) => 255 + (c - 255) * a;
+let blend = (color, alpha) => 255 + (color - 255) * alpha;
 
 let blendSemiTransparentColor =
   fun
