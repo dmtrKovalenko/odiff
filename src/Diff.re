@@ -29,7 +29,7 @@ let compare =
       ? Rgba32.copy(base)
       : Rgba32.make(base.width, base.height, transparentPixel);
 
-  let maxDelta = maxYIQPossibleDelta *. threshold *. threshold;
+  let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
 
   let countDifference = (x, y) => {
     diffCount := diffCount^ + 1;
@@ -38,14 +38,15 @@ let compare =
 
   for (x in 0 to base.width - 1) {
     for (y in 0 to base.height - 1) {
-      let (r, g, b, a) = base |> ImageIO.readImgColor(x, y);
-
       if (x >= comp.width || y >= comp.height) {
+        let a = ImageIO.readImgAlpha(x, y, base);
+
         if (a != 0) {
           countDifference(x, y);
         };
       } else {
-        let (r1, g1, b1, a1) = comp |> ImageIO.readImgColor(x, y);
+        let (r, g, b, a) = ImageIO.readImgColor(x, y, base);
+        let (r1, g1, b1, a1) = ImageIO.readImgColor(x, y, comp);
 
         if (r != r1 || g != g1 || b != b1 || a != a1) {
           let delta =
