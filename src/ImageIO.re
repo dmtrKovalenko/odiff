@@ -25,6 +25,12 @@ let readImgColor = (x, y, img) => {
   );
 };
 
+let readImgAlpha = (x, y, img) => {
+  let (bytes, position) = Rgba32.unsafe_access(img, x, y);
+
+  Bytes.unsafe_get(bytes, position + 3) |> Char.code;
+};
+
 let setImgColor = (x, y, (r, g, b, a), img) => {
   let (bytes, position) = Rgba32.unsafe_access(img, x, y);
 
