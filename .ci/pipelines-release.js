@@ -33,7 +33,7 @@ const packageJson = JSON.stringify(
     repository: mainPackageJson.repository,
     author: mainPackageJson.author,
     typings: "./odiff.d.ts",
-    module: "./odiff.js",
+    main: "./odiff.js",
     scripts: {
       "postinstall": "node ./postinstall.js"
     },
