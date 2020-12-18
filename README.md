@@ -30,7 +30,7 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ Supports comparison of images with different layouts
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference
-- ✅ Zero dependencies for unix. Requires [libpng](http://www.libpng.org/pub/png/libpng.html) **only** for windows
+- ✅ Requires only [libpng](http://www.libpng.org/pub/png/libpng.html) which is a part of most unix system by default
 
 ### Coming in the nearest future:
 
@@ -121,6 +121,21 @@ Then give it a try 👀
 ```
 odiff --help
 ```
+
+### lib* dependencies
+
+Make sure that this library depends on the system `lib{png,jpg,gif}` libraries to encode/decode images. They are optional, so if you are running comparison of only `.png` files – only `libpng` is required. 
+
+Make sure that appropriate dependencies are installed on your system. Especially when you are running odiff on CI or in Docker.
+
+#### Ubuntu
+
+For Ubuntu 18.04+ [there is no lib* deps preinstalled](https://www.linuxuprising.com/2018/05/fix-libpng12-0-missing-in-ubuntu-1804.html) so it will be required to run the docker.
+
+```
+apt-get install -y libpng12-0
+```
+
 
 ### MacOS
 
