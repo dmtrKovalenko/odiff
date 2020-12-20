@@ -43,7 +43,10 @@ let main =
       </Pastel>,
     );
 
+    let t = Odiff.PerfTest.now("save")
+
     Odiff.ImageIO.saveImage(diffPath, diffOutput);
+    Odiff.PerfTest.cycle(t)
     exit(22);
   };
 };

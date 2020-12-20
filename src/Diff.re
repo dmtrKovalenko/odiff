@@ -5,6 +5,8 @@ let redPixel = (
   255 |> char_of_int,
 );
 
+let pool = Task.setup_pool(~num_domains=1)
+
 let transparentPixel: Rgba32.elt = {
   color: {
     r: 0,
@@ -35,33 +37,43 @@ let compare =
     diffCount := diffCount^ + 1;
     diff |> ImageIO.setImgColor(x, y, redPixel);
   };
+  let t = PerfTest.now("wtf")
 
-  for (x in 0 to base.width - 1) {
-    for (y in 0 to base.height - 1) {
-      if (x >= comp.width || y >= comp.height) {
-        let a = ImageIO.readImgAlpha(x, y, base);
+  Task.parallel_for(
+    pool,
+    ~start=0,
+    ~chunk_size=0,
+    ~finish=base.height - 1,
+    ~body=
+      y => {
+        for (x in 0 to base.width - 1) {
+          if (x >= comp.width || y >= comp.height) {
+            let a = ImageIO.readImgAlpha(x, y, base);
 
-        if (a != 0) {
-          countDifference(x, y);
-        };
-      } else {
-        let (r, g, b, a) = ImageIO.readImgColor(x, y, base);
-        let (r1, g1, b1, a1) = ImageIO.readImgColor(x, y, comp);
+            if (a != 0) {
+              countDifference(x, y);
+            };
+          } else {
+            let (r, g, b, a) = ImageIO.readImgColor(x, y, base);
+            let (r1, g1, b1, a1) = ImageIO.readImgColor(x, y, comp);
 
-        if (r != r1 || g != g1 || b != b1 || a != a1) {
-          let delta =
-            ColorDelta.calculatePixelColorDelta(
-              (r, g, b, a),
-              (r1, g1, b1, a1),
-            );
+            if (r != r1 || g != g1 || b != b1 || a != a1) {
+              let delta =
+                ColorDelta.calculatePixelColorDelta(
+                  (r, g, b, a),
+                  (r1, g1, b1, a1),
+                );
 
-          if (delta > maxDelta) {
-            countDifference(x, y);
+              if (delta > maxDelta) {
+                countDifference(x, y);
+              };
+            };
           };
-        };
-      };
-    };
-  };
+        }
+      }
+  );
+
+  PerfTest.cycle(t);
 
   (diff, diffCount^);
 };

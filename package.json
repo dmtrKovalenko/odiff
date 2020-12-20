@@ -46,5 +46,8 @@
     "email": "dmtr.kovalenko@outlook.com",
     "name": "Dmitriy Kovalenko",
     "url": "https://dmtrkovalenko.dev"
+  },
+  "resolutions": {
+    "ocaml": "github:EduardoRFS/ocaml:package.json#2f1318a4b4c1f85703daa5de536e5de6de4af656"
   }
 }
