@@ -9,9 +9,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/setup-node@v1.4.3
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: '12'
       - uses: actions/checkout@v2.3.2
       - name: Install esy
         run: npm install -g esy
