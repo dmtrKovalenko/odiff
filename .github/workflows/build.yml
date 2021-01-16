@@ -42,7 +42,7 @@ jobs:
           key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
           restore-keys: build-odiff-${{ matrix.os }}
         
-      - run: C:\vcpkg\vcpkg install libpng
+      - run: nuget install libpng
         if: matrix.os == 'windows-latest'
 
       # Here we use a low-level command. In real situation you don't have to
