@@ -41,9 +41,16 @@ jobs:
           path: ${{ steps.print_esy_cache.outputs.esy_cache }}
           key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
           restore-keys: build-odiff-${{ matrix.os }}-
-
-      - name: Insltall windows libpng 
-        run: .\vcpkg\vcpkg install libpng
+        
+      - name: Restore from cache and install vcpkg
+        # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
+        uses: lukka/run-vcpkg@v6
+        with:
+          setupOnly: true
+        if: matrix.os == 'windows-latest'
+      - run: |
+          $VCPKG_ROOT/vcpkg install boost:linux-x64
+        shell: bash
         if: matrix.os == 'windows-latest'
 
       # Here we use a low-level command. In real situation you don't have to
