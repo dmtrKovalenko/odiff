@@ -20,10 +20,7 @@ jobs:
         shell: msys2 {0}
         working-directory: ./libpng
         run: |
-          ls
-          ./configure
-          make check
-          make install
+          pacman -S mingw-w64-x86_64-libpng
         if: matrix.os == 'windows-latest'
 
       - name: Install esy
