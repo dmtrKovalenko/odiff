@@ -11,6 +11,10 @@ jobs:
         # os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-toolchain
       - uses: actions/setup-node@v2
         with:
           node-version: '12'
@@ -20,7 +24,7 @@ jobs:
         shell: msys2 {0}
         working-directory: ./libpng
         run: |
-          pacman -S mingw-w64-x86_64-libpng
+          pacman --noconfirm  -S mingw-w64-x86_64-libpng
         if: matrix.os == 'windows-latest'
 
       - name: Install esy
