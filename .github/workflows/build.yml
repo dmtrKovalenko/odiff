@@ -9,12 +9,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
+      - uses: msys2/setup-msys2@v2
       - uses: actions/setup-node@v2
         with:
           node-version: '12'
       - uses: actions/checkout@v2.3.2
 
       - name: Install libpng
+        shell: msys2 {0}
         working-directory: ./libpng
         run: |
           ls
