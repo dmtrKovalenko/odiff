@@ -13,6 +13,14 @@ jobs:
         with:
           node-version: '12'
       - uses: actions/checkout@v2.3.2
+
+      - working-directory: libpng
+        run: |
+          ./configure
+          make check
+          make install
+        if: matrix.os == 'windows-latest'
+        
       - name: Install esy
         run: npm install -g esy
 
@@ -41,13 +49,6 @@ jobs:
           path: ${{ steps.print_esy_cache.outputs.esy_cache }}
           key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
           restore-keys: build-odiff-${{ matrix.os }}
-        
-      - working-directory: libpng
-        run: |
-          ./configure
-          make check
-          make install
-        if: matrix.os == 'windows-latest'
 
       # Here we use a low-level command. In real situation you don't have to
       # but it is useful in CI as it split the log in GitHub UI.
