@@ -30,6 +30,13 @@ jobs:
           pacman --noconfirm  -S mingw-w64-x86_64-libpng
         if: matrix.os == 'windows-latest'
 
+      - name: Install libpng
+        shell: msys2 {0}
+        working-directory: ./libpng
+        run: |
+          pacman --noconfirm  -S mingw-w64-x86_64-nodejs
+        if: matrix.os == 'windows-latest'
+
       - name: Install esy
         run: npm install -g esy
 
