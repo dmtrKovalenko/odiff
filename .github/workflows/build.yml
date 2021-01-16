@@ -49,7 +49,7 @@ jobs:
           setupOnly: true
         if: matrix.os == 'windows-latest'
       - run: |
-          $VCPKG_ROOT/vcpkg install libpng
+          $VCPKG_ROOT\vcpkg install libpng
         shell: bash
         if: matrix.os == 'windows-latest'
 
