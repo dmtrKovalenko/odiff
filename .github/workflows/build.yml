@@ -17,6 +17,7 @@ jobs:
       - name: Install libpng
         working-directory: ./libpng
         run: |
+          ls
           ./configure
           make check
           make install
