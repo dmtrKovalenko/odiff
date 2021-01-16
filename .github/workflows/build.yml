@@ -45,9 +45,6 @@ jobs:
       - run: nuget install libpng
         if: matrix.os == 'windows-latest'
 
-      - run: make
-        if: matrix.os == 'windows-latest'
-
       # Here we use a low-level command. In real situation you don't have to
       # but it is useful in CI as it split the log in GitHub UI.
       # You can see at a glance if it is your projet or your deps that break.
