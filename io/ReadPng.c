@@ -1,12 +1,12 @@
 #define CAML_NAME_SPACE
 #include <stdio.h>
 #include <string.h>
+#include <png.h>
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include <caml/bigarray.h>
-#include <png.h>
 
 CAMLprim value
 read_png_file_to_tuple(value file)
@@ -151,15 +151,14 @@ CAMLprim value write_png_file(png_bytep *row_pointers, value width_value, value 
 
   // Output is 8bit depth, RGBA format.
   png_set_IHDR(
-    png,
-    info,
-    width, height,
-    8,
-    PNG_COLOR_TYPE_RGBA,
-    PNG_INTERLACE_NONE,
-    PNG_COMPRESSION_TYPE_DEFAULT,
-    PNG_FILTER_TYPE_DEFAULT
-  );
+      png,
+      info,
+      width, height,
+      8,
+      PNG_COLOR_TYPE_RGBA,
+      PNG_INTERLACE_NONE,
+      PNG_COMPRESSION_TYPE_DEFAULT,
+      PNG_FILTER_TYPE_DEFAULT);
 
   png_write_info(png, info);
 
@@ -183,7 +182,7 @@ free_row_pointers(png_bytep *row_pointers, value height_value)
 {
   CAMLparam1(height_value);
   int height = Int_val(height_value);
-  
+
   for (int y = 0; y < height; y++)
   {
     free(row_pointers[y]);

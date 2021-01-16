@@ -1,3 +1,5 @@
+open OdiffIo;
+
 module ReadPngIO: Odiff.ImageIO.ImageIO = {
   type t;
   type row =
