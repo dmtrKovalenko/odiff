@@ -31,8 +31,9 @@ jobs:
 
       - name: Install libpng
         run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
-          nvm use 12
+          curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
+          fisher install jorgebucaran/nvm.fish
+          nvm use lts
         if: matrix.os == 'windows-latest'
 
       - name: Install esy
