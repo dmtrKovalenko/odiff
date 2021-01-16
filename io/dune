@@ -2,6 +2,6 @@
  (name odiffIo)
  (flags
   (-w -40 -w +26))
-  (c_library_flags -L/usr/local/opt/libpng/lib/libpng16.a)
+  (c_library_flags -lpng)
   (foreign_stubs (language c) (names ReadPng))
  )
