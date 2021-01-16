@@ -28,7 +28,7 @@ jobs:
 
       - name: Install node
         run: |
-          pacman -S mingw-w64-x86_64-curl
+          pacman --noconfirm -S mingw-w64-x86_64-curl
           curl -s https://install-node.now.sh | bash -s --
       
       - name: Install esy
