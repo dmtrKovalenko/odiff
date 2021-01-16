@@ -40,7 +40,7 @@ jobs:
         with:
           path: ${{ steps.print_esy_cache.outputs.esy_cache }}
           key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
-          restore-keys: build-odiff-${{ matrix.os }}-
+          restore-keys: build-odiff-${{ matrix.os }}
         
       - name: Restore from cache and install vcpkg
         # Download and build vcpkg, without installing any port. If content is cached already, it is a no-op.
@@ -49,7 +49,7 @@ jobs:
           setupOnly: true
         if: matrix.os == 'windows-latest'
       - run: |
-          $VCPKG_ROOT/vcpkg install boost:linux-x64
+          $VCPKG_ROOT/vcpkg install libpng
         shell: bash
         if: matrix.os == 'windows-latest'
 
