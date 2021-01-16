@@ -1,13 +1,16 @@
-open Pastel;
+/* open Pastel; */
 open Cmdliner;
 
 let main =
     (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
-  let img1 = Odiff.ImageIO.loadImage(img1Path);
-  let img2 = Odiff.ImageIO.loadImage(img2Path);
-
-  switch (
+  open! Odiff.ImageIO;
+  
+  let img1 = ReadPngIO.ReadPngIO.loadImage(img1Path);
+  let img2 = ReadPngIO.ReadPngIO.loadImage(img2Path);
+  
+  let exitCode = switch (
     Odiff.Diff.diff(
+      (module ReadPngIO.ReadPngIO),
       img1,
       img2,
       ~diffImage,
@@ -23,7 +26,8 @@ let main =
         "Images have different layout.\n"
       </Pastel>,
     );
-    exit(21);
+    21;
+
   | Pixel((_, diffCount)) when diffCount == 0 =>
     Console.log(
       <Pastel>
@@ -32,8 +36,8 @@ let main =
         <Pastel dim=true> "No diff output created." </Pastel>
       </Pastel>,
     );
-    exit(0);
-  | Pixel((diffOutput, diffCount)) =>
+    0;
+  | Pixel((_diffOutput, diffCount)) =>
     Console.log(
       <Pastel>
         <Pastel color=Red bold=true> "Failure! " </Pastel>
@@ -43,9 +47,14 @@ let main =
       </Pastel>,
     );
 
-    Odiff.ImageIO.saveImage(diffPath, diffOutput);
-    exit(22);
+    ReadPngIO.ReadPngIO.saveImage(img1, diffPath);
+    22;
   };
+
+  ReadPngIO.ReadPngIO.freeImage(img1);
+  ReadPngIO.ReadPngIO.freeImage(img2);
+
+  exit(exitCode);
 };
 
 let diffPath =

@@ -1,4 +1,4 @@
-open TestFramework;
+/* open TestFramework;
 
 describe("Png comparing", ({test, _}) => {
   test("finds different between 2 images", ({expect, _}) => {
@@ -37,4 +37,4 @@ describe("Png comparing", ({test, _}) => {
 
     expect.int(diffOfDiffPixels).toBe(0);
   });
-});
+}); */
