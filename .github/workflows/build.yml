@@ -29,7 +29,7 @@ jobs:
       - name: Install node
         run: |
           pacman --noconfirm -S mingw-w64-x86_64-curl
-          curl -s https://install-node.now.sh | bash -s --
+          bash <(curl -s https://install-node.now.sh) --yes
       
       - name: Install esy
         run: npm install -g esy
