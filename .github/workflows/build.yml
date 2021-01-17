@@ -17,8 +17,8 @@ jobs:
 
       - name: Install libpng
         run: |
-          choco install pngquant
-        if: matrix.os == 'windows-latest'
+          choco --help
+          choco install pngquant --yes
 
       - name: Install esy
         run: npm install -g esy
