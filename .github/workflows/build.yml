@@ -17,7 +17,6 @@ jobs:
 
       - name: Install libpng
         run: |
-          choco --yes install msys2
           choco --yes install gtk-runtime
         if: matrix.os == 'windows-latest'
 
