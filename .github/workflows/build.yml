@@ -25,13 +25,10 @@ jobs:
         run: |
           pacman --noconfirm  -S mingw-w64-x86_64-libpng
 
-      - name: Setup NVM
-        run: |
-          export NODE_VERSION=12
-          curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash -s -- --no-use
-          echo 'export NVM_DIR=$HOME/.nvm' >> $BASH_ENV
-          echo 'source $NVM_DIR/nvm.sh' >> $BASH_ENV
-
+      - uses: dcodeIO/setup-node-nvm@master
+        with:
+          node-version: lts/*
+          
       - name: Install node
         shell: msys2 {0}
         run: |
