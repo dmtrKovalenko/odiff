@@ -2,6 +2,11 @@
  (name odiffIo)
  (flags
   (-w -40 -w +26))
-  (c_library_flags -lpng)
   (foreign_stubs (language c) (names ReadPng))
+  (c_library_flags (:include c_library_flags.sexp))
  )
+
+(rule
+ (targets c_flags.sexp c_library_flags.sexp)
+ (action  (run ./config/discover.exe))
+)
