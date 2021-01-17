@@ -3,7 +3,7 @@
  (flags
   (-w -40 -w +26))
   (foreign_stubs (language c) (names ReadPng))
-  (c_library_flags (:include c_library_flags.sexp))
+  (c_library_flags -LC:/vcpkg/packages/libpng_x86-windows/lib/pkgconfig/../../lib -llibpng16 -lz)
  )
 
 (rule
