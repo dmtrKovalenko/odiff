@@ -66,8 +66,9 @@ jobs:
         run: esy build-dependencies --release
 
       - name: Build project in release
-    
-        run: esy build --release
+        run: |
+          $env:PKG_CONFIG_PATH
+          esy build --release
 
       # Now that our core project build let builds others deps
       - name: Build  dependencies
