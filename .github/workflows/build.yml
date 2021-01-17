@@ -26,14 +26,14 @@ jobs:
           pacman --noconfirm  -S mingw-w64-x86_64-libpng
 
       - name: Install node
+        run: git clone git://github.com/ry/node.git
+
+      - name: Build node
+        working-directory: node
         run: |
-          git clone git://github.com/ry/node.git
-          ls 
-          cd node
-          ls
           ./configure
           make
-          sudo make install
+          sudo make install        
 
       - name: Install esy
         run: npm install -g esy
