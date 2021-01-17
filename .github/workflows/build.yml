@@ -17,10 +17,8 @@ jobs:
 
       - name: Install libpng
         run: |
-          echo $PKG_CONFIG_PATH
-          cat PKG_CONFIG_PATH
           C:\vcpkg\vcpkg install libpng
-          cat PKG_CONFIG_PATH
+          set PKG_CONFIG_PATH=%PKG_CONFIG_PATH%;C:/vcpkg/packages/libpng_x86-windows/lib/pkgconfig/
 
       - name: Install esy
         run: npm install -g esy
