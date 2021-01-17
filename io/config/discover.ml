@@ -19,6 +19,11 @@ in
 Printf.printf "Resolved c flags %s" (String.concat "" conf.cflags);
 Printf.printf "\nResolved c libs %s" (String.concat "" conf.libs);
 
+let flags_to_put = 
+  match Sys.os_type with
+  | "cUnix" -> conf.cflags
+  | _ -> ["-LC:/vcpkg/packages/libpng_x86-windows/lib/pkgconfig/../../lib"; "-llibpng16"; "-lz"];
 
-C.Flags.write_sexp "c_flags.sexp"         conf.cflags;
+in
+C.Flags.write_sexp "c_flags.sexp"         flags_to_put;
 C.Flags.write_sexp "c_library_flags.sexp" conf.libs)
