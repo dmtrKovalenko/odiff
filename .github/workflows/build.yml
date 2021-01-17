@@ -7,30 +7,38 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        shell: wsl-bash {0}
-        distribution: Ubuntu-18.04
+        shell: msys2 {0}
     strategy:
       matrix:
         os: [windows-latest]
         # os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: Vampire/setup-wsl@v1
-      - uses: actions/setup-node@v2
+      - uses: msys2/setup-msys2@v2
         with:
-          node-version: '12'
-
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-toolchain
       - uses: actions/checkout@v2.3.2
 
-      # - name: Install libpng
-      #   run: |
-      #     pacman --noconfirm  -S mingw-w64-x86_64-libpng
-      #   if: matrix.os == 'windows-latest'
-
       - name: Install libpng
+        shell: msys2 {0}
         run: |
-          curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
-          fisher install jorgebucaran/nvm.fish
-          nvm use lts
+          pacman --noconfirm  -S mingw-w64-x86_64-libpng
+
+      - name: Setup NVM
+        command: |
+            rm $(which npm)
+            export NODE_VERSION=$(cat .nvmrc)
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash -s -- --no-use
+            echo 'export NVM_DIR=$HOME/.nvm' >> $BASH_ENV
+            echo 'source $NVM_DIR/nvm.sh' >> $BASH_ENV
+
+      - name: Install node
+        shell: msys2 {0}
+        run: |
+          nvm install 12
+          nvm alias default 12
+          nvm use 12
         if: matrix.os == 'windows-latest'
 
       - name: Install esy
