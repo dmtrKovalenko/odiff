@@ -13,28 +13,16 @@ jobs:
         os: [windows-latest]
         # os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: msys2/setup-msys2@v2
+      - uses: actions/setup-node@v2
         with:
-          msystem: MINGW64
-          update: true
-          install: git mingw-w64-x86_64-toolchain
+          node-version: '13'
       - uses: actions/checkout@v2.3.2
 
       - name: Install libpng
         shell: msys2 {0}
         run: |
           pacman --noconfirm  -S mingw-w64-x86_64-libpng
-
-      - name: Install node
-        run: git clone git://github.com/nodejs/node.git
-
-      - name: Build node
-        working-directory: node
-        run: |
-          ls 
-          ./configure
-          make
-          sudo make install        
+        if: matrix.os == 'windows-latest'
 
       - name: Install esy
         run: npm install -g esy
