@@ -27,9 +27,11 @@ jobs:
 
       - name: Install node
         run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
-          . ~/.nvm/nvm.sh
-          nvm install 12
+          git clone git://github.com/ry/node.git
+          cd node
+          ./configure
+          make
+          sudo make install
 
       - name: Install esy
         run: npm install -g esy
