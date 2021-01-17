@@ -2,8 +2,7 @@
  (name odiffIo)
  (flags
   (-w -40 -w +26))
-  (foreign_stubs (language c) (names ReadPng) (flags -IC:/vcpkg/packages/libpng_x86-windows/lib/pkgconfig/../../include/libpng16))
-  (c_library_flags C:\vcpkg\packages\libpng_x86-windows\lib\libpng16.lib)
+  (foreign_stubs (language c) (names ReadPng) (flags C:\vcpkg\packages\libpng_x86-windows\lib\libpng16.lib -IC:/vcpkg/packages/libpng_x86-windows/lib/pkgconfig/../../include/libpng16))
  )
 
 (rule
