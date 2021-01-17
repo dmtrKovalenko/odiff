@@ -22,7 +22,7 @@ jobs:
           $env:PKG_CONFIG_PATH
           $env:PKG_CONFIG_PATH += 'C:\vcpkg\packages\libpng_x86-windows\lib\pkgconfig'
           $env:PKG_CONFIG_PATH
-          pkg-config --libs libpng
+          pkg-config --libs libpng --cflags
 
 
       - name: Install esy
