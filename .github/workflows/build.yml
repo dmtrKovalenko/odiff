@@ -26,7 +26,10 @@ jobs:
           pacman --noconfirm  -S mingw-w64-x86_64-libpng
 
       - name: Install node
-        run: curl https://mapbox.s3.amazonaws.com/apps/install-node/latest/run | NV=10.15.3 NP=windows-x64 OD=/usr/local sh
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.37.2/install.sh | bash
+          . ~/.nvm/nvm.sh
+          nvm install 12
 
       - name: Install esy
         run: npm install -g esy
