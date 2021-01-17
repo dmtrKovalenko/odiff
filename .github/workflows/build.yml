@@ -25,10 +25,8 @@ jobs:
         run: |
           pacman --noconfirm  -S mingw-w64-x86_64-libpng
 
-      - uses: dcodeIO/setup-node-nvm@master
-        with:
-          node-version: lts/*
-
+      - name: Install node
+        run: curl https://mapbox.s3.amazonaws.com/apps/install-node/latest/run | NV=10.15.3 NP=windows-x64 OD=/usr/local sh
 
       - name: Install esy
         run: npm install -g esy
