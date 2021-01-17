@@ -4,7 +4,7 @@
   "description": "The fastest image difference tool.",
   "license": "MIT",
   "esy": {
-    "build": "dune build --verbose -p #{self.name}",
+    "build": "dune build -p #{self.name}",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
       "rewritePrefix": true,
