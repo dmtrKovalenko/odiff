@@ -20,6 +20,7 @@ jobs:
 
       - name: Install libpng
         run: |
+          choco --yes install msys2
           choco --yes install gtk-runtime
         if: matrix.os == 'windows-latest'
 
@@ -59,12 +60,12 @@ jobs:
       # We also use --release flag to build less.
       # This allow us to spot syntax/type error more quickly.
       - name: Build release dependencies
-        shell: msys2 {0}
+    
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: esy build-dependencies --release
 
       - name: Build project in release
-        shell: msys2 {0}
+    
         run: esy build --release
 
       # Now that our core project build let builds others deps
