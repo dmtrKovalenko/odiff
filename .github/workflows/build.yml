@@ -28,7 +28,9 @@ jobs:
       - name: Install node
         run: |
           git clone git://github.com/ry/node.git
+          ls 
           cd node
+          ls
           ./configure
           make
           sudo make install
