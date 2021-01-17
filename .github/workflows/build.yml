@@ -17,7 +17,7 @@ jobs:
 
       - name: Install libpng
         run: |
-          choco --yes install gtk-runtime
+          choco --yes install pngquant
         if: matrix.os == 'windows-latest'
 
       - name: Install esy
