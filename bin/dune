@@ -2,5 +2,4 @@
  (name ODiffBin)
  (public_name ODiffBin)
  (flags (:standard  -w -27))
- (link_flags (:standard -I C:/vcpkg/packages/libpng_x86-windows/include/libpng16))
  (libraries console.lib pastel.lib odiff odiffIo cmdliner))
