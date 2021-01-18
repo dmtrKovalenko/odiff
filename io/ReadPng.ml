@@ -1,5 +1,5 @@
 
-external read_png_file_to_tuple: string -> int * int * 'a  = "read_png_file_to_tuple"
+external read_png_image: string -> int * int * 'a  = "read_png_file_to_tuple"
 
 external read_row: 'a -> int -> int -> 'b  = "read_row"
 

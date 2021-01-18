@@ -1,10 +1,11 @@
 
 (library
- (name odiffIo)
+ (name ODiffIO)
  (flags
   (-w -40 -w +26))
   (foreign_stubs (language c) (names ReadPng))
   (c_library_flags -lpng16)
+  (libraries odiff camlimages.png camlimages.jpeg camlimages.tiff camlimages.xpm)
  )
 
 (rule

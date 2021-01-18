@@ -2,59 +2,69 @@
 open Cmdliner;
 open Odiff.Diff;
 
+let getIOModule = filename =>
+  Filename.extension(filename)
+  |> (
+    fun
+    | ".png" => (
+        (module ODiffIO.PureC_IO.IO): (module Odiff.ImageIO.ImageIO)
+      )
+
+    | _ => (
+        (module ODiffIO.CamlImagesIO.IO): (module Odiff.ImageIO.ImageIO)
+      )
+  );
+
 let main =
     (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
   open! Odiff.ImageIO;
-  
-  let img1 = ReadPngIO.ReadPngIO.loadImage(img1Path);
-  let img2 = ReadPngIO.ReadPngIO.loadImage(img2Path);
-   
-  module Diff = MakeDiff(ReadPngIO.ReadPngIO);
-  
-  let exitCode = switch (
-    Diff.diff(
-      img1,
-      img2,
-      ~diffImage,
-      ~threshold,
-      ~failOnLayoutChange,
-      (),
-    )
-  ) {
-  | Layout =>
-    Console.log(
-      <Pastel>
-        <Pastel color=Red bold=true> "Failure! " </Pastel>
-        "Images have different layout.\n"
-      </Pastel>,
-    );
-    21;
 
-  | Pixel((_, diffCount)) when diffCount == 0 =>
-    Console.log(
-      <Pastel>
-        <Pastel color=Green bold=true> "Success! " </Pastel>
-        "Images are equal.\n"
-        <Pastel dim=true> "No diff output created." </Pastel>
-      </Pastel>,
-    );
-    0;
-  | Pixel((_diffOutput, diffCount)) =>
-    Console.log(
-      <Pastel>
-        <Pastel color=Red bold=true> "Failure! " </Pastel>
-        "Images are different.\n"
-        "Different pixels: "
-        <Pastel color=Red bold=true> {Int.to_string(diffCount)} </Pastel>
-      </Pastel>,
-    );
+  module IO1 = (val getIOModule(img1Path));
+  module IO2 = (val getIOModule(img2Path));
 
-    ReadPngIO.ReadPngIO.saveImage(img1, diffPath);
-    22;
-  };
+  module Diff = MakeDiff(IO1, IO2);
 
-  ReadPngIO.ReadPngIO.freeImage(img1);
-  ReadPngIO.ReadPngIO.freeImage(img2);
+  let img1 = IO1.loadImage(img1Path);
+  let img2 = IO2.loadImage(img2Path);
+
+  let exitCode =
+    switch (
+      Diff.diff(img1, img2, ~diffImage, ~threshold, ~failOnLayoutChange, ())
+    ) {
+    | Layout =>
+      Console.log(
+        <Pastel>
+          <Pastel color=Red bold=true> "Failure! " </Pastel>
+          "Images have different layout.\n"
+        </Pastel>,
+      );
+      21;
+
+    | Pixel((_, diffCount)) when diffCount == 0 =>
+      Console.log(
+        <Pastel>
+          <Pastel color=Green bold=true> "Success! " </Pastel>
+          "Images are equal.\n"
+          <Pastel dim=true> "No diff output created." </Pastel>
+        </Pastel>,
+      );
+      0;
+    | Pixel((_diffOutput, diffCount)) =>
+      Console.log(
+        <Pastel>
+          <Pastel color=Red bold=true> "Failure! " </Pastel>
+          "Images are different.\n"
+          "Different pixels: "
+          <Pastel color=Red bold=true> {Int.to_string(diffCount)} </Pastel>
+        </Pastel>,
+      );
+
+      IO1.saveImage(img1, diffPath);
+      22;
+    };
+
+  IO1.freeImage(img1);
+  IO2.freeImage(img2);
 
   exit(exitCode);
 };
