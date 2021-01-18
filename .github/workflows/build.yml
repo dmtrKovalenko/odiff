@@ -69,6 +69,7 @@ jobs:
 
       - name: Build project in release
         run: |
+          esy which pkg-config
           esy pkg-config --libs libpng --cflags
           esy build --release
 
