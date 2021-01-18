@@ -3,4 +3,5 @@
  (public_name ODiffBin)
  (flags (:standard -w -27))
  (link_flags -cclib -lpng16)
+ (ocamlopt_flags (:standard -linkall))
  (libraries console.lib pastel.lib odiff odiffIo cmdliner))
