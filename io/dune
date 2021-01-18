@@ -3,8 +3,7 @@
  (name odiffIo)
  (flags
   (-w -40 -w +26))
-  (ocamlopt_flags (:standard -cc gcc))
-  (foreign_stubs (language c) (names ReadPng) (flags -IC:\vcpkg\packages\libpng_x86-windows\include\libpng16))
+  (foreign_stubs (language c) (names ReadPng) (flags -IC:\vcpkg\packages\libpng_x86-windows\include\libpng16 C:\vcpkg\packages\libpng_x86-windows\lib\libpng16.lib))
   (c_library_flags -LC:\vcpkg\packages\libpng_x86-windows\lib -lpng16)
  )
 
