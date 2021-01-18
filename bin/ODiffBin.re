@@ -1,5 +1,6 @@
 /* open Pastel; */
 open Cmdliner;
+open Odiff.Diff;
 
 let main =
     (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
@@ -7,10 +8,11 @@ let main =
   
   let img1 = ReadPngIO.ReadPngIO.loadImage(img1Path);
   let img2 = ReadPngIO.ReadPngIO.loadImage(img2Path);
+   
+  module Diff = MakeDiff(ReadPngIO.ReadPngIO);
   
   let exitCode = switch (
-    Odiff.Diff.diff(
-      (module ReadPngIO.ReadPngIO),
+    Diff.diff(
       img1,
       img2,
       ~diffImage,
