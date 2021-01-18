@@ -1,5 +1,5 @@
 {
-  "checksum": "c8adb2b443603890e8f1ea8a547a3787",
+  "checksum": "5437912910af99a0447b664bba96a6dc",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "refmterr@3.3.2@d41d8cd9": {
@@ -22,22 +22,6 @@
       ],
       "devDependencies": []
     },
-    "pkg-config@archive:https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz#sha1:76e501663b29cb7580245720edfb6106164fad2b@6c89142d": {
-      "id":
-        "pkg-config@archive:https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz#sha1:76e501663b29cb7580245720edfb6106164fad2b@6c89142d",
-      "name": "pkg-config",
-      "version":
-        "archive:https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz#sha1:76e501663b29cb7580245720edfb6106164fad2b",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz#sha1:76e501663b29cb7580245720edfb6106164fad2b"
-        ]
-      },
-      "overrides": [ "esy.lock/overrides/6c89142d38eb01103de07762eae6858d" ],
-      "dependencies": [],
-      "devDependencies": []
-    },
     "odiff@link-dev:./package.json": {
       "id": "odiff@link-dev:./package.json",
       "name": "odiff",
@@ -49,9 +33,8 @@
       },
       "overrides": [],
       "dependencies": [
-        "pkg-config@archive:https://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz#sha1:76e501663b29cb7580245720edfb6106164fad2b@6c89142d",
         "ocaml@4.10.2000@d41d8cd9",
-        "esy-libpng@github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048@d41d8cd9",
+        "esy-libpng@github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
@@ -111,16 +94,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-libpng@github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048@d41d8cd9": {
+    "esy-libpng@github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e@d41d8cd9": {
       "id":
-        "esy-libpng@github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048@d41d8cd9",
+        "esy-libpng@github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e@d41d8cd9",
       "name": "esy-libpng",
       "version":
-        "github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048",
+        "github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e",
       "source": {
         "type": "install",
         "source": [
-          "github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048"
+          "github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e"
         ]
       },
       "overrides": [],
