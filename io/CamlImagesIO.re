@@ -24,7 +24,8 @@ module IO: ImageIO.ImageIO = {
   };
 
   let saveImage = (img: ImageIO.img(t), filename) => {
-    Png.save(filename, [], Images.Rgba32(img.image));
+    /* Png.save(filename, [], Images.Rgba32(img.image)); */
+    ();
   };
 
   let readImgColor = (x, y, img: ImageIO.img(t)) => {
