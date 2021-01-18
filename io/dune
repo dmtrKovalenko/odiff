@@ -5,6 +5,7 @@
   (-w -40 -w +26))
   (foreign_stubs (language c) (names ReadPng) (flags -IC:/vcpkg/packages/libpng_x86-windows/include/libpng16))
   (c_library_flags -LC:/vcpkg/packages/libpng_x86-windows/lib -lpng16)
+  (foreign_archive C:\vcpkg\packages\libpng_x86-windows\lib\libpng16.lib)
  )
 
 (rule
