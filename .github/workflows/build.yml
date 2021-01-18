@@ -69,9 +69,7 @@ jobs:
 
       - name: Build project in release
         run: |
-          $env:PKG_CONFIG_PATH += 'C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig'
-          $env:PKG_CONFIG_PATH
-          pkg-config --libs libpng --cflags
+          esy pkg-config --libs libpng --cflags
           esy build --release
 
       # Now that our core project build let builds others deps
