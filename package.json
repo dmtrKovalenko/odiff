@@ -32,7 +32,8 @@
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "ocaml": "~4.10.0",
-    "esy-libpng": "esy-packages/esy-libpng"
+    "esy-libpng": "esy-packages/esy-libpng",
+    "pkg-config": "briskml/pkg-config"
   },
   "devDependencies": {
     "@opam/merlin": "*",
