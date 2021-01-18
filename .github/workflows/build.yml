@@ -18,7 +18,7 @@ jobs:
       - name: Install libpng
         run: |
           gcc -v
-          C:\vcpkg\vcpkg install libpng:x68-windows-static
+          C:\vcpkg\vcpkg install libpng:x86-windows-static
           ls C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig
           $env:PKG_CONFIG_PATH += 'C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig'
           ls C:/vcpkg/packages/libpng_x86-windows-static/lib/pkgconfig/../../lib 
