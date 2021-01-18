@@ -1,5 +1,5 @@
 {
-  "checksum": "c986ba911ea08063c200e2a3fa212b81",
+  "checksum": "a7be04f3c23820e1cce6b5729caf591d",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "refmterr@3.3.2@d41d8cd9": {
@@ -33,7 +33,9 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.10.2000@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
+        "ocaml@4.10.2000@d41d8cd9",
+        "esy-libpng@github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048@d41d8cd9",
+        "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
         "@opam/dune@opam:2.8.1@34d8055e",
@@ -60,6 +62,22 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "esy-zlib@github:esy-packages/esy-zlib#404929fd8b7ed83ed6a528d751840faff957b4b3@d41d8cd9": {
+      "id":
+        "esy-zlib@github:esy-packages/esy-zlib#404929fd8b7ed83ed6a528d751840faff957b4b3@d41d8cd9",
+      "name": "esy-zlib",
+      "version":
+        "github:esy-packages/esy-zlib#404929fd8b7ed83ed6a528d751840faff957b4b3",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:esy-packages/esy-zlib#404929fd8b7ed83ed6a528d751840faff957b4b3"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "esy-m4@github:esy-packages/esy-m4#c7cf0ac9221be2b1f9d90e83559ca08397a629e7@d41d8cd9": {
       "id":
         "esy-m4@github:esy-packages/esy-m4#c7cf0ac9221be2b1f9d90e83559ca08397a629e7@d41d8cd9",
@@ -74,6 +92,24 @@
       },
       "overrides": [],
       "dependencies": [],
+      "devDependencies": []
+    },
+    "esy-libpng@github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048@d41d8cd9": {
+      "id":
+        "esy-libpng@github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048@d41d8cd9",
+      "name": "esy-libpng",
+      "version":
+        "github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:esy-packages/esy-libpng#d846df4a8547b3299c7627773008bd97543d7048"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-zlib@github:esy-packages/esy-zlib#404929fd8b7ed83ed6a528d751840faff957b4b3@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "@reason-native/rely@3.2.1@d41d8cd9": {
