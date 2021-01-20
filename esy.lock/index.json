@@ -34,7 +34,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9",
-        "esy-libpng@github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e@d41d8cd9",
+        "esy-libpng@github:dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
@@ -94,16 +94,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-libpng@github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e@d41d8cd9": {
+    "esy-libpng@github:dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d@d41d8cd9": {
       "id":
-        "esy-libpng@github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e@d41d8cd9",
+        "esy-libpng@github:dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d@d41d8cd9",
       "name": "esy-libpng",
       "version":
-        "github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e",
+        "github:dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
       "source": {
         "type": "install",
         "source": [
-          "github:dmtrKovalenko/esy-libpng#ababe440cc5613ad1c93677efe405ec1e6e8eb2e"
+          "github:dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d"
         ]
       },
       "overrides": [],

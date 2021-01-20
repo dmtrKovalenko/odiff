@@ -1,7 +1,10 @@
 module C = Configurator.V1
 
+
 let () =
 C.main ~name:"odiff-c-lib-package-resolver" (fun c ->
+let resolved_cflags_for_windows = Unix.getenv("CFLAGS") |> String.trim in
+let resolved_libsflags_for_windows = Unix.getenv("LDFLAGS") |> String.trim in
 let default : C.Pkg_config.package_conf =
   { libs   = ["libpng"]
   ; cflags = []
@@ -20,18 +23,17 @@ let conf =
      | Some deps -> deps
 
 in
-Printf.printf "Resolved c flags %s" (String.concat "" conf.cflags);
-Printf.printf "\nResolved c libs %s" (String.concat "" conf.libs);
-
- 
-Unix.environment ()
-|> Array.iter(fun env ->
-  if Str.string_match (Str.regexp "PNG") env 0 then
-    print_endline("\nlibpng env var:"^env)
-)
-|> ignore;
 
 
-C.Flags.write_sexp "c_flags.sexp"         conf.cflags;
-C.Flags.write_sexp "c_library_flags.sexp" conf.libs)
+if (resolved_cflags_for_windows != String.concat "" conf.cflags) 
+then 
+ Printf.printf "\nAuto resolved c flags from env are different from pkg-config results, \n PKG-CONFIG: %s \n CLFAGS: %s" (String.concat " " conf.cflags) resolved_cflags_for_windows;
+
+if (resolved_libsflags_for_windows != String.concat "" conf.libs) 
+then 
+ Printf.printf "\nAuto resolved libs flags from env are different from pkg-config results, \n PKG-CONFIG: %s \n LDFLAGS: %s" (String.concat " " conf.libs) resolved_libsflags_for_windows;
+
+
+C.Flags.write_sexp "c_flags.sexp"         (String.split_on_char ' ' resolved_cflags_for_windows);
+C.Flags.write_sexp "c_library_flags.sexp" (String.split_on_char ' ' resolved_libsflags_for_windows))
 
