@@ -8,6 +8,15 @@
 #include <caml/fail.h>
 #include <caml/bigarray.h>
 
+void fail_with_read_exception(const char* filename) {
+  const char exception[64] = "";
+  strcat(exception, "Can not load the file - ");
+  strcat(exception, filename);
+
+  caml_failwith(exception);
+  free(exception);
+}
+
 CAMLprim value
 read_png_file_to_tuple(value file)
 {
@@ -24,14 +33,14 @@ read_png_file_to_tuple(value file)
 
   png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   if (!png)
-    abort();
+    fail_with_read_exception(filename);
 
   png_infop info = png_create_info_struct(png);
   if (!info)
-    abort();
+    fail_with_read_exception(filename);
 
   if (setjmp(png_jmpbuf(png)))
-    abort();
+    fail_with_read_exception(filename);
 
   png_init_io(png, fp);
 
@@ -134,18 +143,18 @@ CAMLprim value write_png_file(png_bytep *row_pointers, value width_value, value 
 
   FILE *fp = fopen(String_val(filename_value), "wb");
   if (!fp)
-    abort();
+    caml_failwith("Can not save the output :(");
 
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   if (!png)
-    abort();
+    caml_failwith("Can not save the output :(");
 
   png_infop info = png_create_info_struct(png);
   if (!info)
-    abort();
+    caml_failwith("Can not save the output :(");
 
   if (setjmp(png_jmpbuf(png)))
-    abort();
+    caml_failwith("Can not save the output :(");
 
   png_init_io(png, fp);
 
@@ -163,9 +172,9 @@ CAMLprim value write_png_file(png_bytep *row_pointers, value width_value, value 
   png_write_info(png, info);
 
   if (!row_pointers)
-    abort();
+    caml_failwith("Can not save the output :(");
 
-  png_set_compression_level(png, 0);
+  png_set_compression_level(png, 2);
   png_set_filter(png, 0, PNG_FILTER_NONE);
   png_write_image(png, row_pointers);
   png_write_end(png, NULL);

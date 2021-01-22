@@ -1,8 +1,6 @@
 open Util;
 open Odiff;
 
-exception ImageNotLoaded;
-
 module IO: ImageIO.ImageIO = {
   type t = Rgba32.t;
   type row = int;
@@ -13,7 +11,7 @@ module IO: ImageIO.ImageIO = {
     | Index8(i8img) => Index8.to_rgba32(i8img)
     | Rgb24(rgba24img) => Rgb24.to_rgba32(rgba24img)
     | Rgba32(img) => img
-    | _ => raise(ImageNotLoaded)
+    | _ => raise(ImageIO.ImageNotLoaded)
     };
 
     {

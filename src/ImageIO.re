@@ -4,6 +4,8 @@ type img('a) = {
   image: 'a,
 };
 
+exception ImageNotLoaded;
+
 module type ImageIO = {
   type t;
   type row;

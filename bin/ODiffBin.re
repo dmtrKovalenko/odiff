@@ -6,19 +6,13 @@ let getIOModule = filename =>
   Filename.extension(filename)
   |> (
     fun
-    | ".png" => (
-        (module ODiffIO.PureC_IO.IO): (module Odiff.ImageIO.ImageIO)
-      )
-
-    | _ => (
-        (module ODiffIO.CamlImagesIO.IO): (module Odiff.ImageIO.ImageIO)
-      )
+    | ".png" => ((module ODiffIO.PureC_IO.IO): (module Odiff.ImageIO.ImageIO))
+    | _ => ((module ODiffIO.CamlImagesIO.IO): (module Odiff.ImageIO.ImageIO))
   );
 
 let main =
     (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
   open! Odiff.ImageIO;
-
   module IO1 = (val getIOModule(img1Path));
   module IO2 = (val getIOModule(img2Path));
 
@@ -114,6 +108,7 @@ let diffImage = {
       )
   );
 };
+
 
 let failOnLayout =
   Arg.(
