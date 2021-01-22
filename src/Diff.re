@@ -36,8 +36,8 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
             countDifference(x, y);
           };
         } else {
-          let (r, g, b, a) = IO1.readImgColor(x, row, base); /* IO.readImgColor(x, y, base); */
-          let (r1, g1, b1, a1) = IO2.readImgColor(x, row2, comp); /* IO.readImgColor(x, y, comp); */
+          let (r, g, b, a) = IO1.readImgColor(x, row, base);
+          let (r1, g1, b1, a1) = IO2.readImgColor(x, row2, comp);
 
           if (r != r1 || g != g1 || b != b1 || a != a1) {
             let delta =
