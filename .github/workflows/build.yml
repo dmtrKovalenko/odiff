@@ -14,16 +14,6 @@ jobs:
           node-version: '13'
       - uses: actions/checkout@v2.3.2 
 
-      - name: Install libpng	
-        if: matrix.os == 'windows-latest'
-        run: |	
-          C:\vcpkg\vcpkg install libpng:x86-windows-static	
-          ls C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig	
-          $env:PKG_CONFIG_PATH += 'C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig'	
-          ls C:/vcpkg/packages/libpng_x86-windows-static/lib/pkgconfig/../../lib 	
-          pkg-config --libs libpng	
-          pkg-config --cflags libpng	
-
       - name: Install esy
         run: npm install -g esy
 

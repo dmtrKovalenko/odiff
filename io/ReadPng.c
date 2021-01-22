@@ -8,13 +8,15 @@
 #include <caml/fail.h>
 #include <caml/bigarray.h>
 
-void fail_with_read_exception(const char* filename) {
-  const char exception[64] = "";
-  strcat(exception, "Can not load the file - ");
-  strcat(exception, filename);
-
-  caml_failwith(exception);
-  free(exception);
+char* concat(const char *s1, const char *s2)
+{
+    const size_t len1 = strlen(s1);
+    const size_t len2 = strlen(s2);
+    char *result = malloc(len1 + len2 + 1); // +1 for the null-terminator
+    // in real code you would check for errors in malloc here
+    memcpy(result, s1, len1);
+    memcpy(result + len1, s2, len2 + 1); // +1 to copy the null-terminator
+    return result;
 }
 
 CAMLprim value
@@ -33,14 +35,14 @@ read_png_file_to_tuple(value file)
 
   png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
   if (!png)
-    fail_with_read_exception(filename);
+    caml_failwith(concat("Can not read the file -", filename));
 
   png_infop info = png_create_info_struct(png);
   if (!info)
-    fail_with_read_exception(filename);
+    caml_failwith(concat("Incorrect file type -", filename));
 
   if (setjmp(png_jmpbuf(png)))
-    fail_with_read_exception(filename);
+    caml_failwith(concat("Can not read the file -", filename));
 
   png_init_io(png, fp);
 
