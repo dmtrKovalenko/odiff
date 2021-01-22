@@ -5,9 +5,16 @@
   "license": "MIT",
   "esy": {
     "build": "dune build -p #{self.name}",
-    "buildDev": "refmterr dune build --promote-install-files --root .",
-    "release": { "rewritePrefix": true, "bin": { "odiff": "ODiffBin" } },
-    "buildEnv": { "ODOC_SYNTAX": "re" }
+    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "release": {
+      "rewritePrefix": true,
+      "bin": {
+        "odiff": "ODiffBin"
+      }
+    },
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
+    }
   },
   "scripts": {
     "run": "esy x ODiffBin",
@@ -20,7 +27,7 @@
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
     "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
-    "@opam/dune": ">2.6",
+    "@opam/dune": "2.8.1",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
@@ -30,7 +37,6 @@
   "devDependencies": {
     "@opam/merlin": "3.4.2",
     "@opam/ocaml-lsp-server": "1.4.0",
-    "@opam/ocamlfind-secondary": "1.8.1",
     "@opam/odoc": "*",
     "refmterr": "*"
   },
