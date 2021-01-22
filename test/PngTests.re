@@ -32,7 +32,6 @@ describe("Png comparing", ({test, _}) => {
       Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {
-
       PureC_IO.IO.saveImage(diffOutput, "test/test-images/diff-output.png");
       PureC_IO.IO.saveImage(diffMaskOfDiff, "test/test-images/diff-of-diff.png");
     };
