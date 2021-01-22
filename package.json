@@ -20,7 +20,7 @@
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
     "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
-    "@opam/dune": "2.7.1",
+    "@opam/dune": ">2.6",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
