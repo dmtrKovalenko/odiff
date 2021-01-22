@@ -1,31 +1,18 @@
 name: Build
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest]
-        # os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/setup-node@v2
         with:
           node-version: '13'
       - uses: actions/checkout@v2.3.2
-
-      - name: Install libpng
-        run: |
-          gcc -v
-          cmake
-          C:\vcpkg\vcpkg install libpng:x86-windows-static
-          ls C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig
-          $env:PKG_CONFIG_PATH += 'C:\vcpkg\packages\libpng_x86-windows-static\lib\pkgconfig'
-          ls C:/vcpkg/packages/libpng_x86-windows-static/lib/pkgconfig/../../lib 
-          pkg-config --libs libpng
-          pkg-config --cflags libpng
-
 
       - name: Install esy
         run: npm install -g esy
@@ -90,7 +77,6 @@ jobs:
 
       - name: Test
         run: esy test
-        if: matrix.os != 'windows-latest'
 
       - uses: actions/upload-artifact@v2
         if: failure()
