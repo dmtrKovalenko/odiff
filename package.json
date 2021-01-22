@@ -24,7 +24,7 @@
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
-    "esy-libpng": "dmtrKovalenko/esy-libpng",
+    "esy-libpng": "dmtrKovalenko/esy-libpng#8c099a899224917d9a6b2dc167e2fcfa4aad4f8d",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {

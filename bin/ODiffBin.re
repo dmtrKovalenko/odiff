@@ -13,6 +13,7 @@ let getIOModule = filename =>
 let main =
     (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
   open! Odiff.ImageIO;
+
   module IO1 = (val getIOModule(img1Path));
   module IO2 = (val getIOModule(img2Path));
 
@@ -54,6 +55,7 @@ let main =
       );
 
       IO1.saveImage(img1, diffPath);
+
       22;
     };
 
@@ -108,7 +110,6 @@ let diffImage = {
       )
   );
 };
-
 
 let failOnLayout =
   Arg.(

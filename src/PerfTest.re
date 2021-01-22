@@ -1,11 +1,14 @@
-let now = (name: string) => (name, Unix.gettimeofday());
+let now = (name: string) => (name, ref(Unix.gettimeofday()));
 
-let cycle = ((name, timepoint)) => {
+let cycle = ((name, timepoint), ~cycleName="", ()) => {
   Printf.printf(
-    "'%s' executed for: %f ms \n",
+    "'%s %s' executed for: %f ms \n",
     name,
-    (Unix.gettimeofday() -. timepoint) *. 1000.,
+    cycleName,
+    (Unix.gettimeofday() -. timepoint^) *. 1000.,
   );
+
+  timepoint := Unix.gettimeofday()
 };
 
 let ifTimeMore = (amount, (name, timepoint)) => {
@@ -14,5 +17,5 @@ let ifTimeMore = (amount, (name, timepoint)) => {
 
 let cycleIf = (point, predicate) =>
   if (predicate(point)) {
-    cycle(point);
+    cycle(point, ());
   };
