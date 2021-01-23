@@ -37,7 +37,9 @@ const packageJson = JSON.stringify(
     scripts: {
       "postinstall": "node ./postinstall.js"
     },
-    bin: bins,
+    "bin": {
+      "odiff": "bin/odiff"
+    }
   },
   null,
   2
@@ -58,7 +60,7 @@ try {
     path.join(__dirname, "..", "_release", "LICENSE")
   );
 } catch (e) {
-  console.warn("No LICENSE found");
+  console.warn("No LICENSE found"); V
 }
 
 console.log("Copying README.md");
