@@ -60,7 +60,7 @@ try {
     path.join(__dirname, "..", "_release", "LICENSE")
   );
 } catch (e) {
-  console.warn("No LICENSE found"); V
+  console.warn("No LICENSE found");
 }
 
 console.log("Copying README.md");
