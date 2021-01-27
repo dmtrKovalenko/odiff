@@ -9,3 +9,5 @@ external write_png_file: 'a -> int -> int -> string -> unit = "write_png_file" [
 
 external free_row_pointers: 'a -> int -> unit = "free_row_pointers" [@@noalloc]
 
+external create_empty_img: int -> int -> 'a = "create_empty_img" [@@noalloc]
+

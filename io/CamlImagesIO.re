@@ -6,24 +6,20 @@ module IO: ImageIO.ImageIO = {
   type row = int;
   let readRow = (_, y) => y;
 
-  let loadImage = (filename): Odiff.ImageIO.img(t)  => {
-    let camlimage = switch (Images.load(filename, [])) {
-    | Index8(i8img) => Index8.to_rgba32(i8img)
-    | Rgb24(rgba24img) => Rgb24.to_rgba32(rgba24img)
-    | Rgba32(img) => img
-    | _ => raise(ImageIO.ImageNotLoaded)
-    };
+  let loadImage = (filename): Odiff.ImageIO.img(t) => {
+    let camlimage =
+      switch (Images.load(filename, [])) {
+      | Index8(i8img) => Index8.to_rgba32(i8img)
+      | Rgb24(rgba24img) => Rgb24.to_rgba32(rgba24img)
+      | Rgba32(img) => img
+      | _ => raise(ImageIO.ImageNotLoaded)
+      };
 
-    {
-      width: camlimage.width,
-      height: camlimage.height,
-      image: camlimage
-    }
+    {width: camlimage.width, height: camlimage.height, image: camlimage};
   };
 
   let saveImage = (img: ImageIO.img(t), filename) => {
-    /* Png.save(filename, [], Images.Rgba32(img.image)); */
-    ();
+    Png.save(filename, [], Images.Rgba32(img.image));
   };
 
   let readImgColor = (x, y, img: ImageIO.img(t)) => {
@@ -47,4 +43,23 @@ module IO: ImageIO.ImageIO = {
   };
 
   let freeImage = _ => ();
+
+  let makeSameAsLayout = (img: ImageIO.img(t)) => {
+    {
+      ...img,
+      image:
+        Rgba32.make(
+          img.width,
+          img.height,
+          {
+            color: {
+              r: 0,
+              g: 0,
+              b: 0,
+            },
+            alpha: 0,
+          },
+        ),
+    };
+  };
 };

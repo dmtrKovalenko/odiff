@@ -11,18 +11,17 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       (
         base: ImageIO.img(IO1.t),
         comp: ImageIO.img(IO2.t),
+        ~outputDiffMask=false,
         ~threshold=0.1,
-        ~diffImage=false,
         (),
       ) => {
     let diffCount = ref(0);
-    let diff = base;
-
     let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
+    let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
     let countDifference = (x, y) => {
       diffCount := diffCount^ + 1;
-      diff |> IO1.setImgColor(x, y, redPixel);
+      diffOutput |> IO1.setImgColor(x, y, redPixel);
     };
 
     for (y in 0 to base.height - 1) {
@@ -53,15 +52,16 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         };
       };
     };
-    (diff, diffCount^);
+
+    (diffOutput, diffCount^);
   };
 
   let diff =
       (
         base: ImageIO.img(IO1.t),
         comp: ImageIO.img(IO2.t),
+        ~outputDiffMask,
         ~threshold=0.1,
-        ~diffImage=false,
         ~failOnLayoutChange=true,
         (),
       ) =>
@@ -70,7 +70,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         && base.height != comp.height) {
       Layout;
     } else {
-      let diffResult = compare(base, comp, ~threshold, ~diffImage, ());
+      let diffResult = compare(base, comp, ~threshold, ~outputDiffMask, ());
       Pixel(diffResult);
     };
 };

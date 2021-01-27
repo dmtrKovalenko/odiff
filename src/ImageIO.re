@@ -16,4 +16,5 @@ module type ImageIO = {
   let setImgColor: (int, int, (int, int, int, int), img(t)) => unit;
   let saveImage: (img(t), string) => unit;
   let freeImage: img(t) => unit;
+  let makeSameAsLayout: img(t) => img(t);
 };

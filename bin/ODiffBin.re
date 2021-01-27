@@ -1,4 +1,3 @@
-/* open Pastel; */
 open Cmdliner;
 open Odiff.Diff;
 
@@ -11,7 +10,14 @@ let getIOModule = filename =>
   );
 
 let main =
-    (img1Path, img2Path, diffPath, threshold, diffImage, failOnLayoutChange) => {
+    (
+      img1Path,
+      img2Path,
+      diffPath,
+      threshold,
+      outputDiffMask,
+      failOnLayoutChange,
+    ) => {
   open! Odiff.ImageIO;
 
   module IO1 = (val getIOModule(img1Path));
@@ -22,9 +28,16 @@ let main =
   let img1 = IO1.loadImage(img1Path);
   let img2 = IO2.loadImage(img2Path);
 
-  let exitCode =
+  let (diffOutput, exitCode) =
     switch (
-      Diff.diff(img1, img2, ~diffImage, ~threshold, ~failOnLayoutChange, ())
+      Diff.diff(
+        img1,
+        img2,
+        ~outputDiffMask,
+        ~threshold,
+        ~failOnLayoutChange,
+        (),
+      )
     ) {
     | Layout =>
       Console.log(
@@ -33,9 +46,9 @@ let main =
           "Images have different layout.\n"
         </Pastel>,
       );
-      21;
+      (None, 21);
 
-    | Pixel((_, diffCount)) when diffCount == 0 =>
+    | Pixel((diffOutput, diffCount)) when diffCount == 0 =>
       Console.log(
         <Pastel>
           <Pastel color=Green bold=true> "Success! " </Pastel>
@@ -43,8 +56,9 @@ let main =
           <Pastel dim=true> "No diff output created." </Pastel>
         </Pastel>,
       );
-      0;
-    | Pixel((_diffOutput, diffCount)) =>
+      (Some(diffOutput), 0);
+
+    | Pixel((diffOutput, diffCount)) =>
       Console.log(
         <Pastel>
           <Pastel color=Red bold=true> "Failure! " </Pastel>
@@ -54,13 +68,17 @@ let main =
         </Pastel>,
       );
 
-      IO1.saveImage(img1, diffPath);
-
-      22;
+      IO1.saveImage(diffOutput, diffPath);
+      (Some(diffOutput), 22);
     };
 
   IO1.freeImage(img1);
   IO2.freeImage(img2);
+
+  switch (diffOutput) {
+    | Some(output) when outputDiffMask => IO1.freeImage(output)
+    | _ => ()
+  }
 
   exit(exitCode);
 };
@@ -98,15 +116,15 @@ let threshold = {
   );
 };
 
-let diffImage = {
+let diffMask = {
   Arg.(
     value
     & flag
     & info(
-        ["di", "diff-image"],
+        ["dm", "diff-mask"],
         ~docv="DIFF_IMAGE",
         ~doc=
-          "Render image to the diff output instead of transparent background.",
+          "Output only changed pixel over transparent background.",
       )
   );
 };
@@ -137,7 +155,7 @@ let cmd = {
       $ comp
       $ diffPath
       $ threshold
-      $ diffImage
+      $ diffMask
       $ failOnLayout
     ),
     Term.info(

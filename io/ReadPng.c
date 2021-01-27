@@ -8,22 +8,22 @@
 #include <caml/fail.h>
 #include <caml/bigarray.h>
 
-char* concat(const char *s1, const char *s2)
+char *concat(const char *s1, const char *s2)
 {
-    const size_t len1 = strlen(s1);
-    const size_t len2 = strlen(s2);
-    char *result = malloc(len1 + len2 + 1); // +1 for the null-terminator
-    // in real code you would check for errors in malloc here
-    memcpy(result, s1, len1);
-    memcpy(result + len1, s2, len2 + 1); // +1 to copy the null-terminator
-    return result;
+  const size_t len1 = strlen(s1);
+  const size_t len2 = strlen(s2);
+  char *result = malloc(len1 + len2 + 1); // +1 for the null-terminator
+
+  memcpy(result, s1, len1);
+  memcpy(result + len1, s2, len2 + 1); // +1 to copy the null-terminator
+  return result;
 }
 
 CAMLprim value
 read_png_file_to_tuple(value file)
 {
   CAMLparam1(file);
-  CAMLlocal3(res, row_bytes, ba);
+  CAMLlocal2(res, ba);
 
   int width, height;
   png_byte color_type;
@@ -81,12 +81,11 @@ read_png_file_to_tuple(value file)
 
   png_read_update_info(png, info);
 
-  row_bytes = png_get_rowbytes(png, info);
   row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);
 
   for (int y = 0; y < height; y++)
   {
-    row_pointers[y] = (png_byte *)malloc(row_bytes);
+    row_pointers[y] = (png_byte *)malloc(png_get_rowbytes(png,info));
   }
 
   png_read_image(png, row_pointers);
@@ -102,6 +101,23 @@ read_png_file_to_tuple(value file)
   Store_field(res, 2, row_pointers);
 
   CAMLreturn(res);
+}
+
+CAMLprim value
+create_empty_img(value height_val, value width_val)
+{
+  CAMLparam2(height_val, width_val);
+  int width = Int_val(width_val);
+  int height = Int_val(height_val);
+  
+  png_bytep *row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);;
+
+  for (int y = 0; y < height; y++)
+  {
+    row_pointers[y] = (png_byte *)malloc(width * 4); // we always use RGBA
+  }
+
+  CAMLreturn(row_pointers);
 }
 
 CAMLprim value

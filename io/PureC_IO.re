@@ -28,4 +28,11 @@ module IO: Odiff.ImageIO.ImageIO = {
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
     ReadPng.free_row_pointers(img.image, img.height);
   };
+
+  let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
+    {
+      ...img,
+      image: ReadPng.create_empty_img(img.height, img.width)
+    }
+  };
 };
