@@ -30,7 +30,7 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ Supports comparison of images with different layouts
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference
-- ✅ Requires only [libpng](http://www.libpng.org/pub/png/libpng.html) which is a part of most unix system by default
+- ✅ No dependencies for `.png` comparison. 
 
 ### Coming in the nearest future:
 
@@ -81,7 +81,7 @@ NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 ```ts
 type ODiffOptions = {
   /** Output full diff image. */
-  diffImage: boolean;
+  outputDiffMask: boolean;
   /** Do not compare images and produce output if images layout is different. */
   failOnLayoutDiff: boolean;
   /** Color difference threshold (from 0 to 1). Less more precise. */
@@ -104,7 +104,7 @@ Compare option will return `{ match: true }` if images are identical. Otherwise 
 
 ## Installation
 
-> ⛔️ **for windows users** ⛔️ It is required to install http://www.libpng.org/pub/png/libpng.html manually. But there is a great chance that it was already installed by some other program.
+We provide prebuilt binaries for most of the used platforms, there are a few ways to install them: 
 
 ### Cross-platform
 
@@ -124,22 +124,13 @@ odiff --help
 
 ### lib* dependencies
 
-Make sure that this library depends on the system `lib{png,jpg,gif}` libraries to encode/decode images. They are optional, so if you are running comparison of only `.png` files – only `libpng` is required. 
+Make sure if you want to compare **other** than `.png` images it is required to install the proper C library for each format. For `.jpg` – [libjpg](http://libjpeg.sourceforge.net/), for `.tiff` –[libtiff](http://www.libtiff.org/), for `.xpm` - libxpm. 
 
-Make sure that appropriate dependencies are installed on your system. Especially when you are running odiff on CI or in Docker.
-
-#### Ubuntu
-
-For Ubuntu 18.04+ [there is no lib* deps preinstalled](https://www.linuxuprising.com/2018/05/fix-libpng12-0-missing-in-ubuntu-1804.html) so it will be required to run the docker.
-
-```
-apt-get install -y libpng12-0
-```
-
-
+`.png` images works out of the box.
+ 
 ### MacOS
 
-> ⛔️ Doesn't work. Waiting for brew approve ⛔️ 
+> ⛔️ Doesn't work. Waiting for brew approve ⛔️
 
 ```
 brew install odiff
@@ -167,23 +158,23 @@ Performance matters. At least for sort of tasks like visual regression. For exam
 3s * 25000 / 3600 = 20,83333 hours
 ```
 
-Here is `odiff` performance comparison with other popular visual difference solutions. We are going to compare some real-world use cases. 
+Here is `odiff` performance comparison with other popular visual difference solutions. We are going to compare some real-world use cases.
 
 Lets compare 2 screenshots of full-size [https://cypress.io](cypress.io) page:
 
 | Command                                                                                    |      Mean [s] | Min [s] | Max [s] |    Relative |
 | :----------------------------------------------------------------------------------------- | ------------: | ------: | ------: | ----------: |
-| `pixelmatch www.cypress.io-1.png www.cypress.io.png www.cypress-diff.png`                  | 7.712 ± 0.069 |   7.664 |   7.896 | 1.82 ± 0.03 |
-| ImageMagick `compare www.cypress.io-1.png www.cypress.io.png -compose src diff-magick.png` | 8.881 ± 0.121 |   8.692 |   9.066 | 2.09 ± 0.04 |
-| `odiff www.cypress.io-1.png www.cypress.io.png www.cypress-diff.png`                       | 4.247 ± 0.053 |   4.178 |   4.344 |        1.00 |
+| `pixelmatch www.cypress.io-1.png www.cypress.io.png www.cypress-diff.png`                  | 7.712 ± 0.069 |   7.664 |   7.896 | 6.67 ± 0.03 |
+| ImageMagick `compare www.cypress.io-1.png www.cypress.io.png -compose src diff-magick.png` | 8.881 ± 0.121 |   8.692 |   9.066 | 7.65 ± 0.04 |
+| `odiff www.cypress.io-1.png www.cypress.io.png www.cypress-diff.png`                       | 1.168 ± 0.008 |   1.157 |   1.185 |        1.00 |
 
-Wow. Odiff is mostly 2 times faster than imagemagick and pixelmatch. And this will be even clearer if image will become larger. Lets compare a [4k image](images/water-4k.png) to find a difference with [another 4k image](images/water-4k-2.png):
+Wow. Odiff is mostly 2 times faster than imagemagick and pixelmatch. And this will be even clearer if image will become larger. Lets compare an [8k image](images/water-4k.png) to find a difference with [another 8k image](images/water-4k-2.png):
 
 | Command                                                                       |       Mean [s] | Min [s] | Max [s] |    Relative |
 | :---------------------------------------------------------------------------- | -------------: | ------: | ------: | ----------: |
-| `ODiffBin water-4k.png water-4k-2.png water-diff.png`                         |  4.873 ± 0.090 |   4.814 |   5.105 |        1.00 |
-| `pixelmatch water-4k.png water-4k-2.png water-diff.png`                       | 10.614 ± 0.162 |  10.398 |  10.910 | 2.18 ± 0.05 |
-| Imagemagick `compare water-4k.png water-4k-2.png -compose src water-diff.png` |  9.326 ± 0.436 |   8.819 |  10.394 | 1.91 ± 0.10 |
+| `pixelmatch water-4k.png water-4k-2.png water-diff.png`                       | 10.614 ± 0.162 |  10.398 |  10.910 | 5.50 ± 0.05 |
+| Imagemagick `compare water-4k.png water-4k-2.png -compose src water-diff.png` |  9.326 ± 0.436 |   8.819 |  10.394 | 5.24 ± 0.10 |
+| `odiff water-4k.png water-4k-2.png water-diff.png`                            |  1.951 ± 0.014 |   1.936 |   1.981 |        1.00 |
 
 Yes it is significant improvement. And the produced difference will be the same for all 3 commands.
 
