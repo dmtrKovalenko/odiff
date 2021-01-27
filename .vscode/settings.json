@@ -1,5 +1,9 @@
 {
   "cSpell.words": [
     "Odiff"
-  ]
+  ],
+  "ocaml.sandbox": {
+    "kind": "esy",
+    "root": "${workspaceFolder:odiff}"
+  }
 }
