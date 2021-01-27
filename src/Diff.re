@@ -1,84 +1,76 @@
-let redPixel = (
-  255 |> char_of_int,
-  0 |> char_of_int,
-  0 |> char_of_int,
-  255 |> char_of_int,
-);
-
-let transparentPixel: Rgba32.elt = {
-  color: {
-    r: 0,
-    g: 0,
-    b: 0,
-  },
-  alpha: 0,
-};
+let redPixel = (255, 0, 0, 255);
 
 let maxYIQPossibleDelta = 35215.;
 
-type diffVariant =
+type diffVariant('a) =
   | Layout
-  | Pixel((Rgba32.t, int));
+  | Pixel(('a, int));
 
-let compare =
-    (base: Rgba32.t, comp: Rgba32.t, ~threshold=0.1, ~diffImage=false, ()) => {
-  let diffCount = ref(0);
+module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
+  let compare =
+      (
+        base: ImageIO.img(IO1.t),
+        comp: ImageIO.img(IO2.t),
+        ~outputDiffMask=false,
+        ~threshold=0.1,
+        (),
+      ) => {
+    let diffCount = ref(0);
+    let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
+    let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
-  let diff =
-    diffImage
-      ? Rgba32.copy(base)
-      : Rgba32.make(base.width, base.height, transparentPixel);
+    let countDifference = (x, y) => {
+      diffCount := diffCount^ + 1;
+      diffOutput |> IO1.setImgColor(x, y, redPixel);
+    };
 
-  let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
-
-  let countDifference = (x, y) => {
-    diffCount := diffCount^ + 1;
-    diff |> ImageIO.setImgColor(x, y, redPixel);
-  };
-
-  for (x in 0 to base.width - 1) {
     for (y in 0 to base.height - 1) {
-      if (x >= comp.width || y >= comp.height) {
-        let a = ImageIO.readImgAlpha(x, y, base);
+      let row = IO1.readRow(base, y);
+      let row2 = IO2.readRow(comp, y);
 
-        if (a != 0) {
-          countDifference(x, y);
-        };
-      } else {
-        let (r, g, b, a) = ImageIO.readImgColor(x, y, base);
-        let (r1, g1, b1, a1) = ImageIO.readImgColor(x, y, comp);
-
-        if (r != r1 || g != g1 || b != b1 || a != a1) {
-          let delta =
-            ColorDelta.calculatePixelColorDelta(
-              (r, g, b, a),
-              (r1, g1, b1, a1),
-            );
-
-          if (delta > maxDelta) {
+      for (x in 0 to base.width - 1) {
+        if (x >= comp.width || y >= comp.height) {
+          let (_r, _g, _b, a) = IO1.readImgColor(x, row, base);
+          if (a != 0) {
             countDifference(x, y);
+          };
+        } else {
+          let (r, g, b, a) = IO1.readImgColor(x, row, base);
+          let (r1, g1, b1, a1) = IO2.readImgColor(x, row2, comp);
+
+          if (r != r1 || g != g1 || b != b1 || a != a1) {
+            let delta =
+              ColorDelta.calculatePixelColorDelta(
+                (r, g, b, a),
+                (r1, g1, b1, a1),
+              );
+
+            if (delta > maxDelta) {
+              countDifference(x, y);
+            };
           };
         };
       };
     };
+
+    (diffOutput, diffCount^);
   };
 
-  (diff, diffCount^);
+  let diff =
+      (
+        base: ImageIO.img(IO1.t),
+        comp: ImageIO.img(IO2.t),
+        ~outputDiffMask,
+        ~threshold=0.1,
+        ~failOnLayoutChange=true,
+        (),
+      ) =>
+    if (failOnLayoutChange == true
+        && base.width != comp.width
+        && base.height != comp.height) {
+      Layout;
+    } else {
+      let diffResult = compare(base, comp, ~threshold, ~outputDiffMask, ());
+      Pixel(diffResult);
+    };
 };
-
-let diff =
-    (
-      base: Rgba32.t,
-      comp: Rgba32.t,
-      ~threshold=0.1,
-      ~diffImage=false,
-      ~failOnLayoutChange=true,
-      (),
-    ) =>
-  if (failOnLayoutChange == true
-      && base.width != comp.width
-      && base.height != comp.height) {
-    Layout;
-  } else {
-    Pixel(compare(base, comp, ~threshold, ~diffImage, ()));
-  };

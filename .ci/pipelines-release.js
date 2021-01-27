@@ -37,7 +37,9 @@ const packageJson = JSON.stringify(
     scripts: {
       "postinstall": "node ./postinstall.js"
     },
-    bin: bins,
+    "bin": {
+      "odiff": "bin/odiff"
+    }
   },
   null,
   2
@@ -93,7 +95,7 @@ ECHO Binary was not linked. You need to have postinstall enabled. Please rerun '
 
   Object.keys(bins).forEach((name) => {
     if (bins[name]) {
-      const binPath = path.join(__dirname, "..", "_release", bins[name]);
+      const binPath = path.join(__dirname, "..", "_release", "bin", name);
       fs.writeFileSync(binPath, placeholderFile);
       fs.chmodSync(binPath, 0777);
     } else {

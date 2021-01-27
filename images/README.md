@@ -6,9 +6,9 @@ Run the benchmark with any difference tool you want. This guide shows how to run
 
 Make sure you installed `odiff`, `pixelmatch` and `ImageMagick` (at least for this guide)
 
-## Install the benchmark took
+## Install the benchmark tool
 
-We are using [hyperfine](https://github.com/sharkdp/hyperfine) to run performance tests. Follow the instructions on their [github](https://github.com/sharkdp/hyperfine). On MacOS you can do:
+We are using [hyperfine](https://github.com/sharkdp/hyperfine) to run performance tests. Follow the installation instructions on their [github](https://github.com/sharkdp/hyperfine). On MacOS you can do:
 
 ```
 brew install hyperfine

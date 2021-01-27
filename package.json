@@ -1,20 +1,14 @@
 {
   "name": "odiff",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "The fastest image difference tool.",
   "license": "MIT",
   "esy": {
     "build": "dune build -p #{self.name}",
-    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
-    "release": {
-      "rewritePrefix": true,
-      "bin": {
-        "odiff": "ODiffBin"
-      }
-    },
-    "buildEnv": {
-      "ODOC_SYNTAX": "re"
-    }
+    "buildDev":
+      "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "release": { "rewritePrefix": true, "bin": { "odiff": "ODiffBin" } },
+    "buildEnv": { "ODOC_SYNTAX": "re" }
   },
   "scripts": {
     "run": "esy x ODiffBin",
@@ -27,16 +21,19 @@
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
     "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
-    "@opam/dune": ">=2.6",
+    "@opam/dune": "2.7.1",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
+    "esy-libpng":
+    "dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
     "@opam/merlin": "*",
-    "refmterr": "*",
-    "@opam/odoc": "*"
+    "@opam/ocaml-lsp-server": "1.4.0",
+    "@opam/odoc": "*",
+    "refmterr": "*"
   },
   "repository": {
     "type": "git",

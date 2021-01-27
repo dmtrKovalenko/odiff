@@ -3,4 +3,4 @@
  (flags
   (-w -40 -w +26))
  (public_name odiff)
- (libraries camlimages.jpeg camlimages.png))
+ )

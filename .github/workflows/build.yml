@@ -1,20 +1,21 @@
 name: Build
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/setup-node@v1.4.3
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
-      - uses: actions/checkout@v2.3.2
+          node-version: '13'
+      - uses: actions/checkout@v2.3.2 
+
       - name: Install esy
-        run: npm install -g esy
+        run: npm install -g @esy-nightly/esy
 
       - name: Try to restore install cache
         uses: actions/cache@v2.1.1
@@ -40,7 +41,7 @@ jobs:
         with:
           path: ${{ steps.print_esy_cache.outputs.esy_cache }}
           key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
-          restore-keys: build-odiff-${{ matrix.os }}-
+          restore-keys: build-odiff-${{ matrix.os }}
 
       # Here we use a low-level command. In real situation you don't have to
       # but it is useful in CI as it split the log in GitHub UI.
@@ -49,6 +50,7 @@ jobs:
       # We also use --release flag to build less.
       # This allow us to spot syntax/type error more quickly.
       - name: Build release dependencies
+    
         if: steps.deps-cache.outputs.cache-hit != 'true'
         run: esy build-dependencies --release
 
@@ -72,7 +74,6 @@ jobs:
 
       - name: Test
         run: esy test
-        if: matrix.os != 'windows-latest'
 
       - uses: actions/upload-artifact@v2
         if: failure()

@@ -5,7 +5,7 @@
    (ocamlopt_flags -linkall -g)
    ; you will want to depend on the library you are testing as well, however for
    ; the purposes of this example we are only depending on the test runner itself
-   (libraries rely.lib odiff)
+   (libraries rely.lib odiff ODiffIO)
    (modules (:standard \ RunTests))
 )
 (executable

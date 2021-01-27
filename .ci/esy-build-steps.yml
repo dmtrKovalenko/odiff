@@ -10,8 +10,7 @@ steps:
     displayName: "esy build --release"
   - template: utils/create-docs.yml
   - script: "esy test"
-    displayName: "Test command"
-    condition: ne(variables['AGENT.OS'], 'Windows_NT')
+    displayName: "Run tests"
   - task: PublishBuildArtifacts@1
     displayName: "Publish Artifact: Tests"
     condition: failed()

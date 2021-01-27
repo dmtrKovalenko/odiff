@@ -1,7 +1,6 @@
 // @ts-check
 const path = require("path");
 const { execFile } = require("child_process");
-const { Console } = require("console");
 
 function optionsToArgs(options) {
   if (!options) {
@@ -10,7 +9,7 @@ function optionsToArgs(options) {
 
   let argArray = [];
 
-  const setValueArg = (name, value) => {
+  const setArgWithValue = (name, value) => {
     argArray.push(`--${name}`);
     argArray.push(value.toString());
   };
@@ -21,19 +20,24 @@ function optionsToArgs(options) {
     }
   };
 
-  Object.entries(options).forEach(([option, value]) => {
+  Object.entries(options).forEach((optionEntry) => {
+    /** 
+     * @type {[keyof import('./odiff').ODiffOptions, unknown]} 
+     * @ts-expect-error */
+    const [option, value] = optionEntry
+
     switch (option) {
       case "failOnLayoutDiff":
         setFlag("fail-on-layout", value);
         break;
 
-      case "diffImage":
+      case "outputDiffMask":
         setFlag("diff-image", value);
         break;
 
       case "threshold":
-        setValueArg("threshold", value);
-        argArray;
+        setArgWithValue("threshold", value);
+        break;
     }
   });
 
@@ -48,7 +52,7 @@ async function compare(basePath, comparePath, diffOutput, options) {
     let producedStdout, producedStdError;
 
     execFile(
-      path.join(__dirname, "bin", "ODiffBin"),
+      path.join(__dirname, "bin", "odiff"),
       [basePath, comparePath, diffOutput, ...optionsToArgs(options)],
       (_, stdout, stderr) => {
         producedStdout = stdout;

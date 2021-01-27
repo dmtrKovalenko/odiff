@@ -1,6 +1,6 @@
-type ODiffOptions = {
+export type ODiffOptions = {
   /** Output full diff image. */
-  diffImage: boolean;
+  outputDiffMask: boolean;
   /** Do not compare images and produce output if images layout is different. */
   failOnLayoutDiff: boolean;
   /** Color difference threshold (from 0 to 1). Less more precise. */
