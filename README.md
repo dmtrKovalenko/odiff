@@ -80,7 +80,7 @@ NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
 ```ts
 type ODiffOptions = {
-  /** Output full diff image. */
+  /** Output only changed pixels over transparent background. */
   outputDiffMask: boolean;
   /** Do not compare images and produce output if images layout is different. */
   failOnLayoutDiff: boolean;
