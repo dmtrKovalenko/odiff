@@ -32,7 +32,7 @@ function optionsToArgs(options) {
         break;
 
       case "outputDiffMask":
-        setFlag("diff-image", value);
+        setFlag("diff-mask", value);
         break;
 
       case "threshold":
