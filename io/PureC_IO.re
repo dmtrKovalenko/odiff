@@ -11,8 +11,8 @@ module IO: Odiff.ImageIO.ImageIO = {
     (row.{x * 4}, row.{x * 4 + 1}, row.{x * 4 + 2}, row.{x * 4 + 3});
   };
 
-  let setImgColor = (x, y, _pixel, img: Odiff.ImageIO.img(t)) => {
-    ReadPng.set_pixel_data(img.image, x, y);
+  let setImgColor = (x, y, pixel, img: Odiff.ImageIO.img(t)) => {
+    ReadPng.set_pixel_data(img.image, x, y, pixel);
   };
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
@@ -30,9 +30,6 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
-    {
-      ...img,
-      image: ReadPng.create_empty_img(img.height, img.width)
-    }
+    {...img, image: ReadPng.create_empty_img(img.height, img.width)};
   };
 };
