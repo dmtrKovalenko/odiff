@@ -33,7 +33,38 @@ describe("Png comparing", ({test, _}) => {
 
     if (diffOfDiffPixels > 0) {
       PureC_IO.IO.saveImage(diffOutput, "test/test-images/diff-output.png");
-      PureC_IO.IO.saveImage(diffMaskOfDiff, "test/test-images/diff-of-diff.png");
+      PureC_IO.IO.saveImage(
+        diffMaskOfDiff,
+        "test/test-images/diff-of-diff.png",
+      );
+    };
+
+    expect.int(diffOfDiffPixels).toBe(0);
+  });
+
+  test(
+    "creates the right diff output image with custom diff color",
+    ({expect, _}) => {
+    let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
+    let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
+
+    let (diffOutput, _) =
+      Diff.compare(img1, img2, ~diffPixel=(0, 255, 0), ());
+
+    let originalDiff =
+      PureC_IO.IO.loadImage("test/test-images/orange_diff_green.png");
+    let (diffMaskOfDiff, diffOfDiffPixels) =
+      Diff.compare(originalDiff, diffOutput, ());
+
+    if (diffOfDiffPixels > 0) {
+      PureC_IO.IO.saveImage(
+        diffOutput,
+        "test/test-images/diff-output-green.png",
+      );
+      PureC_IO.IO.saveImage(
+        diffMaskOfDiff,
+        "test/test-images/diff-of-diff-green.png",
+      );
     };
 
     expect.int(diffOfDiffPixels).toBe(0);

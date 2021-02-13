@@ -135,9 +135,9 @@ read_row(png_bytep *row_pointers, value y_val, value img_width_val)
 }
 
 CAMLprim value
-set_pixel_data(png_bytep *row_pointers, value x_val, value y_val)
+set_pixel_data(png_bytep *row_pointers, value x_val, value y_val, value pixel_val)
 {
-  CAMLparam2(x_val, y_val);
+  CAMLparam3(x_val, y_val, pixel_val);
 
   int x = Int_val(x_val);
   int y = Int_val(y_val);
@@ -145,9 +145,9 @@ set_pixel_data(png_bytep *row_pointers, value x_val, value y_val)
   png_bytep row = row_pointers[y];
   png_bytep px = &(row[x * 4]);
 
-  px[0] = 255;
-  px[1] = 0;
-  px[2] = 0;
+  px[0] = Int_val(Field(pixel_val, 0));
+  px[1] = Int_val(Field(pixel_val, 1));
+  px[2] = Int_val(Field(pixel_val, 2));
   px[3] = 255;
 
   CAMLreturn(Val_unit);

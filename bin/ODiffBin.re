@@ -17,6 +17,7 @@ let main =
       threshold,
       outputDiffMask,
       failOnLayoutChange,
+      diffColorHex,
     ) => {
   open! Odiff.ImageIO;
 
@@ -36,6 +37,13 @@ let main =
         ~outputDiffMask,
         ~threshold,
         ~failOnLayoutChange,
+        ~diffPixel=
+          Color.ofHexString(diffColorHex)
+          |> (
+            fun
+            | Some(col) => col
+            | None => (255, 0, 0) // red 
+          ),
         (),
       )
     ) {
@@ -76,9 +84,9 @@ let main =
   IO2.freeImage(img2);
 
   switch (diffOutput) {
-    | Some(output) when outputDiffMask => IO1.freeImage(output)
-    | _ => ()
-  }
+  | Some(output) when outputDiffMask => IO1.freeImage(output)
+  | _ => ()
+  };
 
   exit(exitCode);
 };
@@ -123,8 +131,7 @@ let diffMask = {
     & info(
         ["dm", "diff-mask"],
         ~docv="DIFF_IMAGE",
-        ~doc=
-          "Output only changed pixel over transparent background.",
+        ~doc="Output only changed pixel over transparent background.",
       )
   );
 };
@@ -138,6 +145,16 @@ let failOnLayout =
         ~docv="FAIL_ON_LAYOUT",
         ~doc=
           "Do not compare images and produce output if images layout is different.",
+      )
+  );
+
+let diffColor =
+  Arg.(
+    value
+    & opt(string, "")
+    & info(
+        ["diff-color"],
+        ~doc="Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9).",
       )
   );
 
@@ -157,6 +174,7 @@ let cmd = {
       $ threshold
       $ diffMask
       $ failOnLayout
+      $ diffColor
     ),
     Term.info(
       "odiff",

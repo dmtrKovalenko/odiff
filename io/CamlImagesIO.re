@@ -33,13 +33,13 @@ module IO: ImageIO.ImageIO = {
     );
   };
 
-  let setImgColor = (x, y, (r, g, b, a), img: ImageIO.img(t)) => {
+  let setImgColor = (x, y, (r, g, b), img: ImageIO.img(t)) => {
     let (bytes, position) = Rgba32.unsafe_access(img.image, x, y);
-
+    
     Bytes.unsafe_set(bytes, position, r |> char_of_int);
     Bytes.unsafe_set(bytes, position + 1, g |> char_of_int);
     Bytes.unsafe_set(bytes, position + 2, b |> char_of_int);
-    Bytes.unsafe_set(bytes, position + 3, a |> char_of_int);
+    Bytes.unsafe_set(bytes, position + 3, 255 |> char_of_int);
   };
 
   let freeImage = _ => ();

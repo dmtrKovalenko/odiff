@@ -10,8 +10,7 @@ function optionsToArgs(options) {
   let argArray = [];
 
   const setArgWithValue = (name, value) => {
-    argArray.push(`--${name}`);
-    argArray.push(value.toString());
+    argArray.push(`--${name}=${value.toString()}`);
   };
 
   const setFlag = (name, value) => {
@@ -21,10 +20,10 @@ function optionsToArgs(options) {
   };
 
   Object.entries(options).forEach((optionEntry) => {
-    /** 
-     * @type {[keyof import('./odiff').ODiffOptions, unknown]} 
+    /**
+     * @type {[keyof import('./odiff').ODiffOptions, unknown]}
      * @ts-expect-error */
-    const [option, value] = optionEntry
+    const [option, value] = optionEntry;
 
     switch (option) {
       case "failOnLayoutDiff":
@@ -37,6 +36,10 @@ function optionsToArgs(options) {
 
       case "threshold":
         setArgWithValue("threshold", value);
+        break;
+
+      case "diffColor":
+        setArgWithValue("diff-color", value);
         break;
     }
   });

@@ -1,4 +1,6 @@
 export type ODiffOptions = {
+  /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
+  diffColor: boolean;
   /** Output full diff image. */
   outputDiffMask: boolean;
   /** Do not compare images and produce output if images layout is different. */
