@@ -1,5 +1,5 @@
-open Odiff.Diff;
 open Odiff.ImageIO;
+open Odiff.Diff;
 
 let getIOModule = filename =>
   Filename.extension(filename)
@@ -100,4 +100,3 @@ let main =
 
   exit(exitCode);
 };
-  
