@@ -36,7 +36,7 @@
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
-    "esy-libpng": "dmtrKovalenko/esy-libpng-1.6.38#69475a4fa25ef3fbbd4667f187bcf8120d96ad16",
+    "esy-libpng": "dmtrKovalenko/esy-libpng#4895961b8e92ff0ebba78df6ccb338ecd2272003",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
@@ -55,3 +55,4 @@
     "url": "https://dmtrkovalenko.dev"
   }
 }
+
