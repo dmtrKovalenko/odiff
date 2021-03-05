@@ -5,10 +5,21 @@
   "license": "MIT",
   "esy": {
     "build": "dune build -p #{self.name}",
-    "buildDev":
-      "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
-    "release": { "rewritePrefix": true, "bin": { "odiff": "ODiffBin" } },
-    "buildEnv": { "ODOC_SYNTAX": "re" }
+    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "release": {
+      "rewritePrefix": true,
+      "bin": {
+        "odiff": "ODiffBin"
+      },
+      "includePackages": [
+        "odiff",
+        "esy-libpng",
+        "esy-zlib"
+      ]
+    },
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
+    }
   },
   "scripts": {
     "run": "esy x ODiffBin",
@@ -25,8 +36,7 @@
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
-    "esy-libpng":
-    "dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
+    "esy-libpng": "dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {

@@ -1,5 +1,4 @@
-let redPixel = (255, 0, 0)
-
+let redPixel = (255, 0, 0);
 let maxYIQPossibleDelta = 35215.;
 
 type diffVariant('a) =
@@ -12,7 +11,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         base: ImageIO.img(IO1.t),
         comp: ImageIO.img(IO2.t),
         ~outputDiffMask=false,
-        ~diffPixel:(int, int, int)=redPixel,
+        ~diffPixel: (int, int, int)=redPixel,
         ~threshold=0.1,
         (),
       ) => {
