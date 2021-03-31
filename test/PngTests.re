@@ -8,27 +8,30 @@ describe("Png comparing", ({test, _}) => {
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
-    let (_, diffPixels) = Diff.compare(img1, img2, ());
+    let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
     expect.int(diffPixels).toBe(1430);
+    expect.float(diffPercentage).toBeCloseTo(1.20);
   });
 
   test("uses provided threshold", ({expect, _}) => {
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
-    let (_, diffPixels) = Diff.compare(img1, img2, ~threshold=0.5, ());
+    let (_, diffPixels, diffPercentage) =
+      Diff.compare(img1, img2, ~threshold=0.5, ());
     expect.int(diffPixels).toBe(222);
+    expect.float(diffPercentage).toBeCloseTo(0.19);
   });
 
   test("creates the right diff output image", ({expect, _}) => {
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
-    let (diffOutput, _) = Diff.compare(img1, img2, ());
+    let (diffOutput, _, _) = Diff.compare(img1, img2, ());
 
     let originalDiff =
       PureC_IO.IO.loadImage("test/test-images/orange_diff.png");
-    let (diffMaskOfDiff, diffOfDiffPixels) =
+    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
       Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {
@@ -40,6 +43,7 @@ describe("Png comparing", ({test, _}) => {
     };
 
     expect.int(diffOfDiffPixels).toBe(0);
+    expect.float(diffOfDiffPercentage).toBeCloseTo(0.0);
   });
 
   test(
@@ -48,12 +52,12 @@ describe("Png comparing", ({test, _}) => {
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
-    let (diffOutput, _) =
+    let (diffOutput, _, _) =
       Diff.compare(img1, img2, ~diffPixel=(0, 255, 0), ());
 
     let originalDiff =
       PureC_IO.IO.loadImage("test/test-images/orange_diff_green.png");
-    let (diffMaskOfDiff, diffOfDiffPixels) =
+    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
       Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {
@@ -68,5 +72,6 @@ describe("Png comparing", ({test, _}) => {
     };
 
     expect.int(diffOfDiffPixels).toBe(0);
+    expect.float(diffOfDiffPercentage).toBeCloseTo(0.0);
   });
 });
