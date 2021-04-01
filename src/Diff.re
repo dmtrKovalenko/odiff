@@ -3,7 +3,7 @@ let maxYIQPossibleDelta = 35215.;
 
 type diffVariant('a) =
   | Layout
-  | Pixel(('a, int));
+  | Pixel(('a, int, float));
 
 module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
   let compare =
@@ -53,7 +53,12 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       };
     };
 
-    (diffOutput, diffCount^);
+    let diffPercentage =
+      100.0
+      *. Float.of_int(diffCount^)
+      /. (Float.of_int(base.width) *. Float.of_int(base.height));
+
+    (diffOutput, diffCount^, diffPercentage);
   };
 
   let diff =

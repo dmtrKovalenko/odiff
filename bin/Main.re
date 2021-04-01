@@ -61,7 +61,7 @@ let main =
           </Pastel>,
       }
 
-    | Pixel((diffOutput, diffCount)) when diffCount == 0 => {
+    | Pixel((diffOutput, diffCount, _diffPercentage)) when diffCount == 0 => {
         exitCode: 0,
         diff: Some(diffOutput),
         message:
@@ -72,7 +72,7 @@ let main =
           </Pastel>,
       }
 
-    | Pixel((diffOutput, diffCount)) =>
+    | Pixel((diffOutput, diffCount, diffPercentage)) =>
       IO1.saveImage(diffOutput, diffPath);
 
       {
@@ -83,7 +83,9 @@ let main =
             <Pastel color=Red bold=true> "Failure! " </Pastel>
             "Images are different.\n"
             "Different pixels: "
-            <Pastel color=Red bold=true> {Int.to_string(diffCount)} </Pastel>
+            <Pastel color=Red bold=true>
+              {Printf.sprintf("%i (%f%%)", diffCount, diffPercentage)}
+            </Pastel>
           </Pastel>,
       };
     };
