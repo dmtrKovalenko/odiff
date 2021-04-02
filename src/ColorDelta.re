@@ -36,3 +36,10 @@ let calculatePixelColorDelta = (_pixelA, _pixelB) => {
 
   0.5053 *. y *. y +. 0.299 *. i *. i +. 0.1957 *. q *. q;
 };
+
+let calculatePixelBrightnessDelta = (pixelA, pixelB) => {
+  let pixelA = pixelA |> blendSemiTransparentColor |> convertPixelToFloat;
+  let pixelB = pixelB |> blendSemiTransparentColor |> convertPixelToFloat;
+
+  rgb2y(pixelA) -. rgb2y(pixelB);
+};
