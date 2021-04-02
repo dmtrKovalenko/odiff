@@ -24,63 +24,35 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       diffOutput |> IO1.setImgColor(x, y, diffPixel);
     };
 
-    // With the anti-aliasing check, we are getting a 4 x 4 square of colors
-    // To not get all of them twice, we cache them in a Hashtable, to be able to look them up easily.
-    // TODO: We at most need to keep the current + two rows up + two rows down of colors.
-    let colorCacheBase = Array.make_matrix(base.width, base.height, None);
-    let rowCacheBase = Array.make(base.height, None);
-
-    let colorCacheComp = Array.make_matrix(comp.width, comp.height, None);
-    let rowCacheComp = Array.make(comp.height, None);
-
-    let getBaseRow = y =>
-      switch (rowCacheBase[y]) {
-      | Some(row) => row
-      | None =>
-        let row = IO1.readRow(base, y);
-        rowCacheBase[y] = Some(row);
-        row;
-      };
-
-    let getCompRow = y =>
-      switch (rowCacheComp[y]) {
-      | Some(row) => row
-      | None =>
-        let row = IO2.readRow(comp, y);
-        rowCacheComp[y] = Some(row);
-        row;
-      };
-
-    let getBaseColor = (x, y) =>
-      switch (colorCacheBase[x][y]) {
-      | Some(color) => color
-      | None =>
-        let row = getBaseRow(y);
-        let color = IO1.readImgColor(x, row, base);
-        colorCacheBase[x][y] = Some(color);
-        color;
-      };
-
-    let getCompColor = (x, y) =>
-      switch (colorCacheComp[x][y]) {
-      | Some(color) => color
-      | None =>
-        let row = getCompRow(y);
-        let color = IO2.readImgColor(x, row, comp);
-        colorCacheComp[x][y] = Some(color);
-        color;
-      };
-
     for (y in 0 to base.height - 1) {
+      let row = IO1.readRow(base, y);
+      let row2 = IO2.readRow(comp, y);
+
+      let getBaseColor = (x, rowToGet) => {
+        IO1.readImgColor(
+          x,
+          rowToGet == y ? row : IO1.readRow(base, rowToGet),
+          base,
+        );
+      };
+
+      let getCompColor = (x, rowToGet) => {
+        IO2.readImgColor(
+          x,
+          rowToGet == y ? row2 : IO2.readRow(comp, rowToGet),
+          comp,
+        );
+      };
+
       for (x in 0 to base.width - 1) {
         if (x >= comp.width || y >= comp.height) {
-          let (_r, _g, _b, a) = getBaseColor(x, y);
+          let (_r, _g, _b, a) = IO1.readImgColor(x, row, base);
           if (a != 0) {
             countDifference(x, y);
           };
         } else {
-          let baseColor = getBaseColor(x, y);
-          let compColor = getCompColor(x, y);
+          let baseColor = IO1.readImgColor(x, row, base);
+          let compColor = IO2.readImgColor(x, row2, comp);
 
           if (!Helpers.isSameColor(baseColor, compColor)) {
             let delta =
