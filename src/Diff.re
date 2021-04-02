@@ -24,29 +24,90 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       diffOutput |> IO1.setImgColor(x, y, diffPixel);
     };
 
-    for (y in 0 to base.height - 1) {
-      let row = IO1.readRow(base, y);
-      let row2 = IO2.readRow(comp, y);
+    // With the anti-aliasing check, we are getting a 4 x 4 square of colors
+    // To not get all of them twice, we cache them in a Hashtable, to be able to look them up easily.
+    // TODO: We at most need to keep the current + two rows up + two rows down of colors.
+    let colorCacheBase = Array.make_matrix(base.width, base.height, None);
+    let rowCacheBase = Array.make(base.height, None);
 
+    let colorCacheComp = Array.make_matrix(comp.width, comp.height, None);
+    let rowCacheComp = Array.make(comp.height, None);
+
+    let getBaseRow = y =>
+      switch (rowCacheBase[y]) {
+      | Some(row) => row
+      | None =>
+        let row = IO1.readRow(base, y);
+        rowCacheBase[y] = Some(row);
+        row;
+      };
+
+    let getCompRow = y =>
+      switch (rowCacheComp[y]) {
+      | Some(row) => row
+      | None =>
+        let row = IO2.readRow(comp, y);
+        rowCacheComp[y] = Some(row);
+        row;
+      };
+
+    let getBaseColor = (x, y) =>
+      switch (colorCacheBase[x][y]) {
+      | Some(color) => color
+      | None =>
+        let row = getBaseRow(y);
+        let color = IO1.readImgColor(x, row, base);
+        colorCacheBase[x][y] = Some(color);
+        color;
+      };
+
+    let getCompColor = (x, y) =>
+      switch (colorCacheComp[x][y]) {
+      | Some(color) => color
+      | None =>
+        let row = getCompRow(y);
+        let color = IO2.readImgColor(x, row, comp);
+        colorCacheComp[x][y] = Some(color);
+        color;
+      };
+
+    for (y in 0 to base.height - 1) {
       for (x in 0 to base.width - 1) {
         if (x >= comp.width || y >= comp.height) {
-          let (_r, _g, _b, a) = IO1.readImgColor(x, row, base);
+          let (_r, _g, _b, a) = getBaseColor(x, y);
           if (a != 0) {
             countDifference(x, y);
           };
         } else {
-          let (r, g, b, a) = IO1.readImgColor(x, row, base);
-          let (r1, g1, b1, a1) = IO2.readImgColor(x, row2, comp);
+          let baseColor = getBaseColor(x, y);
+          let compColor = getCompColor(x, y);
 
-          if (r != r1 || g != g1 || b != b1 || a != a1) {
+          if (!Helpers.isSameColor(baseColor, compColor)) {
             let delta =
-              ColorDelta.calculatePixelColorDelta(
-                (r, g, b, a),
-                (r1, g1, b1, a1),
-              );
+              ColorDelta.calculatePixelColorDelta(baseColor, compColor);
 
             if (delta > maxDelta) {
-              countDifference(x, y);
+              let isAntialiased =
+                Antialiasing.isAntialiased(
+                  ~x,
+                  ~y,
+                  ~width=base.width,
+                  ~height=base.height,
+                  ~readBaseColor=getBaseColor,
+                  ~readCompColor=getCompColor,
+                )
+                || Antialiasing.isAntialiased(
+                     ~x,
+                     ~y,
+                     ~width=comp.width,
+                     ~height=comp.height,
+                     ~readBaseColor=getCompColor,
+                     ~readCompColor=getBaseColor,
+                   );
+
+              if (!isAntialiased) {
+                countDifference(x, y);
+              };
             };
           };
         };
