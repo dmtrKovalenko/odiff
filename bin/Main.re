@@ -24,6 +24,7 @@ let main =
       outputDiffMask,
       failOnLayoutChange,
       diffColorHex,
+      antialiasing,
     ) => {
   module IO1 = (val getIOModule(img1Path));
   module IO2 = (val getIOModule(img2Path));
@@ -41,6 +42,7 @@ let main =
         ~outputDiffMask,
         ~threshold,
         ~failOnLayoutChange,
+        ~antialiasing,
         ~diffPixel=
           Color.ofHexString(diffColorHex)
           |> (

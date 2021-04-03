@@ -41,6 +41,10 @@ function optionsToArgs(options) {
       case "diffColor":
         setArgWithValue("diff-color", value);
         break;
+
+      case "antialiasing":
+        setArgWithValue("antialiasing", value);
+        break;
     }
   });
 

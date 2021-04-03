@@ -4,13 +4,13 @@ open ODiffIO;
 module Diff = Odiff.Diff.MakeDiff(PureC_IO.IO, PureC_IO.IO);
 
 describe("Png comparing", ({test, _}) => {
-  test("finds different between 2 images", ({expect, _}) => {
+  test("finds difference between 2 images", ({expect, _}) => {
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
     let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
-    expect.int(diffPixels).toBe(1091);
-    expect.float(diffPercentage).toBeCloseTo(0.91);
+    expect.int(diffPixels).toBe(1430);
+    expect.float(diffPercentage).toBeCloseTo(1.20);
   });
 
   test("uses provided threshold", ({expect, _}) => {
@@ -19,8 +19,8 @@ describe("Png comparing", ({test, _}) => {
 
     let (_, diffPixels, diffPercentage) =
       Diff.compare(img1, img2, ~threshold=0.5, ());
-    expect.int(diffPixels).toBe(131);
-    expect.float(diffPercentage).toBeCloseTo(0.11);
+    expect.int(diffPixels).toBe(222);
+    expect.float(diffPercentage).toBeCloseTo(0.19);
   });
 
   test("creates the right diff output image", ({expect, _}) => {
@@ -80,7 +80,7 @@ describe("Png comparing", ({test, _}) => {
     let img2 = PureC_IO.IO.loadImage("test/test-images/antialiasing-off.png");
 
     let (_, diffPixels, diffPercentage) =
-      Diff.compare(img1, img2, ~outputDiffMask=true, ());
+      Diff.compare(img1, img2, ~outputDiffMask=true, ~antialiasing=true, ());
 
     expect.int(diffPixels).toBe(38);
     expect.float(diffPercentage).toBeCloseTo(0.095);

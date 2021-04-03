@@ -10,6 +10,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       (
         base: ImageIO.img(IO1.t),
         comp: ImageIO.img(IO2.t),
+        ~antialiasing=false,
         ~outputDiffMask=false,
         ~diffPixel: (int, int, int)=redPixel,
         ~threshold=0.1,
@@ -59,22 +60,26 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
 
             if (delta > maxDelta) {
               let isAntialiased =
-                Antialiasing.isAntialiased(
-                  ~x,
-                  ~y,
-                  ~width=base.width,
-                  ~height=base.height,
-                  ~readBaseColor=getBaseColor,
-                  ~readCompColor=getCompColor,
-                )
-                || Antialiasing.isAntialiased(
-                     ~x,
-                     ~y,
-                     ~width=comp.width,
-                     ~height=comp.height,
-                     ~readBaseColor=getCompColor,
-                     ~readCompColor=getBaseColor,
-                   );
+                if (!antialiasing) {
+                  false;
+                } else {
+                  Antialiasing.isAntialiased(
+                    ~x,
+                    ~y,
+                    ~width=base.width,
+                    ~height=base.height,
+                    ~readBaseColor=getBaseColor,
+                    ~readCompColor=getCompColor,
+                  )
+                  || Antialiasing.isAntialiased(
+                       ~x,
+                       ~y,
+                       ~width=comp.width,
+                       ~height=comp.height,
+                       ~readBaseColor=getCompColor,
+                       ~readCompColor=getBaseColor,
+                     );
+                };
 
               if (!isAntialiased) {
                 countDifference(x, y);
@@ -105,6 +110,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         ~threshold=0.1,
         ~diffPixel=redPixel,
         ~failOnLayoutChange=true,
+        ~antialiasing=false,
         (),
       ) =>
     if (failOnLayoutChange == true
@@ -113,7 +119,15 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       Layout;
     } else {
       let diffResult =
-        compare(base, comp, ~threshold, ~diffPixel, ~outputDiffMask, ());
+        compare(
+          base,
+          comp,
+          ~threshold,
+          ~diffPixel,
+          ~outputDiffMask,
+          ~antialiasing,
+          (),
+        );
 
       Pixel(diffResult);
     };
