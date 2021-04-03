@@ -9,8 +9,8 @@ describe("Png comparing", ({test, _}) => {
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
     let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
-    expect.int(diffPixels).toBe(1430);
-    expect.float(diffPercentage).toBeCloseTo(1.20);
+    expect.int(diffPixels).toBe(1091);
+    expect.float(diffPercentage).toBeCloseTo(0.91);
   });
 
   test("uses provided threshold", ({expect, _}) => {
@@ -19,8 +19,8 @@ describe("Png comparing", ({test, _}) => {
 
     let (_, diffPixels, diffPercentage) =
       Diff.compare(img1, img2, ~threshold=0.5, ());
-    expect.int(diffPixels).toBe(222);
-    expect.float(diffPercentage).toBeCloseTo(0.19);
+    expect.int(diffPixels).toBe(131);
+    expect.float(diffPercentage).toBeCloseTo(0.11);
   });
 
   test("creates the right diff output image", ({expect, _}) => {
@@ -73,5 +73,30 @@ describe("Png comparing", ({test, _}) => {
 
     expect.int(diffOfDiffPixels).toBe(0);
     expect.float(diffOfDiffPercentage).toBeCloseTo(0.0);
+  });
+
+  test("does not count anti-aliased pixels as different", ({expect, _}) => {
+    let img1 = PureC_IO.IO.loadImage("test/test-images/antialiasing-on.png");
+    let img2 = PureC_IO.IO.loadImage("test/test-images/antialiasing-off.png");
+
+    let (_, diffPixels, diffPercentage) =
+      Diff.compare(img1, img2, ~outputDiffMask=true, ());
+
+    expect.int(diffPixels).toBe(38);
+    expect.float(diffPercentage).toBeCloseTo(0.095);
+  });
+
+  test("Diff of mask and no mask are equal", ({expect, _}) => {
+    let img1 = PureC_IO.IO.loadImage("test/test-images/antialiasing-on.png");
+    let img2 = PureC_IO.IO.loadImage("test/test-images/antialiasing-off.png");
+
+    let (_, diffPixels, diffPercentage) =
+      Diff.compare(img1, img2, ~outputDiffMask=false, ());
+
+    let (_, diffPixelsMask, diffPercentageMask) =
+      Diff.compare(img1, img2, ~outputDiffMask=true, ());
+
+    expect.int(diffPixels).toBe(diffPixelsMask);
+    expect.float(diffPercentage).toBeCloseTo(diffPercentageMask);
   });
 });
