@@ -7,7 +7,6 @@
     "build": "dune build -p #{self.name}",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
-      "rewritePrefix": true,
       "bin": {
         "odiff": "ODiffBin"
       },
