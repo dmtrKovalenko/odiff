@@ -27,12 +27,22 @@ let hasManySiblingsWithSameColor = (~x, ~y, ~width, ~height, ~readColor) => {
   zeroes^ >= 3;
 };
 
-let isAntialiased = (~x, ~y, ~width, ~height, ~readBaseColor, ~readCompColor) => {
+let isAntialiased =
+    (
+      ~x,
+      ~y,
+      ~baseWidth,
+      ~baseHeight,
+      ~readBaseColor,
+      ~compWidth,
+      ~compHeight,
+      ~readCompColor,
+    ) => {
   let x0 = max(x - 1, 0);
   let y0 = max(y - 1, 0);
 
-  let x1 = min(x + 1, width - 1);
-  let y1 = min(y + 1, height - 1);
+  let x1 = min(x + 1, baseWidth - 1);
+  let y1 = min(y + 1, baseHeight - 1);
 
   let minAdjacientDelta = ref(0.0);
   let maxAdjacientDelta = ref(0.0);
@@ -87,15 +97,15 @@ let isAntialiased = (~x, ~y, ~width, ~height, ~readBaseColor, ~readCompColor) =>
       hasManySiblingsWithSameColor(
         ~x=minX,
         ~y=minY,
-        ~width,
-        ~height,
+        ~width=baseWidth,
+        ~height=baseHeight,
         ~readColor=readBaseColor,
       )
       || hasManySiblingsWithSameColor(
            ~x=maxX,
            ~y=maxY,
-           ~width,
-           ~height,
+           ~width=baseWidth,
+           ~height=baseHeight,
            ~readColor=readBaseColor,
          )
     )
@@ -103,15 +113,15 @@ let isAntialiased = (~x, ~y, ~width, ~height, ~readBaseColor, ~readCompColor) =>
       hasManySiblingsWithSameColor(
         ~x=minX,
         ~y=minY,
-        ~width,
-        ~height,
+        ~width=compWidth,
+        ~height=compHeight,
         ~readColor=readCompColor,
       )
       || hasManySiblingsWithSameColor(
            ~x=maxX,
            ~y=maxY,
-           ~width,
-           ~height,
+           ~width=compWidth,
+           ~height=compHeight,
            ~readColor=readCompColor,
          )
     );
