@@ -66,17 +66,21 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
                   Antialiasing.isAntialiased(
                     ~x,
                     ~y,
-                    ~width=base.width,
-                    ~height=base.height,
+                    ~baseWidth=base.width,
+                    ~baseHeight=base.height,
                     ~readBaseColor=getBaseColor,
+                    ~compWidth=comp.width,
+                    ~compHeight=comp.height,
                     ~readCompColor=getCompColor,
                   )
                   || Antialiasing.isAntialiased(
                        ~x,
                        ~y,
-                       ~width=comp.width,
-                       ~height=comp.height,
+                       ~baseWidth=comp.width,
+                       ~baseHeight=comp.height,
                        ~readBaseColor=getCompColor,
+                       ~compWidth=base.width,
+                       ~compHeight=base.height,
                        ~readCompColor=getBaseColor,
                      );
                 };
