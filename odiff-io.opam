@@ -10,9 +10,9 @@ depends: [
   "dune"
   "reason"     {>= "3.6.0" & < "4.0.0"}
   "ocaml"      {>= "4.10.0" & < "4.11.0"}
-  "cmdliner"
+  "camlimages" {= "5.0.4"}
+  "conf-libpng"
   "odiff-core"
-  "odiff-io"
 ]
 build: [
   ["dune" "build" "-p" name "-j" jobs]
