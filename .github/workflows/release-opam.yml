@@ -1,0 +1,31 @@
+name: opam release
+
+on:
+  release:
+    types: [published]
+  # TODO: This is for testing purposes. Delete later
+  push:
+    branches:
+      - opam
+
+jobs:
+  opam-release:
+    name: Publish to opam registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup OCaml
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.11.1
+
+      - name: Install publish utils
+        run: |
+          opam install opam-publish
+
+      - name: publish odiff-core
+        run: |
+          opam publish --no-browser --dry-run odiff-core.opam
+
+      - name: publish odiff-io
+        run: |
+          opam publish --no-browser --dry-run odiff-io.opam
