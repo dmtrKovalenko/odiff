@@ -26,6 +26,9 @@ jobs:
       - name: Checkout Sources
         uses: actions/checkout@v2
 
+      - name: Fetch Tags
+        run: git fetch --prune --unshallow --tags
+
       - name: publish odiff-core
         run: |
           opam publish --no-browser --dry-run odiff-core.opam
