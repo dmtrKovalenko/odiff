@@ -3,11 +3,11 @@ const path = require("path");
 const { execFile } = require("child_process");
 
 function optionsToArgs(options) {
-  if (!options) {
-    return [];
-  }
+  let argArray = ["--parsable-stdout"];
 
-  let argArray = [];
+  if (!options) {
+    return argArray;
+  }
 
   const setArgWithValue = (name, value) => {
     argArray.push(`--${name}=${value.toString()}`);
@@ -47,6 +47,29 @@ function optionsToArgs(options) {
   return argArray;
 }
 
+/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number }>} */
+function parsePixelDiffStdout(stdout) {
+  const parts = stdout.split(";");
+  
+  if (parts.length === 2) {
+    const [diffCount, diffPercentage] = parts;
+
+    try {
+      return {
+        diffCount: parseInt(diffCount),
+        diffPercentage: parseFloat(diffPercentage),
+      };
+    } catch (e) {
+      console.warn(
+        "For some reason can not parse output from odiff internal process. Please make an issue https://github.com/dmtrKovalenko/odiff/issues/new with stacktrace",
+        e
+      );
+    }
+  }
+
+  return {};
+}
+
 const CMD_BIN_HELPER_MSG =
   "Usage: odiff [OPTION]... [BASE] [COMPARING] [DIFF]\nTry `odiff --help' for more information.\n";
 
@@ -54,9 +77,13 @@ async function compare(basePath, comparePath, diffOutput, options) {
   return new Promise((resolve, reject) => {
     let producedStdout, producedStdError;
 
+    const binaryPath = options.__binaryPath
+      ? options.__binaryPath
+      : path.join(__dirname, "bin", "odiff");
+
     execFile(
-      path.join(__dirname, "bin", "odiff"),
-      [basePath, comparePath, diffOutput, ...optionsToArgs(options)],
+      binaryPath,
+      [basePath, comparePath, diffOutput].concat(optionsToArgs(options)),
       (_, stdout, stderr) => {
         producedStdout = stdout;
         producedStdError = stderr;
@@ -70,7 +97,11 @@ async function compare(basePath, comparePath, diffOutput, options) {
           resolve({ match: false, reason: "layout-diff" });
           break;
         case 22:
-          resolve({ match: false, reason: "pixel-diff" });
+          resolve({
+            match: false,
+            reason: "pixel-diff",
+            ...parsePixelDiffStdout(producedStdout),
+          });
           break;
         case 124:
           reject(

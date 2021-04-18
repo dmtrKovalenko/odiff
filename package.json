@@ -5,24 +5,18 @@
   "license": "MIT",
   "esy": {
     "build": "dune build -p #{self.name}",
-    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "buildDev":
+      "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
-      "bin": {
-        "odiff": "ODiffBin"
-      },
-      "includePackages": [
-        "odiff",
-        "esy-libpng",
-        "esy-zlib"
-      ]
+      "bin": { "odiff": "ODiffBin" },
+      "includePackages": [ "odiff", "esy-libpng", "esy-zlib" ]
     },
-    "buildEnv": {
-      "ODOC_SYNTAX": "re"
-    }
+    "buildEnv": { "ODOC_SYNTAX": "re" }
   },
   "scripts": {
     "run": "esy x ODiffBin",
     "test": "esy x RunTests.exe",
+    "test-js": "esy ava",
     "format": "esy dune build @fmt --auto-promote",
     "doc": "esy dune build @doc",
     "post-release": "node .ci/pipelines-release.js"
@@ -35,7 +29,9 @@
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
-    "esy-libpng": "dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
+    "ava": "^3.15.0",
+    "esy-libpng":
+      "dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
