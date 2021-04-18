@@ -4,8 +4,8 @@
   "description": "The fastest image difference tool.",
   "license": "MIT",
   "esy": {
-    "build": "dune build -p #{self.name}",
-    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "build": "dune build --release --only-packages odiff,odiff-io,odiff-core",
+    "buildDev": "refmterr dune build --promote-install-files --root . --only-packages odiff,odiff-io,odiff-core",
     "release": {
       "bin": {
         "odiff": "ODiffBin"
@@ -32,7 +32,7 @@
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
     "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
-    "@opam/dune": "2.7.1",
+    "@opam/dune": "< 3.0.0",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
