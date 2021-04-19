@@ -31,6 +31,22 @@ test("Outputs correct parsed result when images different", async (t) => {
   t.is(diffPercentage, 2.85952484323);
 });
 
+test("Correctly parses cli arguments", async (t) => {
+  const { reason, diffCount, diffPercentage } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      threshold: 0.6,
+      __binaryPath: BINARY_PATH,
+    }
+  )
+
+  t.is(reason, 'pixel-diff')
+  t.is(diffCount, 50332);
+  t.is(diffPercentage, 1.31007003768);
+});
+
 test("Outputs correct parsed result when images different for cypress image", async (t) => {
   const { reason, diffCount, diffPercentage } = await compare(
     path.join(IMAGES_PATH, "www.cypress.io.png"),

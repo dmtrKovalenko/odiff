@@ -51,7 +51,7 @@ function optionsToArgs(options) {
 function parsePixelDiffStdout(stdout) {
   try {
     const parts = stdout.split(";");
-    
+
     if (parts.length === 2) {
       const [diffCount, diffPercentage] = parts;
 
@@ -85,7 +85,7 @@ async function compare(basePath, comparePath, diffOutput, options) {
 
     execFile(
       binaryPath,
-      [basePath, comparePath, diffOutput].concat(optionsToArgs(options)),
+      [basePath, comparePath, diffOutput, ...optionsToArgs(options)],
       (_, stdout, stderr) => {
         producedStdout = stdout;
         producedStdError = stderr;
