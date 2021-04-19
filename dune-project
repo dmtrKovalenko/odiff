@@ -26,6 +26,7 @@
 
 (package
  (name odiff-core)
+ (synopsis "Pixel-by-pixel image difference algorithm")
  (depends
   dune
   (reason (and (>= 3.6.0) (< 4.0.0)))
@@ -35,6 +36,7 @@
 
 (package
  (name odiff-io)
+ (synopsis "Ready to use io for odiff-core")
  (depends
   dune
   conf-libpng
