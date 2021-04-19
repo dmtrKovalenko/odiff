@@ -61,7 +61,7 @@ function parsePixelDiffStdout(stdout) {
       };
     } catch (e) {
       console.warn(
-        "For some reason can not parse output from odiff internal process. Please make an issue https://github.com/dmtrKovalenko/odiff/issues/new with stacktrace",
+        "Can't parse output from internal process. Please file an issue at https://github.com/dmtrKovalenko/odiff/issues/new with the following stacktrace:",
         e
       );
     }
