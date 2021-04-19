@@ -41,8 +41,8 @@ jobs:
 
       - name: publish odiff-core
         run: |
-          opam publish --no-browser --dry-run odiff-core.opam
+          opam publish --no-browser odiff-core.opam
 
       - name: publish odiff-io
         run: |
-          opam publish --no-browser --dry-run odiff-io.opam
+          opam publish --no-browser odiff-io.opam
