@@ -49,22 +49,24 @@ function optionsToArgs(options) {
 
 /** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number }>} */
 function parsePixelDiffStdout(stdout) {
-  const parts = stdout.split(";");
-  
-  if (parts.length === 2) {
-    const [diffCount, diffPercentage] = parts;
+  try {
+    const parts = stdout.split(";");
+    
+    if (parts.length === 2) {
+      const [diffCount, diffPercentage] = parts;
 
-    try {
       return {
         diffCount: parseInt(diffCount),
         diffPercentage: parseFloat(diffPercentage),
       };
-    } catch (e) {
-      console.warn(
-        "Can't parse output from internal process. Please file an issue at https://github.com/dmtrKovalenko/odiff/issues/new with the following stacktrace:",
-        e
-      );
+    } else {
+      throw new Error(`Weird pixel diff stdout: ${stdout}`);
     }
+  } catch (e) {
+    console.warn(
+      "Can't parse output from internal process. Please submit an issue at https://github.com/dmtrKovalenko/odiff/issues/new with the following stacktrace:",
+      e
+    );
   }
 
   return {};
