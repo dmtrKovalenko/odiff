@@ -22,6 +22,16 @@ jobs:
         run: |
           opam install opam-publish
 
+      - name: Setup user
+        run: |
+          git config --global user.email "dmtr.kovalenko@outlook.com"
+          git config --global user.name "dmtrKovalenko"
+
+      - name: Setup token
+        run: |
+          mkdir -p  ~/.opam/plugins/opam-publish/
+          echo -n ${{ secrets.OPAM_RELEASE_TOKEN }} > ~/.opam/plugins/opam-publish/odiff.token
+
       # Checkout the projects sources
       - name: Checkout Sources
         uses: actions/checkout@v2
