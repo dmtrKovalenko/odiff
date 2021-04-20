@@ -75,6 +75,9 @@ jobs:
       - name: Test
         run: esy test
 
+      - name: Test node bindings
+        run: esy test-js
+
       - uses: actions/upload-artifact@v2
         if: failure()
         with:
