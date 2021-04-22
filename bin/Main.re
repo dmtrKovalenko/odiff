@@ -10,7 +10,6 @@ let getIOModule = filename =>
   );
 
 type diffResult('output) = {
-  message: string,
   exitCode: int,
   diff: option('output),
 };
@@ -24,6 +23,7 @@ let main =
       outputDiffMask,
       failOnLayoutChange,
       diffColorHex,
+      stdoutParsableString,
     ) => {
   module IO1 = (val getIOModule(img1Path));
   module IO2 = (val getIOModule(img2Path));
@@ -33,64 +33,36 @@ let main =
   let img1 = IO1.loadImage(img1Path);
   let img2 = IO2.loadImage(img2Path);
 
-  let {message, diff, exitCode} =
-    switch (
-      Diff.diff(
-        img1,
-        img2,
-        ~outputDiffMask,
-        ~threshold,
-        ~failOnLayoutChange,
-        ~diffPixel=
-          Color.ofHexString(diffColorHex)
-          |> (
-            fun
-            | Some(col) => col
-            | None => (255, 0, 0) // red
-          ),
-        (),
-      )
-    ) {
-    | Layout => {
-        diff: None,
-        exitCode: 21,
-        message:
-          <Pastel>
-            <Pastel color=Red bold=true> "Failure! " </Pastel>
-            "Images have different layout.\n"
-          </Pastel>,
-      }
-
-    | Pixel((diffOutput, diffCount, _diffPercentage)) when diffCount == 0 => {
-        exitCode: 0,
-        diff: Some(diffOutput),
-        message:
-          <Pastel>
-            <Pastel color=Green bold=true> "Success! " </Pastel>
-            "Images are equal.\n"
-            <Pastel dim=true> "No diff output created." </Pastel>
-          </Pastel>,
-      }
-
-    | Pixel((diffOutput, diffCount, diffPercentage)) =>
-      IO1.saveImage(diffOutput, diffPath);
-
-      {
-        exitCode: 22,
-        diff: Some(diffOutput),
-        message:
-          <Pastel>
-            <Pastel color=Red bold=true> "Failure! " </Pastel>
-            "Images are different.\n"
-            "Different pixels: "
-            <Pastel color=Red bold=true>
-              {Printf.sprintf("%i (%f%%)", diffCount, diffPercentage)}
-            </Pastel>
-          </Pastel>,
-      };
-    };
-
-  Console.log(message);
+  let {diff, exitCode} =
+    Diff.diff(
+      img1,
+      img2,
+      ~outputDiffMask,
+      ~threshold,
+      ~failOnLayoutChange,
+      ~diffPixel=
+        Color.ofHexString(diffColorHex)
+        |> (
+          fun
+          | Some(col) => col
+          | None => (255, 0, 0) // red
+        ),
+      (),
+    )
+    |> Print.printDiffResult(stdoutParsableString)
+    |> (
+      fun
+      | Layout => {diff: None, exitCode: 21}
+      | Pixel((diffOutput, diffCount, stdoutParsableString))
+          when diffCount == 0 => {
+          exitCode: 0,
+          diff: Some(diffOutput),
+        }
+      | Pixel((diffOutput, diffCount, diffPercentage)) => {
+          IO1.saveImage(diffOutput, diffPath);
+          {exitCode: 22, diff: Some(diffOutput)};
+        }
+    );
 
   IO1.freeImage(img1);
   IO2.freeImage(img2);

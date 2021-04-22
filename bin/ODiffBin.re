@@ -56,6 +56,19 @@ let failOnLayout =
           "Do not compare images and produce output if images layout is different.",
       )
   );
+  
+let parsableOutput =
+  Arg.(
+    value
+    & flag
+    & info(
+        ["parsable-stdout"],
+        ~docv="PARSABLE_OUTPUT",
+        ~doc=
+          "Stdout parsable output",
+      )
+  );
+
 
 let diffColor =
   Arg.(
@@ -84,6 +97,7 @@ let cmd = {
       $ diffMask
       $ failOnLayout
       $ diffColor
+      $ parsableOutput
     ),
     Term.info(
       "odiff",
