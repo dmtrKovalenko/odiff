@@ -27,6 +27,13 @@ jobs:
           git config --global user.email "dmtr.kovalenko@outlook.com"
           git config --global user.name "dmtrKovalenko"
 
+      - name: Setup opam repository
+        run: |
+          mkdir -p  ~/.opam/plugins/opam-publish/repos/
+          git clone git://github.com/ocaml/opam-repository ~/.opam/plugins/opam-publish/repos/ocaml%opam-repository
+          cd ~/.opam/plugins/opam-publish/repos/ocaml%opam-repository
+          ls -l
+
       - name: Setup token
         run: |
           mkdir -p  ~/.opam/plugins/opam-publish/
