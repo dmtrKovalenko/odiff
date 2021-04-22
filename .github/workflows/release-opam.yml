@@ -30,7 +30,7 @@ jobs:
       - name: Setup token
         run: |
           mkdir -p  ~/.opam/plugins/opam-publish/
-          echo -n ${{ secrets.OPAM_RELEASE_TOKEN }} > ~/.opam/plugins/opam-publish/odiff.token
+          echo -n ${{ secrets.OPAM_RELEASE_TOKEN }} > ~/.opam/plugins/opam-publish/ocaml%opam-repository.token
 
       # Checkout the projects sources
       - name: Checkout Sources
