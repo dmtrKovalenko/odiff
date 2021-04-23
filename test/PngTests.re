@@ -93,6 +93,9 @@ describe("Png comparing", ({test, _}) => {
     let (_, diffPixels, diffPercentage) =
       Diff.compare(img1, img2, ~outputDiffMask=false, ());
 
+    let img1 = PureC_IO.IO.loadImage("test/test-images/antialiasing-on.png");
+    let img2 = PureC_IO.IO.loadImage("test/test-images/antialiasing-off.png");
+
     let (_, diffPixelsMask, diffPercentageMask) =
       Diff.compare(img1, img2, ~outputDiffMask=true, ());
 
