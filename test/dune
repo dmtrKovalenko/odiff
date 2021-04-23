@@ -1,20 +1,21 @@
 (library
-   (name OdiffTests)
-   ; the linkall flag ensures that all of our tests are compiled and the
-   ; -g flag emits debugging information
-   (ocamlopt_flags -linkall -g)
-   ; you will want to depend on the library you are testing as well, however for
-   ; the purposes of this example we are only depending on the test runner itself
-   (libraries rely.lib odiff ODiffIO)
-   (modules (:standard \ RunTests))
+ (name OdiffTests)
+ ; the linkall flag ensures that all of our tests are compiled and the
+ ; -g flag emits debugging information
+ (ocamlopt_flags -linkall -g)
+ ; you will want to depend on the library you are testing as well, however for
+ ; the purposes of this example we are only depending on the test runner itself
+ (libraries rely.lib odiff odiff-io)
+ (modules (:standard \ RunTests))
 )
 (executable
-  ; the for the library is automatically detected because of the name, but we
-  ; need to explicitly specify the package here
-  (name RunTests)
-  (public_name RunTests.exe)
-  (libraries
-    OdiffTests
-  )
-  (modules RunTests)
+ ; the for the library is automatically detected because of the name, but we
+ ; need to explicitly specify the package here
+ (name RunTests)
+ (package odiff)
+ (public_name RunTests.exe)
+ (libraries
+  OdiffTests
+ )
+ (modules RunTests)
 )

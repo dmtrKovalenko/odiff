@@ -1,6 +1,6 @@
 (library
  (name odiff)
+ (public_name odiff-core)
  (flags
   (-w -40 -w +26))
- (public_name odiff)
  )
