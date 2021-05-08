@@ -58,6 +58,12 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
-    {...img, image: ReadPng.create_empty_img(img.height, img.width)};
+    {
+      ...img,
+      image: {
+        rowPointers: ReadPng.create_empty_img(img.height, img.width),
+        bigarray: img.image.bigarray,
+      },
+    };
   };
 };
