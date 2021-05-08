@@ -16,7 +16,7 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, rowPointers) = ReadPng.read_png_image(filename);
+    let (width, height, _rowbytes, rowPointers) = ReadPng.read_png_image(filename);
 
     {width, height, image: rowPointers};
   };
