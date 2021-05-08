@@ -16,12 +16,13 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         ~threshold=0.1,
         (),
       ) => {
-    let diffPixels = ref([]);
+    let diffCount = ref(0);
     let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
     let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
     let countDifference = (x, y) => {
-      diffPixels := [(x, y), ...diffPixels^];
+      diffCount := diffCount^ + 1;
+      diffOutput |> IO1.setImgColor(x, y,diffPixel)
     };
 
     for (y in 0 to base.height - 1) {
@@ -94,16 +95,14 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       };
     };
 
-    diffPixels^
-    |> List.iter(((x, y)) => IO1.setImgColor(x, y, diffPixel, diffOutput));
-    let diffCount = List.length(diffPixels^);
+    print_endline("End");
 
     let diffPercentage =
       100.0
-      *. Float.of_int(diffCount)
+      *. Float.of_int(diffCount^)
       /. (Float.of_int(base.width) *. Float.of_int(base.height));
 
-    (diffOutput, diffCount, diffPercentage);
+    (diffOutput, diffCount^, diffPercentage);
   };
 
   let diff =

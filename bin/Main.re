@@ -34,6 +34,8 @@ let main =
   let img1 = IO1.loadImage(img1Path);
   let img2 = IO2.loadImage(img2Path);
 
+  Console.log("loaded")
+
   let {diff, exitCode} =
     Diff.diff(
       img1,
@@ -66,13 +68,13 @@ let main =
         }
     );
 
-  IO1.freeImage(img1);
-  IO2.freeImage(img2);
+  // IO1.freeImage(img1);
+  // IO2.freeImage(img2);
 
-  switch (diff) {
-  | Some(output) when outputDiffMask => IO1.freeImage(output)
-  | _ => ()
-  };
+  // switch (diff) {
+  // | Some(output) when outputDiffMask => IO1.freeImage(output)
+  // | _ => ()
+  // };
 
   exit(exitCode);
 };

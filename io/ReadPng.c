@@ -19,6 +19,18 @@ char *concat(const char *s1, const char *s2)
   return result;
 }
 
+#define ARRAY_CONCAT(TYPE, A, An, B, Bn) \
+  (TYPE *)array_concat((const void *)(A), (An), (const void *)(B), (Bn), sizeof(TYPE));
+
+void *array_concat(const void *a, size_t an,
+                   const void *b, size_t bn, size_t s)
+{
+  char *p = malloc(s * (an + bn));
+  memcpy(p, a, an * s);
+  memcpy(p + an * s, b, bn * s);
+  return p;
+}
+
 CAMLprim value
 read_png_file_to_tuple(value file)
 {
@@ -82,10 +94,11 @@ read_png_file_to_tuple(value file)
   png_read_update_info(png, info);
 
   row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);
+  int rowbytes = png_get_rowbytes(png, info);
 
   for (int y = 0; y < height; y++)
   {
-    row_pointers[y] = (png_byte *)malloc(png_get_rowbytes(png,info));
+    row_pointers[y] = (png_byte *)malloc(rowbytes);
   }
 
   png_read_image(png, row_pointers);
@@ -94,13 +107,32 @@ read_png_file_to_tuple(value file)
 
   png_destroy_read_struct(&png, &info, NULL);
 
-  res = caml_alloc(3, 0);
+  res = caml_alloc(4, 0);
 
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
-  Store_field(res, 2, row_pointers);
+  Store_field(res, 2, Val_int(rowbytes));
+  Store_field(res, 3, row_pointers);
 
   CAMLreturn(res);
+}
+
+CAMLprim value
+row_pointers_to_bigarray(png_bytep *row_pointers, value rowbytes_val, value height_val, value width_val)
+{
+  int width = Int_val(width_val);
+  int height = Int_val(height_val);
+  int rowbytes = Int_val(rowbytes_val);
+
+  unsigned char *total_pixels = malloc(height * rowbytes);
+
+  for (int y = 0; y < height; y++)
+  {
+    memcpy(total_pixels + y * rowbytes, row_pointers[y], rowbytes);
+  }
+
+  long dims[1] = {width * height * 4};
+  return caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT, 1, total_pixels, dims);
 }
 
 CAMLprim value
@@ -109,8 +141,8 @@ create_empty_img(value height_val, value width_val)
   CAMLparam2(height_val, width_val);
   int width = Int_val(width_val);
   int height = Int_val(height_val);
-  
-  png_bytep *row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);;
+
+  png_bytep *row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);
 
   for (int y = 0; y < height; y++)
   {
@@ -128,7 +160,6 @@ read_row(png_bytep *row_pointers, value y_val, value img_width_val)
   int img_width = Int_val(img_width_val);
 
   png_bytep row = row_pointers[y];
-  png_bytep px = &(row[1 * 4]);
 
   long dims[] = {img_width * 4};
   CAMLreturn(caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT, 1, row, dims));

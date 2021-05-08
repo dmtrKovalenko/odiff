@@ -1,28 +1,53 @@
-module IO: Odiff.ImageIO.ImageIO = {
-  type t;
-  type row =
-    Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout);
+open Odiff.ImageIO;
 
-  let readRow = (img: Odiff.ImageIO.img(t), y): row => {
-    ReadPng.read_row(img.image, y, img.width);
+module IO: Odiff.ImageIO.ImageIO = {
+  type rowPointers;
+  type t = {
+    rowPointers,
+    bigarray:
+      Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout),
   };
 
-  let readImgColor = (x, row: row, _img: Odiff.ImageIO.img(t)) => {
-    (row.{x * 4}, row.{x * 4 + 1}, row.{x * 4 + 2}, row.{x * 4 + 3});
+  type row = int;
+  // Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout);
+
+  let readRow = (img: Odiff.ImageIO.img(t), y): row => {
+    // ReadPng.read_row(img.image, y, img.width);
+    y;
+  };
+
+  let readImgColor = (x, row: row, img: Odiff.ImageIO.img(t)) => {
+    (
+      (img.image.bigarray).{row * img.width * 4 + x * 4 + 0},
+      (img.image.bigarray).{row * img.width * 4 + x * 4 + 1},
+      (img.image.bigarray).{row * img.width * 4 + x * 4 + 2},
+      (img.image.bigarray).{row * img.width * 4 + x * 4 + 3},
+      // (row.{x * 4}, row.{x * 4 + 1}, row.{x * 4 + 2}, row.{x * 4 + 3});
+    );
   };
 
   let setImgColor = (x, y, pixel, img: Odiff.ImageIO.img(t)) => {
-    ReadPng.set_pixel_data(img.image, x, y, pixel);
+    ReadPng.set_pixel_data(img.image.rowPointers, x, y, pixel);
   };
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, rowPointers) = ReadPng.read_png_image(filename);
+    let (width, height, rowbytes, rowPointers) =
+      ReadPng.read_png_image(filename);
+    let bigarray =
+      ReadPng.row_pointers_to_bigarray(rowPointers, rowbytes, height, width);
 
-    {width, height, image: rowPointers};
+    {
+      width,
+      height,
+      image: {
+        bigarray,
+        rowPointers,
+      },
+    };
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    ReadPng.write_png_file(img.image, img.width, img.height, filename);
+    ReadPng.write_png_file(img.image.rowPointers, img.width, img.height, filename);
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
