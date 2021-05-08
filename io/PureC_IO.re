@@ -1,5 +1,5 @@
 module IO: Odiff.ImageIO.ImageIO = {
-  type t;
+  type t = int;
   type row =
     Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout);
 

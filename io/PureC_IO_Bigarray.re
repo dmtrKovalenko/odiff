@@ -1,7 +1,7 @@
 open Odiff.ImageIO;
 
 module IO: Odiff.ImageIO.ImageIO = {
-  type rowPointers;
+  type rowPointers = int;
   type t = {
     rowPointers,
     bigarray:
