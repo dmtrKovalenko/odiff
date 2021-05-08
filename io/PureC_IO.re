@@ -33,8 +33,23 @@ module IO: Odiff.ImageIO.ImageIO = {
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
     let (width, height, rowbytes, rowPointers) =
       ReadPng.read_png_image(filename);
+    let t = Odiff.PerfTest.now("to_big_array")
     let bigarray =
       ReadPng.row_pointers_to_bigarray(rowPointers, rowbytes, height, width);
+    Odiff.PerfTest.cycle(t, ());
+    // for (y in 0 to 1) {
+    //   for (x in 0 to 1) {
+    //     Printf.printf(
+    //       "%d;%d;%d;%d; – ",
+    //       bigarray.{y, x * 4 + 0},
+    //       bigarray.{y, x * 4 + 1},
+    //       bigarray.{y, x * 4 + 2},
+    //       bigarray.{y, x * 4 + 3},
+    //     );
+    //   };
+
+    //   Printf.printf("\n");
+    // };
 
     {
       width,
@@ -47,11 +62,16 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    ReadPng.write_png_file(img.image.rowPointers, img.width, img.height, filename);
+    ReadPng.write_png_file(
+      img.image.rowPointers,
+      img.width,
+      img.height,
+      filename,
+    );
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
-    ReadPng.free_row_pointers(img.image, img.height);
+    ReadPng.free_row_pointers(img.image.rowPointers, img.height);
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {

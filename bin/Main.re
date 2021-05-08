@@ -31,10 +31,12 @@ let main =
 
   module Diff = MakeDiff(IO1, IO2);
 
+
+  let t = Odiff.PerfTest.now("Compare");
+
   let img1 = IO1.loadImage(img1Path);
   let img2 = IO2.loadImage(img2Path);
-
-  Console.log("loaded")
+  Odiff.PerfTest.cycle(t, ~cycleName="load", ());
 
   let {diff, exitCode} =
     Diff.diff(
@@ -63,18 +65,21 @@ let main =
           diff: Some(diffOutput),
         }
       | Pixel((diffOutput, diffCount, diffPercentage)) => {
+          Odiff.PerfTest.cycle(t, ~cycleName="compare", ());
           IO1.saveImage(diffOutput, diffPath);
+          Odiff.PerfTest.cycle(t, ~cycleName="save", ());
           {exitCode: 22, diff: Some(diffOutput)};
         }
     );
 
-  // IO1.freeImage(img1);
-  // IO2.freeImage(img2);
+  IO1.freeImage(img1);
+  IO2.freeImage(img2);
 
-  // switch (diff) {
-  // | Some(output) when outputDiffMask => IO1.freeImage(output)
-  // | _ => ()
-  // };
+  switch (diff) {
+  | Some(output) when outputDiffMask => IO1.freeImage(output)
+  | _ => ()
+  };
 
+  Odiff.PerfTest.cycle(t, ~cycleName="finish", ());
   exit(exitCode);
 };
