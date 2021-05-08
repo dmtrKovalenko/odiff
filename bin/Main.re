@@ -1,10 +1,13 @@
 open Odiff.ImageIO;
 open Odiff.Diff;
 
-let getIOModule = filename =>
+let getIOModule = (filename, ~antialiasing) =>
   Filename.extension(filename)
   |> (
     fun
+    | ".png" when antialiasing => (
+        (module ODiffIO.PureC_IO_Bigarray.IO): (module ImageIO)
+      )
     | ".png" => ((module ODiffIO.PureC_IO.IO): (module ImageIO))
     | _ => ((module ODiffIO.CamlImagesIO.IO): (module ImageIO))
   );
@@ -26,17 +29,13 @@ let main =
       stdoutParsableString,
       antialiasing,
     ) => {
-  module IO1 = (val getIOModule(img1Path));
-  module IO2 = (val getIOModule(img2Path));
+  module IO1 = (val getIOModule(img1Path, ~antialiasing));
+  module IO2 = (val getIOModule(img2Path, ~antialiasing));
 
   module Diff = MakeDiff(IO1, IO2);
 
-
-  let t = Odiff.PerfTest.now("Compare");
-
   let img1 = IO1.loadImage(img1Path);
   let img2 = IO2.loadImage(img2Path);
-  Odiff.PerfTest.cycle(t, ~cycleName="load", ());
 
   let {diff, exitCode} =
     Diff.diff(
@@ -65,9 +64,7 @@ let main =
           diff: Some(diffOutput),
         }
       | Pixel((diffOutput, diffCount, diffPercentage)) => {
-          Odiff.PerfTest.cycle(t, ~cycleName="compare", ());
           IO1.saveImage(diffOutput, diffPath);
-          Odiff.PerfTest.cycle(t, ~cycleName="save", ());
           {exitCode: 22, diff: Some(diffOutput)};
         }
     );
@@ -80,6 +77,5 @@ let main =
   | _ => ()
   };
 
-  Odiff.PerfTest.cycle(t, ~cycleName="finish", ());
   exit(exitCode);
 };

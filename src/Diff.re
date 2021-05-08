@@ -6,6 +6,9 @@ type diffVariant('a) =
   | Pixel(('a, int, float));
 
 module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
+  module BaseAA = Antialiasing.MakeAntialiasing(IO1, IO2);
+  module CompAA = Antialiasing.MakeAntialiasing(IO2, IO1);
+
   let compare =
       (
         base: ImageIO.img(IO1.t),
@@ -22,28 +25,12 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
 
     let countDifference = (x, y) => {
       diffCount := diffCount^ + 1;
-      diffOutput |> IO1.setImgColor(x, y,diffPixel)
+      diffOutput |> IO1.setImgColor(x, y, diffPixel);
     };
 
     for (y in 0 to base.height - 1) {
       let row = IO1.readRow(base, y);
       let row2 = IO2.readRow(comp, y);
-
-      let getBaseColor = (x, rowToGet) => {
-        IO1.readImgColor(
-          x,
-          rowToGet == y ? row : IO1.readRow(base, rowToGet),
-          base,
-        );
-      };
-
-      let getCompColor = (x, rowToGet) => {
-        IO2.readImgColor(
-          x,
-          rowToGet == y ? row2 : IO2.readRow(comp, rowToGet),
-          comp,
-        );
-      };
 
       for (x in 0 to base.width - 1) {
         if (x >= comp.width || y >= comp.height) {
@@ -64,26 +51,8 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
                 if (!antialiasing) {
                   false;
                 } else {
-                  Antialiasing.isAntialiased(
-                    ~x,
-                    ~y,
-                    ~baseWidth=base.width,
-                    ~baseHeight=base.height,
-                    ~readBaseColor=getBaseColor,
-                    ~compWidth=comp.width,
-                    ~compHeight=comp.height,
-                    ~readCompColor=getCompColor,
-                  )
-                  || Antialiasing.isAntialiased(
-                       ~x,
-                       ~y,
-                       ~baseWidth=comp.width,
-                       ~baseHeight=comp.height,
-                       ~readBaseColor=getCompColor,
-                       ~compWidth=base.width,
-                       ~compHeight=base.height,
-                       ~readCompColor=getBaseColor,
-                     );
+                  BaseAA.detect(~x, ~y, ~baseImg=base, ~compImg=comp)
+                  || CompAA.detect(~x, ~y, ~baseImg=comp, ~compImg=base);
                 };
 
               if (!isAntialiased) {
@@ -94,8 +63,6 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         };
       };
     };
-
-    print_endline("End");
 
     let diffPercentage =
       100.0

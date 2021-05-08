@@ -19,18 +19,6 @@ char *concat(const char *s1, const char *s2)
   return result;
 }
 
-#define ARRAY_CONCAT(TYPE, A, An, B, Bn) \
-  (TYPE *)array_concat((const void *)(A), (An), (const void *)(B), (Bn), sizeof(TYPE));
-
-void *array_concat(const void *a, size_t an,
-                   const void *b, size_t bn, size_t s)
-{
-  char *p = malloc(s * (an + bn));
-  memcpy(p, a, an * s);
-  memcpy(p + an * s, b, bn * s);
-  return p;
-}
-
 CAMLprim value
 read_png_file_to_tuple(value file)
 {
