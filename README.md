@@ -13,7 +13,7 @@
 
 ## Why Odiff?
 
-ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was originally designed to handle the "big" images. Thanks to [Ocaml](https://ocaml.org/) and its speedy and predictable compiler we can significantly speed up your CI pipeline.
+ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was originally designed to handle the "big" images. Thanks to [OCaml](https://ocaml.org/) and its speedy and predictable compiler we can significantly speed up your CI pipeline.
 
 ## Demo
 
@@ -179,7 +179,7 @@ Lets compare 2 screenshots of full-size [https://cypress.io](cypress.io) page:
 | ImageMagick `compare www.cypress.io-1.png www.cypress.io.png -compose src diff-magick.png` | 8.881 ± 0.121 |   8.692 |   9.066 | 7.65 ± 0.04 |
 | `odiff www.cypress.io-1.png www.cypress.io.png www.cypress-diff.png`                       | 1.168 ± 0.008 |   1.157 |   1.185 |        1.00 |
 
-Wow. Odiff is mostly 2 times faster than imagemagick and pixelmatch. And this will be even clearer if image will become larger. Lets compare an [8k image](images/water-4k.png) to find a difference with [another 8k image](images/water-4k-2.png):
+Wow. Odiff is mostly 6 times faster than imagemagick and pixelmatch. And this will be even clearer if image will become larger. Lets compare an [8k image](images/water-4k.png) to find a difference with [another 8k image](images/water-4k-2.png):
 
 | Command                                                                       |       Mean [s] | Min [s] | Max [s] |    Relative |
 | :---------------------------------------------------------------------------- | -------------: | ------: | ------: | ----------: |
