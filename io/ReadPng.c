@@ -108,6 +108,8 @@ read_png_file_to_tuple(value file)
 CAMLprim value
 row_pointers_to_bigarray(png_bytep *row_pointers, value rowbytes_val, value height_val, value width_val)
 {
+  CAMLparam3(rowbytes_val, height_val, width_val);
+
   int width = Int_val(width_val);
   int height = Int_val(height_val);
   int rowbytes = Int_val(rowbytes_val);
@@ -119,8 +121,8 @@ row_pointers_to_bigarray(png_bytep *row_pointers, value rowbytes_val, value heig
     memcpy(total_pixels + y * rowbytes, row_pointers[y], rowbytes);
   }
 
-  long dims[1] = {width * height * 4};
-  return caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT, 1, total_pixels, dims);
+  long dims[1] = {width * height};
+  CAMLreturn(caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, total_pixels, dims));
 }
 
 CAMLprim value

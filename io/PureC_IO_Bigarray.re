@@ -4,18 +4,19 @@ module IO: Odiff.ImageIO.ImageIO = {
   type rowPointers = int;
   type t = {
     rowPointers,
-    bigarray:
-      Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout),
+    bigarray: Bigarray.Array1.t(int32, Bigarray.int32_elt, Bigarray.c_layout),
   };
 
   type row = int;
   let readDirectPixel = (~x: int, ~y: int, img) => {
-    (
-      (img.image.bigarray).{y * img.width * 4 + x * 4 + 0},
-      (img.image.bigarray).{y * img.width * 4 + x * 4 + 1},
-      (img.image.bigarray).{y * img.width * 4 + x * 4 + 2},
-      (img.image.bigarray).{y * img.width * 4 + x * 4 + 3},
-    );
+    let pixel = (img.image.bigarray).{y * img.width + x} |> Int32.to_int;
+
+    let a = pixel lsr 24 land 0xFF;
+    let r = pixel lsr 16 land 0xFF;
+    let g = pixel lsr 8 land 0xFF;
+    let b = pixel land 0xFF;
+
+    (r, g, b, a);
   };
 
   let readRow = (img: Odiff.ImageIO.img(t), y): row => y;

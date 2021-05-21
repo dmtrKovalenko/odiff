@@ -7,7 +7,6 @@ module AADiff =
 
 describe("Png comparing", ({test, _}) => {
   test("finds difference between 2 images", ({expect, _}) => {
-    Console.log("1");
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
 
