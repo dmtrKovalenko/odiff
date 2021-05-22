@@ -1,10 +1,13 @@
 open Odiff.ImageIO;
 open Odiff.Diff;
 
-let getIOModule = filename =>
+let getIOModule = (filename, ~antialiasing) =>
   Filename.extension(filename)
   |> (
     fun
+    | ".png" when antialiasing => (
+        (module ODiffIO.PureC_IO_Bigarray.IO): (module ImageIO)
+      )
     | ".png" => ((module ODiffIO.PureC_IO.IO): (module ImageIO))
     | _ => ((module ODiffIO.CamlImagesIO.IO): (module ImageIO))
   );
@@ -24,9 +27,10 @@ let main =
       failOnLayoutChange,
       diffColorHex,
       stdoutParsableString,
+      antialiasing,
     ) => {
-  module IO1 = (val getIOModule(img1Path));
-  module IO2 = (val getIOModule(img2Path));
+  module IO1 = (val getIOModule(img1Path, ~antialiasing));
+  module IO2 = (val getIOModule(img2Path, ~antialiasing));
 
   module Diff = MakeDiff(IO1, IO2);
 
@@ -40,6 +44,7 @@ let main =
       ~outputDiffMask,
       ~threshold,
       ~failOnLayoutChange,
+      ~antialiasing,
       ~diffPixel=
         Color.ofHexString(diffColorHex)
         |> (

@@ -1,5 +1,5 @@
 module IO: Odiff.ImageIO.ImageIO = {
-  type t;
+  type t = int;
   type row =
     Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout);
 
@@ -16,7 +16,8 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, rowPointers) = ReadPng.read_png_image(filename);
+    let (width, height, _rowbytes, rowPointers) =
+      ReadPng.read_png_image(filename);
 
     {width, height, image: rowPointers};
   };
@@ -31,5 +32,9 @@ module IO: Odiff.ImageIO.ImageIO = {
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
     {...img, image: ReadPng.create_empty_img(img.height, img.width)};
+  };
+
+  let readDirectPixel = (~x, ~y, _img) => {
+    failwith("Direct pixel access is not allowed for imperative C IO");
   };
 };
