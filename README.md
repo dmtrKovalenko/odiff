@@ -28,6 +28,7 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ .png, .jpg, .jpeg, .bmp, .tiff, .xpm – Files supported.
 - ✅ Cross-format comparison - Yes .jpg vs .png comparison without any problems.
 - ✅ Supports comparison of images with different layouts.
+- ✅ Anti-aliasing detection
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference.
 - ✅ No dependencies for `.png` comparison. Only several system C dependencies for other formats, [more info](#lib-dependencies).
@@ -35,8 +36,8 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 ### Coming in the nearest future:
 
 - ⏹ Ignoring regions
-- ⏹ Anti-aliasing support
-- ⏹ Remote images compare
+- ⏹ Reading image from memory buffer
+- ⏹ Reading images from url 
 
 ## Usage
 
@@ -88,6 +89,8 @@ export type ODiffOptions = {
   failOnLayoutDiff: boolean;
   /** Color difference threshold (from 0 to 1). Less more precise. */
   threshold: number;
+  /** If this is true, antialiased pixels are not counted to the diff of an image */
+  antialiasing: boolean;
 };
 
 declare function compare(
@@ -107,6 +110,8 @@ declare function compare(
       diffPercentage: number;
     }
 >;
+
+export { compare };
 ```
 
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
