@@ -18,4 +18,5 @@ module type ImageIO = {
   let saveImage: (img(t), string) => unit;
   let freeImage: img(t) => unit;
   let makeSameAsLayout: img(t) => img(t);
+  let readDirectPixel: (~x: int, ~y:int, img(t)) => (int, int, int, int);
 };

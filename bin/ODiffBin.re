@@ -76,9 +76,22 @@ let diffColor =
     & opt(string, "")
     & info(
         ["diff-color"],
-        ~doc="Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9).",
+        ~doc=
+          "Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9).",
       )
   );
+
+let antialiasing = {
+  Arg.(
+    value
+    & flag
+    & info(
+        ["aa", "antialiasing"],
+        ~doc=
+          "With this flag enabled, antialiased pixels are not counted to the diff of an image",
+      )
+  );
+};
 
 let cmd = {
   let man = [
@@ -98,6 +111,7 @@ let cmd = {
       $ failOnLayout
       $ diffColor
       $ parsableOutput
+      $ antialiasing
     ),
     Term.info(
       "odiff",

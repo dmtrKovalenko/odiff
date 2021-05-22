@@ -15,7 +15,6 @@ var platform = process.platform;
 
 process.env["OCAML_VERSION"] = "ocaml";
 process.env["OCAML_PKG_NAME"] = "n.00.0000";
-process.env["ESY_RELEASE_REWRITE_PREFIX"] = true;
 
 var packageJson = require("./package.json");
 var binariesToCopy = Object.keys(packageJson.bin)
