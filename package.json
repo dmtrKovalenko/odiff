@@ -1,6 +1,6 @@
 {
   "name": "odiff",
-  "version": "2.2.1",
+  "version": "2.3.1",
   "description": "The fastest image difference tool.",
   "license": "MIT",
   "esy": {
