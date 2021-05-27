@@ -79,11 +79,11 @@ function parsePixelDiffStdout(stdout) {
 const CMD_BIN_HELPER_MSG =
   "Usage: odiff [OPTION]... [BASE] [COMPARING] [DIFF]\nTry `odiff --help' for more information.\n";
 
-async function compare(basePath, comparePath, diffOutput, options) {
+async function compare(basePath, comparePath, diffOutput, options = {}) {
   return new Promise((resolve, reject) => {
     let producedStdout, producedStdError;
 
-    const binaryPath = options.__binaryPath
+    const binaryPath = options && options.__binaryPath
       ? options.__binaryPath
       : path.join(__dirname, "bin", "odiff");
 
