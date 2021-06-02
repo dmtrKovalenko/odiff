@@ -113,4 +113,25 @@ describe("Png comparing", ({test, _}) => {
     expect.int(diffPixels).toBe(diffPixelsMask);
     expect.float(diffPercentage).toBeCloseTo(diffPercentageMask);
   });
+
+  test("tests diffrent sized AA images", ({expect, _}) => {
+    let img1 =
+      PureC_IO_Bigarray.IO.loadImage("test/test-images/antialiasing-on.png");
+    let img2 =
+      PureC_IO_Bigarray.IO.loadImage(
+        "test/test-images/antialiasing-off-small.png",
+      );
+
+    let (_, diffPixels, diffPercentage) =
+      AADiff.compare(
+        img1,
+        img2,
+        ~outputDiffMask=true,
+        ~antialiasing=true,
+        (),
+      );
+
+    expect.int(diffPixels).toBe(417);
+    expect.float(diffPercentage).toBeCloseTo(1.04);
+  });
 });
