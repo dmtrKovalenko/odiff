@@ -26,6 +26,22 @@ describe("Png comparing", ({test, _}) => {
     expect.float(diffPercentage).toBeCloseTo(0.19);
   });
 
+  test("uses provided irgnore regions", ({expect, _}) => {
+    let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
+    let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");
+
+    let (_diffOutput, diffPixels, diffPercentage) =
+      Diff.compare(
+        img1,
+        img2,
+        ~ignoreRegions=[(150, 30, 160, 75), (20, 175, 85, 25)],
+        (),
+      );
+
+    expect.int(diffPixels).toBe(0);
+    expect.float(diffPercentage).toBeCloseTo(0.0);
+  });
+
   test("creates the right diff output image", ({expect, _}) => {
     let img1 = PureC_IO.IO.loadImage("test/test-images/orange.png");
     let img2 = PureC_IO.IO.loadImage("test/test-images/orange_changed.png");

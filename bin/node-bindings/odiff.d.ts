@@ -9,6 +9,8 @@ export type ODiffOptions = {
   threshold: number;
   /** If this is true, antialiased pixels are not counted to the diff of an image */
   antialiasing: boolean;
+  /** An array of regions to ignore in the diff. One region consists of four numbers (x, y, width, height) */
+  ignoreRegions: Array<Array<number>>;
 };
 
 declare function compare(

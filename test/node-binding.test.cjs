@@ -47,6 +47,23 @@ test("Correctly parses cli arguments", async (t) => {
   t.is(diffPercentage, 1.31007003768);
 });
 
+test("Correctly parses ignore regions", async (t) => {
+  const { match } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      ignoreRegions: [
+        [749, 1155, 421, 448],
+        [657, 1278, 85, 56]
+      ],
+      __binaryPath: BINARY_PATH,
+    }
+  )
+
+  t.is(match, true);
+});
+
 test("Outputs correct parsed result when images different for cypress image", async (t) => {
   const { reason, diffCount, diffPercentage } = await compare(
     path.join(IMAGES_PATH, "www.cypress.io.png"),
