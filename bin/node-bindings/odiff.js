@@ -48,8 +48,8 @@ function optionsToArgs(options) {
 
       case "ignoreRegions": {
         const regions = value
-          .map((region) => `${region[0]},${region[1]},${region[2]},${region[3]}`)
-          .join('+');
+          .map((region) => `${region.x1}:${region.y1}-${region.x2}:${region.y2}`)
+          .join(',');
 
         argArray.push(`--ignore=${regions}`);
         break;

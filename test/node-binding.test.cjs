@@ -54,8 +54,14 @@ test("Correctly parses ignore regions", async (t) => {
     path.join(IMAGES_PATH, "diff.png"),
     {
       ignoreRegions: [
-        [749, 1155, 421, 448],
-        [657, 1278, 85, 56]
+        {
+          x1: 749,  y1: 1155,
+          x2: 1170, y2: 1603,
+        },
+        {
+          x1: 657, y1: 1278,
+          x2: 742, y2: 1334,
+        }
       ],
       __binaryPath: BINARY_PATH,
     }

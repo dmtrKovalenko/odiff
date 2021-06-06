@@ -7,9 +7,7 @@ type diffVariant('a) =
 
 let isInIgnoreRegion = (x, y, regions) => {
   List.exists(
-    ((rx, ry, width, height)) => {
-      x >= rx && x <= rx + width && y >= ry && y <= ry + height
-    },
+    (((x1, y1), (x2, y2))) => x >= x1 && x <= x2 && y >= y1 && y <= y2,
     regions,
   );
 };

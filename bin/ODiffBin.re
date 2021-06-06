@@ -94,11 +94,17 @@ let antialiasing = {
 let ignoreRegions = {
   Arg.(
     value
-    & opt(list(~sep='+', t4(int, int, int, int)), [])
+    & opt(
+        list(
+          ~sep=',',
+          t2(~sep='-', t2(~sep=':', int, int), t2(~sep=':', int, int)),
+        ),
+        [],
+      )
     & info(
         ["i", "ignore"],
         ~doc=
-          "An array of regions to ignore in the diff. One region consists of four numbers (x, y, width, height). Multiple regions are separated with a '+'.",
+          "An array of regions to ignore in the diff. One region looks like \"x1:y1-x2:y2\". Multiple regions are separated with a ','.",
       )
   );
 };

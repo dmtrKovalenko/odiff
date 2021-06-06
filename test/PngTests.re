@@ -34,7 +34,10 @@ describe("Png comparing", ({test, _}) => {
       Diff.compare(
         img1,
         img2,
-        ~ignoreRegions=[(150, 30, 160, 75), (20, 175, 85, 25)],
+        ~ignoreRegions=[
+          ((150, 30), (310, 105)),
+          ((20, 175), (105, 200)),
+        ],
         (),
       );
 
