@@ -29,13 +29,13 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ Cross-format comparison - Yes .jpg vs .png comparison without any problems.
 - ✅ Supports comparison of images with different layouts.
 - ✅ Anti-aliasing detection
+- ✅ Ignoring regions
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference.
 - ✅ No dependencies for `.png` comparison. Only several system C dependencies for other formats, [more info](#lib-dependencies).
 
 ### Coming in the nearest future:
 
-- ⏹ Ignoring regions
 - ⏹ Reading image from memory buffer
 - ⏹ Reading images from url 
 
@@ -91,6 +91,13 @@ export type ODiffOptions = {
   threshold: number;
   /** If this is true, antialiased pixels are not counted to the diff of an image */
   antialiasing: boolean;
+  /** An array of regions to ignore in the diff. */
+  ignoreRegions: Array<{
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+  }>;
 };
 
 declare function compare(

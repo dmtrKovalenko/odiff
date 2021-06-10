@@ -56,7 +56,7 @@ let failOnLayout =
           "Do not compare images and produce output if images layout is different.",
       )
   );
-  
+
 let parsableOutput =
   Arg.(
     value
@@ -64,11 +64,9 @@ let parsableOutput =
     & info(
         ["parsable-stdout"],
         ~docv="PARSABLE_OUTPUT",
-        ~doc=
-          "Stdout parsable output",
+        ~doc="Stdout parsable output",
       )
   );
-
 
 let diffColor =
   Arg.(
@@ -93,6 +91,24 @@ let antialiasing = {
   );
 };
 
+let ignoreRegions = {
+  Arg.(
+    value
+    & opt(
+        list(
+          ~sep=',',
+          t2(~sep='-', t2(~sep=':', int, int), t2(~sep=':', int, int)),
+        ),
+        [],
+      )
+    & info(
+        ["i", "ignore"],
+        ~doc=
+          "An array of regions to ignore in the diff. One region looks like \"x1:y1-x2:y2\". Multiple regions are separated with a ','.",
+      )
+  );
+};
+
 let cmd = {
   let man = [
     `S(Manpage.s_description),
@@ -112,6 +128,7 @@ let cmd = {
       $ diffColor
       $ parsableOutput
       $ antialiasing
+      $ ignoreRegions
     ),
     Term.info(
       "odiff",

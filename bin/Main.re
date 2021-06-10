@@ -28,6 +28,7 @@ let main =
       diffColorHex,
       stdoutParsableString,
       antialiasing,
+      ignoreRegions,
     ) => {
   module IO1 = (val getIOModule(img1Path, ~antialiasing));
   module IO2 = (val getIOModule(img2Path, ~antialiasing));
@@ -45,6 +46,7 @@ let main =
       ~threshold,
       ~failOnLayoutChange,
       ~antialiasing,
+      ~ignoreRegions,
       ~diffPixel=
         Color.ofHexString(diffColorHex)
         |> (
