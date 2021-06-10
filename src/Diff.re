@@ -34,8 +34,10 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
 
       for (x in 0 to base.width - 1) {
         if (x >= comp.width || y >= comp.height) {
-          let (_r, _g, _b, a) = IO1.readImgColor(x, row, base);
-          if (a != 0) {
+          let alpha =
+            Int32.to_int(IO1.readImgColor(x, row, base)) lsr 24 land 0xFF;
+
+          if (alpha != 0) {
             countDifference(x, y);
           };
         } else {

@@ -1,21 +1,24 @@
-let blend = (color, alpha) => 255 + (color - 255) * alpha;
+let blend = (color, alpha) => 255. +. (color -. 255.) *. alpha;
 
 let blendSemiTransparentColor =
   fun
-  | (r, g, b, alpha) when alpha < 255 => (
+  | (r, g, b, alpha) when alpha < 255. => (
       blend(r, alpha),
       blend(g, alpha),
       blend(b, alpha),
-      alpha / 255,
+      alpha /. 255.,
     )
   | colors => colors;
 
-let convertPixelToFloat = ((r, g, b, a)) => (
-  Float.of_int(r),
-  Float.of_int(g),
-  Float.of_int(b),
-  Float.of_int(a),
-);
+let convertPixelToFloat = pixel => {
+  let pixel = pixel |> Int32.to_int;
+  let a = pixel lsr 24 land 0xFF;
+  let r = pixel lsr 16 land 0xFF;
+  let g = pixel lsr 8 land 0xFF;
+  let b = pixel land 0xFF;
+
+  (Float.of_int(r), Float.of_int(g), Float.of_int(b), Float.of_int(a));
+};
 
 let rgb2y = ((r, g, b, a)) =>
   r *. 0.29889531 +. g *. 0.58662247 +. b *. 0.11448223;
@@ -27,8 +30,8 @@ let rgb2q = ((r, g, b, a)) =>
   r *. 0.21147017 -. g *. 0.52261711 +. b *. 0.31114694;
 
 let calculatePixelColorDelta = (_pixelA, _pixelB) => {
-  let pixelA = _pixelA |> blendSemiTransparentColor |> convertPixelToFloat;
-  let pixelB = _pixelB |> blendSemiTransparentColor |> convertPixelToFloat;
+  let pixelA = _pixelA |> convertPixelToFloat |> blendSemiTransparentColor;
+  let pixelB = _pixelB |> convertPixelToFloat |> blendSemiTransparentColor;
 
   let y = rgb2y(pixelA) -. rgb2y(pixelB);
   let i = rgb2i(pixelA) -. rgb2i(pixelB);
@@ -38,8 +41,8 @@ let calculatePixelColorDelta = (_pixelA, _pixelB) => {
 };
 
 let calculatePixelBrightnessDelta = (pixelA, pixelB) => {
-  let pixelA = pixelA |> blendSemiTransparentColor |> convertPixelToFloat;
-  let pixelB = pixelB |> blendSemiTransparentColor |> convertPixelToFloat;
+  let pixelA = pixelA |> convertPixelToFloat |> blendSemiTransparentColor;
+  let pixelB = pixelB |> convertPixelToFloat |> blendSemiTransparentColor;
 
   rgb2y(pixelA) -. rgb2y(pixelB);
 };

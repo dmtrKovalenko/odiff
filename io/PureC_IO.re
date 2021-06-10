@@ -8,7 +8,12 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let readImgColor = (x, row: row, _img: Odiff.ImageIO.img(t)) => {
-    (row.{x * 4}, row.{x * 4 + 1}, row.{x * 4 + 2}, row.{x * 4 + 3});
+    let r = row.{x * 4 + 0} land 0xFF;
+    let g = row.{x * 4 + 1} land 0xFF;
+    let b = row.{x * 4 + 2} land 0xFF;
+    let a = row.{x * 4 + 3} land 0xFF;
+
+    Int32.of_int(a lsl 24 + r lsl 16 + g lsl 8 + b);
   };
 
   let setImgColor = (x, y, pixel, img: Odiff.ImageIO.img(t)) => {
