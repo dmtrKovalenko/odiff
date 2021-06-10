@@ -51,7 +51,7 @@ function optionsToArgs(options) {
           .map((region) => `${region.x1}:${region.y1}-${region.x2}:${region.y2}`)
           .join(',');
 
-        argArray.push(`--ignore=${regions}`);
+        setArgWithValue("ignore", regions);
         break;
       }
     }

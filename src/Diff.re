@@ -5,10 +5,9 @@ type diffVariant('a) =
   | Layout
   | Pixel(('a, int, float));
 
-let isInIgnoreRegion = (x, y, regions) => {
-  List.exists(
-    (((x1, y1), (x2, y2))) => x >= x1 && x <= x2 && y >= y1 && y <= y2,
-    regions,
+let isInIgnoreRegion = (x, y) => {
+  List.exists((((x1, y1), (x2, y2))) =>
+    x >= x1 && x <= x2 && y >= y1 && y <= y2
   );
 };
 
