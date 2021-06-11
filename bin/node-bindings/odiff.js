@@ -45,6 +45,15 @@ function optionsToArgs(options) {
       case "antialiasing":
         setArgWithValue("antialiasing", value);
         break;
+
+      case "ignoreRegions": {
+        const regions = value
+          .map((region) => `${region.x1}:${region.y1}-${region.x2}:${region.y2}`)
+          .join(',');
+
+        setArgWithValue("ignore", regions);
+        break;
+      }
     }
   });
 
