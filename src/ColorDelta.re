@@ -13,9 +13,9 @@ let blendSemiTransparentColor =
 let convertPixelToFloat = pixel => {
   let pixel = pixel |> Int32.to_int;
   let a = pixel lsr 24 land 0xFF;
-  let r = pixel lsr 16 land 0xFF;
+  let b = pixel lsr 16 land 0xFF;
   let g = pixel lsr 8 land 0xFF;
-  let b = pixel land 0xFF;
+  let r = pixel land 0xFF;
 
   (Float.of_int(r), Float.of_int(g), Float.of_int(b), Float.of_int(a));
 };

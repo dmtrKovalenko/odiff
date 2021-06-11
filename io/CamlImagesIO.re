@@ -30,7 +30,7 @@ module IO: ImageIO.ImageIO = {
     let b = Char.code(Bytes.unsafe_get(bytes, position + 2)) land 0xFF;
     let a = Char.code(Bytes.unsafe_get(bytes, position + 3)) land 0xFF;
 
-    Int32.of_int(a lsl 24 + r lsl 16 + g lsl 8 + b);
+    Int32.of_int(a lsl 24 + b lsl 16 + g lsl 8 + r);
   };
 
   let readImgColor = (x, y, img: ImageIO.img(t)) =>
