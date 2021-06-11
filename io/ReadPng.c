@@ -151,8 +151,8 @@ read_row(png_bytep *row_pointers, value y_val, value img_width_val)
 
   png_bytep row = row_pointers[y];
 
-  long dims[] = {img_width * 4};
-  CAMLreturn(caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT, 1, row, dims));
+  long dims[] = {img_width};
+  CAMLreturn(caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, row, dims));
 }
 
 CAMLprim value
