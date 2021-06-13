@@ -37,7 +37,7 @@
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "ava": "^3.15.0",
-    "esy-libpng": "dmtrKovalenko/esy-libpng#a8f4da71d87e5bfbf567f472c0e52c95db90e04d",
+    "esy-libpng": "EduardoRFS/esy-libpng#fd6e69baaeaeac68dc247d304080d84aa765dd4c",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
