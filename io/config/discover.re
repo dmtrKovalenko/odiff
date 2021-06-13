@@ -40,7 +40,7 @@ C.main(~name="odiff-c-lib-package-resolver", c => {
 
   C.Flags.write_sexp(
     "c_library_flags.sexp",
-    String.split_on_char(' ', resolved_libsflags_for_windows),
+    String.split_on_char(' ', resolved_libsflags_for_windows) @ ["-lz"],
   );
 
   C.Flags.write_sexp("flags.sexp", ["-cclib", png_lib_path ++ "/libpng.a"]);
