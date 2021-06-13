@@ -11,9 +11,7 @@
         "odiff": "ODiffBin"
       },
       "includePackages": [
-        "odiff",
-        "esy-libpng",
-        "esy-zlib"
+        "odiff"
       ]
     },
     "buildEnv": {
