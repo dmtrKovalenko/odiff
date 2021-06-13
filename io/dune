@@ -3,7 +3,8 @@
  (public_name odiff-io)
  (flags
   (-w -40 -w +26)
-  (:include flags.sexp))
+  (:include flags.sexp)
+  -verbose)
  (foreign_stubs
   (language c)
   (names ReadPng)
