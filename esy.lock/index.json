@@ -1,5 +1,5 @@
 {
-  "checksum": "94fd4da51f07e81b2aff995fe89ec130",
+  "checksum": "0ec69c8a47d44c745c1414a193e969f1",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.7@d41d8cd9": {
@@ -1524,6 +1524,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9",
+        "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9",
         "esy-libpng@github:EduardoRFS/esy-libpng#fd6e69baaeaeac68dc247d304080d84aa765dd4c@d41d8cd9",
         "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
@@ -2883,16 +2884,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-zlib@github:dmtrKovalenko/esy-zlib#7b7e1be0281b9d164a9736db7ae9dd05c36064af@d41d8cd9": {
+    "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9": {
       "id":
-        "esy-zlib@github:dmtrKovalenko/esy-zlib#7b7e1be0281b9d164a9736db7ae9dd05c36064af@d41d8cd9",
+        "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9",
       "name": "esy-zlib",
       "version":
-        "github:dmtrKovalenko/esy-zlib#7b7e1be0281b9d164a9736db7ae9dd05c36064af",
+        "github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10",
       "source": {
         "type": "install",
         "source": [
-          "github:dmtrKovalenko/esy-zlib#7b7e1be0281b9d164a9736db7ae9dd05c36064af"
+          "github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10"
         ]
       },
       "overrides": [],
@@ -2913,7 +2914,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "esy-zlib@github:dmtrKovalenko/esy-zlib#7b7e1be0281b9d164a9736db7ae9dd05c36064af@d41d8cd9"
+        "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9"
       ],
       "devDependencies": []
     },

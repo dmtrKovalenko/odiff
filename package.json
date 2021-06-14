@@ -15,7 +15,8 @@
       ]
     },
     "buildEnv": {
-      "ODOC_SYNTAX": "re"
+      "ODOC_SYNTAX": "re",
+      "Z_LIB_PATH": "#{esy-zlib.lib}"
     }
   },
   "scripts": {
@@ -36,6 +37,7 @@
     "@reason-native/rely": "^3.2.1",
     "ava": "^3.15.0",
     "esy-libpng": "EduardoRFS/esy-libpng#fd6e69baaeaeac68dc247d304080d84aa765dd4c",
+    "esy-zlib": "*",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
@@ -43,6 +45,9 @@
     "@opam/ocaml-lsp-server": "1.4.0",
     "@opam/odoc": "*",
     "refmterr": "*"
+  },
+  "resolutions": {
+    "esy-zlib": "esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10"
   },
   "repository": {
     "type": "git",
