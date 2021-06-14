@@ -1,5 +1,5 @@
 {
-  "checksum": "0ec69c8a47d44c745c1414a193e969f1",
+  "checksum": "16d5b0194bf982d4a313afa6e64397ee",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.7@d41d8cd9": {
@@ -1524,7 +1524,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9",
-        "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9",
+        "esy-zlib@github:eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb@d41d8cd9",
         "esy-libpng@github:EduardoRFS/esy-libpng#fd6e69baaeaeac68dc247d304080d84aa765dd4c@d41d8cd9",
         "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
@@ -2884,16 +2884,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9": {
+    "esy-zlib@github:eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb@d41d8cd9": {
       "id":
-        "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9",
+        "esy-zlib@github:eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb@d41d8cd9",
       "name": "esy-zlib",
       "version":
-        "github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10",
+        "github:eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb",
       "source": {
         "type": "install",
         "source": [
-          "github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10"
+          "github:eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb"
         ]
       },
       "overrides": [],
@@ -2914,7 +2914,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "esy-zlib@github:esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10@d41d8cd9"
+        "esy-zlib@github:eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb@d41d8cd9"
       ],
       "devDependencies": []
     },

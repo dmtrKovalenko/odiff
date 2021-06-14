@@ -15,8 +15,7 @@
       ]
     },
     "buildEnv": {
-      "ODOC_SYNTAX": "re",
-      "Z_LIB_PATH": "#{esy-zlib.lib}"
+      "ODOC_SYNTAX": "re"
     }
   },
   "scripts": {
@@ -47,7 +46,7 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-zlib": "esy-packages/esy-zlib#f691047f6fe5f2272e7a2e890f8055d3b0071b10"
+    "esy-zlib": "eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb"
   },
   "repository": {
     "type": "git",
