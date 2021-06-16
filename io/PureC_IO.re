@@ -1,14 +1,13 @@
 module IO: Odiff.ImageIO.ImageIO = {
   type t = int;
-  type row =
-    Bigarray.Array1.t(int, Bigarray.int8_unsigned_elt, Bigarray.c_layout);
+  type row = Bigarray.Array1.t(int32, Bigarray.int32_elt, Bigarray.c_layout);
 
   let readRow = (img: Odiff.ImageIO.img(t), y): row => {
     ReadPng.read_row(img.image, y, img.width);
   };
 
   let readImgColor = (x, row: row, _img: Odiff.ImageIO.img(t)) => {
-    (row.{x * 4}, row.{x * 4 + 1}, row.{x * 4 + 2}, row.{x * 4 + 3});
+    row.{x};
   };
 
   let setImgColor = (x, y, pixel, img: Odiff.ImageIO.img(t)) => {

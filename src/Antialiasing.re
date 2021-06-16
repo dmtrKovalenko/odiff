@@ -17,13 +17,11 @@ module MakeAntialiasing = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       // go through 8 adjacent pixels
       for (adj_y in y0 to y1) {
         for (adj_x in x0 to x1) {
-          /* This is the current pixel or we already have our result, do nothing */
-          if (x == adj_x && y == adj_y || zeroes^ >= 3) {
-            ();
-          } else {
+          /* This is not the current pixel and we don't have our result */
+          if (zeroes^ < 3 && (x != adj_x || y != adj_y)) {
             let adjacentColor = readColor(~x=adj_x, ~y=adj_y);
-            if (Helpers.isSameColor(baseColor, adjacentColor)) {
-              zeroes := zeroes^ + 1;
+            if (baseColor == adjacentColor) {
+              incr(zeroes);
             };
           };
         };
@@ -53,14 +51,13 @@ module MakeAntialiasing = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
 
     for (adj_y in y0 to y1) {
       for (adj_x in x0 to x1) {
-        /* This is the current pixel or we already know, this is not anti-aliasing, do nothing */
-        if (x == adj_x && y == adj_y || zeroes^ >= 3) {
-          ();
-        } else {
-          let adjacentColor = baseImg |> IO1.readDirectPixel(~x=adj_x, ~y=adj_y);
+        /* This is not the current pixel and we don't have our result */
+        if (zeroes^ < 3 && (x != adj_x || y != adj_y)) {
+          let adjacentColor =
+            baseImg |> IO1.readDirectPixel(~x=adj_x, ~y=adj_y);
 
-          if (Helpers.isSameColor(baseColor, adjacentColor)) {
-            zeroes := zeroes^ + 1;
+          if (baseColor == adjacentColor) {
+            incr(zeroes);
           } else {
             let delta =
               ColorDelta.calculatePixelBrightnessDelta(

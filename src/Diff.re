@@ -31,7 +31,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
     let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
     let countDifference = (x, y) => {
-      diffCount := diffCount^ + 1;
+      incr(diffCount);
       diffOutput |> IO1.setImgColor(x, y, diffPixel);
     };
 
@@ -43,15 +43,17 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         if (isInIgnoreRegion(x, y, ignoreRegions)) {
           ();
         } else if (x >= comp.width || y >= comp.height) {
-          let (_r, _g, _b, a) = IO1.readImgColor(x, row, base);
-          if (a != 0) {
+          let alpha =
+            Int32.to_int(IO1.readImgColor(x, row, base)) lsr 24 land 0xFF;
+
+          if (alpha != 0) {
             countDifference(x, y);
           };
         } else {
           let baseColor = IO1.readImgColor(x, row, base);
           let compColor = IO2.readImgColor(x, row2, comp);
 
-          if (!Helpers.isSameColor(baseColor, compColor)) {
+          if (baseColor != compColor) {
             let delta =
               ColorDelta.calculatePixelColorDelta(baseColor, compColor);
 
