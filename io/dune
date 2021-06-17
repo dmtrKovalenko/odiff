@@ -2,13 +2,19 @@
  (name ODiffIO)
  (public_name odiff-io)
  (flags
-  (-w -40 -w +26))
-  (foreign_stubs (language c) (names ReadPng) (flags (:include c_flags.sexp)))
-  (c_library_flags (:include c_library_flags.sexp))
-  (libraries odiff-core console.lib camlimages.png camlimages.jpeg camlimages.tiff camlimages.xpm)
- )
+  (-w -40 -w +26)
+  (:include flags.sexp)
+  -verbose)
+ (foreign_stubs
+  (language c)
+  (names ReadPng)
+  (flags
+   (:include c_flags.sexp)))
+ (c_library_flags
+  (:include c_library_flags.sexp))
+ (libraries odiff-core camlimages.jpeg camlimages.tiff camlimages.xpm))
 
 (rule
- (targets c_flags.sexp c_library_flags.sexp)
- (action  (run ./config/discover.exe))
-)
+ (targets flags.sexp c_flags.sexp c_library_flags.sexp)
+ (action
+  (run ./config/discover.exe)))

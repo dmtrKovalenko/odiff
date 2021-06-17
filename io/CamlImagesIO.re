@@ -19,7 +19,12 @@ module IO: ImageIO.ImageIO = {
   };
 
   let saveImage = (img: ImageIO.img(t), filename) => {
-    Png.save(filename, [], Images.Rgba32(img.image));
+    ReadPng.write_png_buffer(
+      filename,
+      Rgba32.dump(img.image),
+      img.width,
+      img.height,
+    );
   };
 
   let readDirectPixel = (~x, ~y, img: ImageIO.img(Rgba32.t)) => {

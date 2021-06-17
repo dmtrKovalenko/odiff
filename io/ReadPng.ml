@@ -8,6 +8,8 @@ external set_pixel_data: 'a -> int -> int -> int * int * int -> unit = "set_pixe
 
 external write_png_file: 'a -> int -> int -> string -> unit = "write_png_file" [@@noalloc]
 
+external write_png_buffer : string -> bytes -> int -> int -> unit = "write_png_buffer"
+
 external free_row_pointers: 'a -> int -> unit = "free_row_pointers" [@@noalloc]
 
 external create_empty_img: int -> int -> 'a = "create_empty_img" [@@noalloc]
