@@ -35,7 +35,7 @@
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "ava": "^3.15.0",
-    "esy-libpng": "eWert-Online/esy-libpng#49da73dc0215d7b5f10acc3e616bc80bea796f15",
+    "esy-libpng": "eWert-Online/esy-libpng#fe7de71e846cd25c297b1264b4147047df37b2af",
     "esy-zlib": "*",
     "ocaml": "~4.10.0"
   },
