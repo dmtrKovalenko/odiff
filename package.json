@@ -35,7 +35,7 @@
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "ava": "^3.15.0",
-    "esy-libpng": "EduardoRFS/esy-libpng#fd6e69baaeaeac68dc247d304080d84aa765dd4c",
+    "esy-libpng": "eWert-Online/esy-libpng#8523cdaa2f14fea13900bb53ecd1f05364c0f194",
     "esy-zlib": "*",
     "ocaml": "~4.10.0"
   },
@@ -46,7 +46,7 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-zlib": "eWert-Online/esy-zlib#576bce9f942472477c5440f9930bcc9395de8feb"
+    "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },
   "repository": {
     "type": "git",
