@@ -9,14 +9,7 @@ module IO: Odiff.ImageIO.ImageIO = {
 
   type row = int;
   let readDirectPixel = (~x: int, ~y: int, img) => {
-    let pixel = (img.image.bigarray).{y * img.width + x} |> Int32.to_int;
-
-    let a = pixel lsr 24 land 0xFF;
-    let r = pixel lsr 16 land 0xFF;
-    let g = pixel lsr 8 land 0xFF;
-    let b = pixel land 0xFF;
-
-    (r, g, b, a);
+    (img.image.bigarray).{y * img.width + x};
   };
 
   let readRow = (img: Odiff.ImageIO.img(t), y): row => y;
