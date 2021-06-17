@@ -1,5 +1,5 @@
 {
-  "checksum": "de1fd67efeea832ae6cf686c095284d2",
+  "checksum": "908eb7c8e8877458d5287d4a2bef2762",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.7@d41d8cd9": {
@@ -1525,7 +1525,7 @@
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9",
         "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
-        "esy-libpng@github:eWert-Online/esy-libpng#41ed4e1588d5eb1bd97b1591a4992620b8e14754@d41d8cd9",
+        "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
         "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
@@ -2900,16 +2900,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-libpng@github:eWert-Online/esy-libpng#41ed4e1588d5eb1bd97b1591a4992620b8e14754@d41d8cd9": {
+    "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9": {
       "id":
-        "esy-libpng@github:eWert-Online/esy-libpng#41ed4e1588d5eb1bd97b1591a4992620b8e14754@d41d8cd9",
+        "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
       "name": "esy-libpng",
       "version":
-        "github:eWert-Online/esy-libpng#41ed4e1588d5eb1bd97b1591a4992620b8e14754",
+        "github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
       "source": {
         "type": "install",
         "source": [
-          "github:eWert-Online/esy-libpng#41ed4e1588d5eb1bd97b1591a4992620b8e14754"
+          "github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506"
         ]
       },
       "overrides": [],
