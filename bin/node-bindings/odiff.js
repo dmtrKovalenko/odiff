@@ -43,7 +43,7 @@ function optionsToArgs(options) {
         break;
 
       case "antialiasing":
-        setArgWithValue("antialiasing", value);
+        setFlag("antialiasing", value);
         break;
 
       case "ignoreRegions": {

@@ -31,7 +31,7 @@ test("Outputs correct parsed result when images different", async (t) => {
   t.is(diffPercentage, 2.85952484323);
 });
 
-test("Correctly parses cli arguments", async (t) => {
+test("Correctly parses threshold", async (t) => {
   const { reason, diffCount, diffPercentage } = await compare(
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
@@ -45,6 +45,22 @@ test("Correctly parses cli arguments", async (t) => {
   t.is(reason, 'pixel-diff')
   t.is(diffCount, 50332);
   t.is(diffPercentage, 1.31007003768);
+});
+
+test("Correctly parses antialiasing", async (t) => {
+  const { reason, diffCount, diffPercentage } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      antialiasing: true,
+      __binaryPath: BINARY_PATH,
+    }
+  )
+
+  t.is(reason, 'pixel-diff')
+  t.is(diffCount, 108208);
+  t.is(diffPercentage, 2.8164996153);
 });
 
 test("Correctly parses ignore regions", async (t) => {
