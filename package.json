@@ -27,15 +27,17 @@
     "post-release": "node .ci/pipelines-release.js"
   },
   "dependencies": {
-    "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
+    "@opam/reason": ">= 3.6.0 < 4.0.0",
     "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
     "@opam/dune": "< 3.0.0",
+    "@opam/dune-configurator": "< 3.0.0",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "ava": "^3.15.0",
-    "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
+    "esy-libpng": "*",
+    "esy-libjpeg-turbo": "*",
     "esy-zlib": "*",
     "ocaml": "~4.10.0"
   },
@@ -46,6 +48,8 @@
     "refmterr": "*"
   },
   "resolutions": {
+    "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
+    "esy-libjpeg-turbo": "eWert-Online/esy-libjpeg-turbo#7f1556f76b9b2fe9239cf0285b5ac5ba7ed8e7f0",
     "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },
   "repository": {
