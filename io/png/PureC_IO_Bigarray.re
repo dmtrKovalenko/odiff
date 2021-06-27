@@ -39,7 +39,7 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    ReadPng.write_png_file(
+    WritePng.write_png_file(
       img.image.rowPointers,
       img.width,
       img.height,

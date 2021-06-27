@@ -6,10 +6,10 @@ let getIOModule = (filename, ~antialiasing) =>
   |> (
     fun
     | ".png" when antialiasing => (
-        (module ODiffIO.PureC_IO_Bigarray.IO): (module ImageIO)
+        (module ODiffIO.Png.BigarrayIO): (module ImageIO)
       )
-    | ".png" => ((module ODiffIO.PureC_IO.IO): (module ImageIO))
-    | _ => ((module ODiffIO.CamlImagesIO.IO): (module ImageIO))
+    | ".png" => ((module ODiffIO.Png.IO): (module ImageIO))
+    | _ => failwith("Format not supported")
   );
 
 type diffResult('output) = {

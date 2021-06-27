@@ -1,3 +1,5 @@
+module BigarrayIO = PureC_IO_Bigarray.IO;
+
 module IO: Odiff.ImageIO.ImageIO = {
   type t = int;
   type row = Bigarray.Array1.t(int32, Bigarray.int32_elt, Bigarray.c_layout);
@@ -22,7 +24,7 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    ReadPng.write_png_file(img.image, img.width, img.height, filename);
+    WritePng.write_png_file(img.image, img.width, img.height, filename);
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
