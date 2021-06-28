@@ -5,18 +5,13 @@
   "license": "MIT",
   "esy": {
     "build": "dune build --release --only-packages odiff,odiff-io,odiff-core",
-    "buildDev": "refmterr dune build --promote-install-files --root . --only-packages odiff,odiff-io,odiff-core",
+    "buildDev":
+      "refmterr dune build --promote-install-files --root . --only-packages odiff,odiff-io,odiff-core",
     "release": {
-      "bin": {
-        "odiff": "ODiffBin"
-      },
-      "includePackages": [
-        "odiff"
-      ]
+      "bin": { "odiff": "ODiffBin" },
+      "includePackages": [ "odiff" ]
     },
-    "buildEnv": {
-      "ODOC_SYNTAX": "re"
-    }
+    "buildEnv": { "ODOC_SYNTAX": "re" }
   },
   "scripts": {
     "run": "esy x ODiffBin",
@@ -28,14 +23,15 @@
   },
   "dependencies": {
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
-    "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
     "@opam/dune": "< 3.0.0",
+    "@opam/dune-configurator": "2.8.5",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "ava": "^3.15.0",
-    "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
+    "esy-libpng":
+      "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
     "esy-zlib": "*",
     "ocaml": "~4.10.0"
   },
@@ -46,7 +42,8 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
+    "esy-zlib":
+      "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },
   "repository": {
     "type": "git",
