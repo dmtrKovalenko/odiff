@@ -11,6 +11,7 @@ let getIOModule = (filename, ~antialiasing) =>
     | ".png" => ((module ODiffIO.Png.IO): (module ImageIO))
     | ".jpg"
     | ".jpeg" => ((module ODiffIO.Jpg.IO): (module ImageIO))
+    | ".bmp" => ((module ODiffIO.Bmp.IO): (module ImageIO))
     | _ => failwith("Format not supported")
   );
 

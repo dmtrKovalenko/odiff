@@ -3,4 +3,4 @@
  (public_name odiff-io)
  (flags
   (-w -40 -w +26))
- (libraries odiff-io.png odiff-io.jpg))
+ (libraries odiff-io.png odiff-io.jpg odiff-io.bmp))

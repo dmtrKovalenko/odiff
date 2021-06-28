@@ -1,0 +1,6 @@
+(library
+ (name Bmp)
+ (public_name odiff-io.bmp)
+ (flags
+  (-w -40 -w +26))
+ (libraries odiff-core WritePng))
