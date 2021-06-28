@@ -96,8 +96,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         (),
       ) =>
     if (failOnLayoutChange == true
-        && base.width != comp.width
-        && base.height != comp.height) {
+        && (base.width != comp.width || base.height != comp.height)) {
       Layout;
     } else {
       let diffResult =
