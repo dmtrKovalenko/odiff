@@ -12,7 +12,7 @@
    (:include c_flags.sexp)))
  (c_library_flags
   (:include c_library_flags.sexp))
- (libraries odiff-core camlimages.png))
+ (libraries odiff-core camlimages.png camlimages.tiff camlimages.xpm))
 
 (rule
  (targets flags.sexp c_flags.sexp c_library_flags.sexp)
