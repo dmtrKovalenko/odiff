@@ -9,6 +9,10 @@ C.main(~name="odiff-c-lib-package-resolver", _c => {
   let jpeg_lib_path = Sys.getenv("JPEG_LIB_PATH") |> String.trim;
   let libturbojpeg = jpeg_lib_path ++ "/libturbojpeg.a";
 
+  let tiff_include_path = Sys.getenv("TIFF_INCLUDE_PATH") |> String.trim;
+  let tiff_lib_path = Sys.getenv("TIFF_LIB_PATH") |> String.trim;
+  let libtiff = tiff_lib_path ++ "/libtiff.a";
+
   let z_lib_path = Sys.getenv("Z_LIB_PATH") |> String.trim;
   let zlib = z_lib_path ++ "/libz.a";
 
@@ -23,4 +27,8 @@ C.main(~name="odiff-c-lib-package-resolver", _c => {
   C.Flags.write_sexp("jpg_c_flags.sexp", ["-I" ++ jpeg_include_path]);
   C.Flags.write_sexp("jpg_c_library_flags.sexp", [libturbojpeg]);
   C.Flags.write_sexp("jpg_flags.sexp", ["-cclib", libturbojpeg]);
+
+  C.Flags.write_sexp("tiff_c_flags.sexp", ["-I" ++ tiff_include_path]);
+  C.Flags.write_sexp("tiff_c_library_flags.sexp", [libtiff, zlib]);
+  C.Flags.write_sexp("tiff_flags.sexp", ["-cclib", libtiff]);
 });

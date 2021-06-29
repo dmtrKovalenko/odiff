@@ -1,5 +1,5 @@
 {
-  "checksum": "104f596388ee87a9248b6026b16dcaf9",
+  "checksum": "0555c8106e8f8a71d4c0906f099e96af",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.9@d41d8cd9": {
@@ -1525,6 +1525,7 @@
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9",
         "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
+        "esy-libtiff@github:eWert-Online/esy-libtiff#4f59bddfb542d2e5892232895e0a153f8264fe50@d41d8cd9",
         "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
         "esy-libjpeg-turbo@github:eWert-Online/esy-libjpeg-turbo#7f1556f76b9b2fe9239cf0285b5ac5ba7ed8e7f0@d41d8cd9",
         "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
@@ -2647,7 +2648,7 @@
       "overrides": [],
       "dependencies": [
         "slash@3.0.0@d41d8cd9", "merge2@1.4.1@d41d8cd9",
-        "ignore@5.1.8@d41d8cd9", "fast-glob@3.2.5@d41d8cd9",
+        "ignore@5.1.8@d41d8cd9", "fast-glob@3.2.6@d41d8cd9",
         "dir-glob@3.0.1@d41d8cd9", "array-union@2.1.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -2854,21 +2855,21 @@
       "dependencies": [ "reusify@1.0.4@d41d8cd9" ],
       "devDependencies": []
     },
-    "fast-glob@3.2.5@d41d8cd9": {
-      "id": "fast-glob@3.2.5@d41d8cd9",
+    "fast-glob@3.2.6@d41d8cd9": {
+      "id": "fast-glob@3.2.6@d41d8cd9",
       "name": "fast-glob",
-      "version": "3.2.5",
+      "version": "3.2.6",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/fast-glob/-/fast-glob-3.2.5.tgz#sha1:7939af2a656de79a4f1901903ee8adcaa7cb9661"
+          "archive:https://registry.npmjs.org/fast-glob/-/fast-glob-3.2.6.tgz#sha1:434dd9529845176ea049acc9343e8282765c6e1a"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "picomatch@2.3.0@d41d8cd9", "micromatch@4.0.4@d41d8cd9",
-        "merge2@1.4.1@d41d8cd9", "glob-parent@5.1.2@d41d8cd9",
-        "@nodelib/fs.walk@1.2.7@d41d8cd9", "@nodelib/fs.stat@2.0.5@d41d8cd9"
+        "micromatch@4.0.4@d41d8cd9", "merge2@1.4.1@d41d8cd9",
+        "glob-parent@5.1.2@d41d8cd9", "@nodelib/fs.walk@1.2.7@d41d8cd9",
+        "@nodelib/fs.stat@2.0.5@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -2916,6 +2917,24 @@
       },
       "overrides": [],
       "dependencies": [],
+      "devDependencies": []
+    },
+    "esy-libtiff@github:eWert-Online/esy-libtiff#4f59bddfb542d2e5892232895e0a153f8264fe50@d41d8cd9": {
+      "id":
+        "esy-libtiff@github:eWert-Online/esy-libtiff#4f59bddfb542d2e5892232895e0a153f8264fe50@d41d8cd9",
+      "name": "esy-libtiff",
+      "version":
+        "github:eWert-Online/esy-libtiff#4f59bddfb542d2e5892232895e0a153f8264fe50",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:eWert-Online/esy-libtiff#4f59bddfb542d2e5892232895e0a153f8264fe50"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9": {
@@ -3952,7 +3971,7 @@
         "chunkd@2.0.1@d41d8cd9", "chokidar@3.5.2@d41d8cd9",
         "chalk@4.1.1@d41d8cd9", "callsites@3.1.0@d41d8cd9",
         "arrify@2.0.1@d41d8cd9", "arrgv@1.0.2@d41d8cd9",
-        "ansi-styles@5.2.0@d41d8cd9", "acorn-walk@8.1.0@d41d8cd9",
+        "ansi-styles@5.2.0@d41d8cd9", "acorn-walk@8.1.1@d41d8cd9",
         "acorn@8.4.1@d41d8cd9", "@concordance/react@2.0.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -4171,14 +4190,14 @@
       ],
       "devDependencies": []
     },
-    "acorn-walk@8.1.0@d41d8cd9": {
-      "id": "acorn-walk@8.1.0@d41d8cd9",
+    "acorn-walk@8.1.1@d41d8cd9": {
+      "id": "acorn-walk@8.1.1@d41d8cd9",
       "name": "acorn-walk",
-      "version": "8.1.0",
+      "version": "8.1.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.1.0.tgz#sha1:d3c6a9faf00987a5e2b9bdb506c2aa76cd707f83"
+          "archive:https://registry.npmjs.org/acorn-walk/-/acorn-walk-8.1.1.tgz#sha1:3ddab7f84e4a7e2313f6c414c5b7dac85f4e3ebc"
         ]
       },
       "overrides": [],
