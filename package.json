@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@opam/reason": ">= 3.6.0 < 4.0.0",
-    "@opam/camlimages": "5.0.4",
     "@opam/cmdliner": "1.0.4",
     "@opam/dune": "< 3.0.0",
     "@opam/dune-configurator": "< 3.0.0",
@@ -49,9 +48,9 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-libjpeg-turbo": "eWert-Online/esy-libjpeg-turbo#7f1556f76b9b2fe9239cf0285b5ac5ba7ed8e7f0",
+    "esy-libjpeg-turbo": "eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6",
     "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
-    "esy-libtiff": "eWert-Online/esy-libtiff#4f59bddfb542d2e5892232895e0a153f8264fe50",
+    "esy-libtiff": "eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
     "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },
   "repository": {

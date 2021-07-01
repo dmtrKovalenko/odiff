@@ -100,7 +100,7 @@ read_png_file_to_tuple(value file)
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
   Store_field(res, 2, Val_int(rowbytes));
-  Store_field(res, 3, row_pointers);
+  Store_field(res, 3, Val_bp(row_pointers));
 
   CAMLreturn(res);
 }
@@ -139,7 +139,7 @@ create_empty_img(value height_val, value width_val)
     row_pointers[y] = (png_byte *)malloc(width * 4); // we always use RGBA
   }
 
-  CAMLreturn(row_pointers);
+  CAMLreturn(Val_bp(row_pointers));
 }
 
 CAMLprim value
