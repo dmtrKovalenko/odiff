@@ -25,17 +25,17 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 
 ## Features
 
-- ✅ .png, .jpg, .jpeg, .bmp, .tiff, .xpm – Files supported.
 - ✅ Cross-format comparison - Yes .jpg vs .png comparison without any problems.
 - ✅ Supports comparison of images with different layouts.
 - ✅ Anti-aliasing detection
 - ✅ Ignoring regions
 - ✅ Using [YIQ NTSC
   transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference.
-- ✅ No dependencies for `.png` comparison. Only several system C dependencies for other formats, [more info](#lib-dependencies).
+- ✅ No dependencies for `.png` comparison
 
 ### Coming in the nearest future:
 
+- ⏹ Support different image formats `.jpeg`, `.tiff` and `.bmp` 
 - ⏹ Reading image from memory buffer
 - ⏹ Reading images from url 
 
@@ -144,12 +144,6 @@ Then give it a try 👀
 ```
 odiff --help
 ```
-
-### lib* dependencies
-
-Make sure if you want to compare **other** than `.png` images it is required to install the proper C library for each format. For `.jpg` – [libjpg](http://libjpeg.sourceforge.net/), for `.tiff` –[libtiff](http://www.libtiff.org/), for `.xpm` - libxpm. 
-
-`.png` images works out of the box.
  
 ### MacOS
 
