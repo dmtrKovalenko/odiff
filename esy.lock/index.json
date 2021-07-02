@@ -1,5 +1,5 @@
 {
-  "checksum": "d928628f70800c5ed0d885e1d8ecf7d4",
+  "checksum": "6cb559ba4048b31049e7d35ad85cec66",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.9@d41d8cd9": {
@@ -1527,7 +1527,7 @@
         "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
         "esy-libtiff@github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
         "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
-        "esy-libjpeg-turbo@github:eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6@d41d8cd9",
+        "esy-libjpeg@github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d@d41d8cd9",
         "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
@@ -2902,22 +2902,6 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-nasm@github:ManasJayanth/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9": {
-      "id":
-        "esy-nasm@github:ManasJayanth/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9",
-      "name": "esy-nasm",
-      "version":
-        "github:ManasJayanth/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a",
-      "source": {
-        "type": "install",
-        "source": [
-          "github:ManasJayanth/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
-      "devDependencies": []
-    },
     "esy-libtiff@github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9": {
       "id":
         "esy-libtiff@github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
@@ -2954,36 +2938,16 @@
       ],
       "devDependencies": []
     },
-    "esy-libjpeg-turbo@github:eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6@d41d8cd9": {
+    "esy-libjpeg@github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d@d41d8cd9": {
       "id":
-        "esy-libjpeg-turbo@github:eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6@d41d8cd9",
-      "name": "esy-libjpeg-turbo",
+        "esy-libjpeg@github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d@d41d8cd9",
+      "name": "esy-libjpeg",
       "version":
-        "github:eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6",
+        "github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d",
       "source": {
         "type": "install",
         "source": [
-          "github:eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "esy-nasm@github:ManasJayanth/esy-nasm#6240bdbb164476558d3738812fbbe48f66cc904a@d41d8cd9",
-        "esy-cmake@github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6@d41d8cd9",
-        "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "esy-cmake@github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6@d41d8cd9": {
-      "id":
-        "esy-cmake@github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6@d41d8cd9",
-      "name": "esy-cmake",
-      "version":
-        "github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6",
-      "source": {
-        "type": "install",
-        "source": [
-          "github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6"
+          "github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d"
         ]
       },
       "overrides": [],
@@ -5489,20 +5453,6 @@
         "@opam/menhir@opam:20210419@11c42419",
         "@opam/fix@opam:20201120@0b212fb9", "@opam/dune@opam:2.9.0@489e77a9"
       ],
-      "devDependencies": []
-    },
-    "@esy-cross/ninja-build@1.8.2001@d41d8cd9": {
-      "id": "@esy-cross/ninja-build@1.8.2001@d41d8cd9",
-      "name": "@esy-cross/ninja-build",
-      "version": "1.8.2001",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/@esy-cross/ninja-build/-/ninja-build-1.8.2001.tgz#sha1:d223b3b9e73e14ef2f241ddc522fa330f94b8602"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
       "devDependencies": []
     },
     "@concordance/react@2.0.0@d41d8cd9": {

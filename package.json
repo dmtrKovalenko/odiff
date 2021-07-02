@@ -37,7 +37,7 @@
     "ava": "^3.15.0",
     "esy-libtiff": "*",
     "esy-libpng": "*",
-    "esy-libjpeg-turbo": "*",
+    "esy-libjpeg": "*",
     "esy-zlib": "*",
     "ocaml": "~4.10.0"
   },
@@ -48,7 +48,7 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-libjpeg-turbo": "eWert-Online/esy-libjpeg-turbo#5fa4e38210caa8c944447eb7c2b2ca108722cfe6",
+    "esy-libjpeg": "eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d",
     "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
     "esy-libtiff": "eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
     "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"

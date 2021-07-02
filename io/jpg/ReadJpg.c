@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include <turbojpeg.h>
+#include <jpeglib.h>
 
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
@@ -17,8 +17,11 @@ read_jpeg_file_to_tuple(value file)
   CAMLlocal1(res);
 
   size_t size;
-  unsigned char *jpeg = NULL;
-  tjhandle handle;
+  struct jpeg_error_mgr jerr;
+  struct jpeg_decompress_struct cinfo;
+
+  jpeg_create_decompress(&cinfo);
+  cinfo.err = jpeg_std_error(&jerr);
 
   const char *filename = String_val(file);
   FILE *fp = fopen(filename, "rb");
@@ -32,41 +35,36 @@ read_jpeg_file_to_tuple(value file)
       caml_failwith("Input file contains no data");
   }
 
-  jpeg = (unsigned char *)tjAlloc(size);
-  if (!jpeg) {
-      caml_failwith("allocating JPEG buffer failed");
+  jpeg_stdio_src(&cinfo, fp);
+  jpeg_read_header(&cinfo, TRUE);
+  jpeg_start_decompress(&cinfo);
+
+  uint32_t width    = cinfo.output_width;
+  uint32_t height   = cinfo.output_height;
+  uint32_t channels = cinfo.output_components;
+
+  JDIMENSION stride = width * channels;
+  JSAMPARRAY temp_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, stride, 1);
+
+  int buffer_size = width * height;
+  uint8_t *image_buffer = (uint8_t*)malloc(buffer_size * 4);
+
+  while (cinfo.output_scanline < cinfo.output_height) {
+    jpeg_read_scanlines(&cinfo, temp_buffer, 1);
+
+    unsigned int k = (cinfo.output_scanline - 1) * 4 * width;
+    unsigned int j = 0;
+    for(unsigned int i = 0; i < 4 * width; i += 4) {
+      image_buffer[k + i]     = temp_buffer[0][j];
+      image_buffer[k + i + 1] = temp_buffer[0][j + 1];
+      image_buffer[k + i + 2] = temp_buffer[0][j + 2];
+      image_buffer[k + i + 3] = 255;
+
+      j += 3;
+    }
   }
 
-  if (fread(jpeg, size, 1, fp) < 1) {
-      caml_failwith("reading input file failed");
-  }
-
-  if ((handle = tjInitDecompress()) == NULL) {
-      caml_failwith("initializing decompressor failed");
-  }
-
-  int width, height;
-  int inSubsamp, inColorspace;
-  if (tjDecompressHeader3(handle, jpeg, size, &width, &height, &inSubsamp, &inColorspace) < 0) {
-      caml_failwith("reading JPEG header failed");
-  }
-
-  int pixelFormat = TJPF_RGBA;
-  tjscalingfactor scalingFactor = { 1, 1 };
-  width = TJSCALED(width, scalingFactor);
-  height = TJSCALED(height, scalingFactor);
-  int pitch = width * tjPixelSize[pixelFormat];
-  int flags = 0;
-  int buffer_size = width * height * tjPixelSize[pixelFormat];
-  unsigned char *buffer = NULL;
-
-  if ((buffer = (unsigned char*)tjAlloc(buffer_size)) == NULL) {
-      caml_failwith("allocating buffer failed");
-  }
-
-  if (tjDecompress2(handle, jpeg, size, buffer, width, pitch, height, pixelFormat, flags) < 0) {
-      caml_failwith("decompressing JPEG image failed");
-  }
+  jpeg_finish_decompress(&cinfo);
 
   res = caml_alloc(3, 0);
 
@@ -74,9 +72,10 @@ read_jpeg_file_to_tuple(value file)
 
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
-  Store_field(res, 2, caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer, dims));
+  Store_field(res, 2, caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, image_buffer, dims));
 
-  tjFree(jpeg);
+  jpeg_destroy_decompress(&cinfo);
+  fclose(fp);
 
   CAMLreturn(res);
 }
