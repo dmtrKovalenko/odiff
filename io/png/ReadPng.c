@@ -79,6 +79,8 @@ read_png_file_to_tuple(value file)
       color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
     png_set_gray_to_rgb(png);
 
+  png_set_interlace_handling(png);
+
   png_read_update_info(png, info);
 
   row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);

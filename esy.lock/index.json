@@ -1,5 +1,5 @@
 {
-  "checksum": "6cb559ba4048b31049e7d35ad85cec66",
+  "checksum": "d0b526d2375953fc3e0d5827f865d7b2",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.9@d41d8cd9": {
@@ -1525,7 +1525,7 @@
       "dependencies": [
         "ocaml@4.10.2000@d41d8cd9",
         "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
-        "esy-libtiff@github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
+        "esy-libtiff@github:esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
         "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
         "esy-libjpeg@github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d@d41d8cd9",
         "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
@@ -2902,16 +2902,16 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-libtiff@github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9": {
+    "esy-libtiff@github:esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9": {
       "id":
-        "esy-libtiff@github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
+        "esy-libtiff@github:esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
       "name": "esy-libtiff",
       "version":
-        "github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
+        "github:esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
       "source": {
         "type": "install",
         "source": [
-          "github:eWert-Online/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066"
+          "github:esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066"
         ]
       },
       "overrides": [],
