@@ -65,7 +65,7 @@ jobs:
       - name: Build project
         run: esy build
 
-      - name: Ensure reamde is up-to-orange_diff_generated
+      - name: Ensure reamde is up-to-date
         run: esy node scripts/process-readme.md verify
 
       # Here we cleanup if we have a cache fail because we use restore-keys.
