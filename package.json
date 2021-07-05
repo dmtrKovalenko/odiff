@@ -40,8 +40,7 @@
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
-    "esy-zlib": "*",
-    "get-port": "^5.1.1",
+    "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
@@ -52,9 +51,6 @@
     "@opam/ocaml-lsp-server": "1.4.0",
     "@opam/odoc": "*",
     "refmterr": "*"
-  },
-  "resolutions": {
-    "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },
   "repository": {
     "type": "git",

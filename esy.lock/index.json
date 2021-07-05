@@ -1,5 +1,5 @@
 {
-  "checksum": "fb92dfc52759777e752b7783c7a5bcfd",
+  "checksum": "b2b6508a82304ba11c49ee08ec5747d3",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.9@d41d8cd9": {
@@ -1551,7 +1551,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.10.2000@d41d8cd9", "get-port@5.1.1@d41d8cd9",
+        "ocaml@4.10.2000@d41d8cd9",
         "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
         "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
@@ -2752,20 +2752,6 @@
       },
       "overrides": [],
       "dependencies": [ "pump@3.0.0@d41d8cd9" ],
-      "devDependencies": []
-    },
-    "get-port@5.1.1@d41d8cd9": {
-      "id": "get-port@5.1.1@d41d8cd9",
-      "name": "get-port",
-      "version": "5.1.1",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/get-port/-/get-port-5.1.1.tgz#sha1:0469ed07563479de6efb986baf053dcd7d4e3193"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [],
       "devDependencies": []
     },
     "get-caller-file@2.0.5@d41d8cd9": {
