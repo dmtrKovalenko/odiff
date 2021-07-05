@@ -66,7 +66,7 @@ jobs:
         run: esy build
 
       - name: Ensure reamde is up-to-date
-        run: node scripts/process-readme.md verify
+        run: node scripts/process-readme.js verify
 
       # Here we cleanup if we have a cache fail because we use restore-keys.
       # restore-keys take the old store even on cache fail.
