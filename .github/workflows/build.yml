@@ -66,12 +66,7 @@ jobs:
         run: esy build
 
       - name: Ensure reamde is up-to-orange_diff_generated
-        run: esy node scripts/process-readme.md
-
-      - name: Check for uncommitted changes
-        id: check-changes
-        uses: mskri/check-uncommitted-changes-action@v1.0.1
-
+        run: esy node scripts/process-readme.md verify
 
       # Here we cleanup if we have a cache fail because we use restore-keys.
       # restore-keys take the old store even on cache fail.
