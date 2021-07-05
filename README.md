@@ -79,8 +79,9 @@ odiff --help
 
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
-```ts
-export type ODiffOptions = {
+<!--inline-interface-start-->
+```tsx
+export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
   diffColor: string;
   /** Output full diff image. */
@@ -98,7 +99,7 @@ export type ODiffOptions = {
     x2: number,
     y2: number,
   }>;
-};
+}>;
 
 declare function compare(
   basePath: string,
@@ -120,7 +121,8 @@ declare function compare(
 
 export { compare };
 ```
-
+<!--inline-interface-end-->"
+ 
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
 
 > Make sure that diff output file will be created only if images have pixel difference we can see 👀

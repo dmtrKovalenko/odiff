@@ -1,4 +1,4 @@
-export type ODiffOptions = {
+export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
   diffColor: string;
   /** Output full diff image. */
@@ -16,7 +16,7 @@ export type ODiffOptions = {
     x2: number,
     y2: number,
   }>;
-};
+}>;
 
 declare function compare(
   basePath: string,

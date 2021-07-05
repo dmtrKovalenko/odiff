@@ -5,21 +5,31 @@
   "license": "MIT",
   "esy": {
     "build": "dune build --release --only-packages odiff,odiff-io,odiff-core",
-    "buildDev":
-      "refmterr dune build --promote-install-files --root . --only-packages odiff,odiff-io,odiff-core",
+    "buildDev": "refmterr dune build --promote-install-files --root . --only-packages odiff,odiff-io,odiff-core",
     "release": {
-      "bin": { "odiff": "ODiffBin" },
-      "includePackages": [ "odiff" ]
+      "bin": {
+        "odiff": "ODiffBin"
+      },
+      "includePackages": [
+        "odiff"
+      ]
     },
-    "buildEnv": { "ODOC_SYNTAX": "re" }
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
+    }
+  },
+  "simple-git-hooks": {
+    "pre-push": "esy node process-readme.md"
   },
   "scripts": {
     "run": "esy x ODiffBin",
     "test": "esy x RunTests.exe",
     "test-js": "esy ava",
+    "test-ts": "esy tsc --noEmit test/node-bindings.test.ts",
     "format": "esy dune build @fmt --auto-promote",
     "doc": "esy dune build @doc",
-    "post-release": "node .ci/pipelines-release.js"
+    "post-release": "node .ci/pipelines-release.js",
+    "process:readme": "esy node scripts/process-readme.js"
   },
   "dependencies": {
     "@esy-ocaml/reason": ">= 3.6.0 < 4.0.0",
@@ -29,21 +39,18 @@
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
-    "ava": "^3.15.0",
-    "esy-libpng":
-      "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
-    "esy-zlib": "*",
+    "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
+    "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf",
     "ocaml": "~4.10.0"
   },
   "devDependencies": {
+    "ava": "^3.15.0",
+    "typescript": "^4.3.5",
+    "simple-git-hooks": "^2.5.1",
     "@opam/merlin": "*",
     "@opam/ocaml-lsp-server": "1.4.0",
     "@opam/odoc": "*",
     "refmterr": "*"
-  },
-  "resolutions": {
-    "esy-zlib":
-      "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },
   "repository": {
     "type": "git",
