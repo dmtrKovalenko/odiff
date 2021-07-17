@@ -65,6 +65,9 @@ jobs:
       - name: Build project
         run: esy build
 
+      - name: Ensure reamde is up-to-date
+        run: node scripts/process-readme.js verify
+
       # Here we cleanup if we have a cache fail because we use restore-keys.
       # restore-keys take the old store even on cache fail.
       # So, we have deps we don't care anymore. We prune them.
@@ -77,6 +80,9 @@ jobs:
 
       - name: Test node bindings
         run: esy test-js
+
+      - name: Test ts declaration
+        run: esy test-ts
 
       - uses: actions/upload-artifact@v2
         if: failure()

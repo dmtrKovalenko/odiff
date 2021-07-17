@@ -1,5 +1,5 @@
 {
-  "checksum": "d0b526d2375953fc3e0d5827f865d7b2",
+  "checksum": "f3ecae1e054832e57ef4792158eeea14",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.9@d41d8cd9": {
@@ -245,6 +245,20 @@
       },
       "overrides": [],
       "dependencies": [ "crypto-random-string@2.0.0@d41d8cd9" ],
+      "devDependencies": []
+    },
+    "typescript@4.3.5@d41d8cd9": {
+      "id": "typescript@4.3.5@d41d8cd9",
+      "name": "typescript",
+      "version": "4.3.5",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/typescript/-/typescript-4.3.5.tgz#sha1:4d1c37cc16e893973c45a06886b7113234f119f4"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
       "devDependencies": []
     },
     "typedarray-to-buffer@3.1.5@d41d8cd9": {
@@ -689,6 +703,20 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "simple-git-hooks@2.5.1@d41d8cd9": {
+      "id": "simple-git-hooks@2.5.1@d41d8cd9",
+      "name": "simple-git-hooks",
+      "version": "2.5.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/simple-git-hooks/-/simple-git-hooks-2.5.1.tgz#sha1:78ed9cfa552843bc45cd36ad5b7424567119c2f4"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "signal-exit@3.0.3@d41d8cd9": {
       "id": "signal-exit@3.0.3@d41d8cd9",
       "name": "signal-exit",
@@ -913,7 +941,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "path-parse@1.0.7@d41d8cd9", "is-core-module@2.4.0@d41d8cd9"
+        "path-parse@1.0.7@d41d8cd9", "is-core-module@2.5.0@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -1024,7 +1052,7 @@
       "dependencies": [
         "type-fest@0.6.0@d41d8cd9", "parse-json@5.2.0@d41d8cd9",
         "normalize-package-data@2.5.0@d41d8cd9",
-        "@types/normalize-package-data@2.4.0@d41d8cd9"
+        "@types/normalize-package-data@2.4.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -1537,7 +1565,9 @@
         "@opam/cmdliner@opam:1.0.4@93208aac"
       ],
       "devDependencies": [
-        "refmterr@3.3.2@d41d8cd9", "@opam/odoc@opam:1.5.2@3d78163d",
+        "typescript@4.3.5@d41d8cd9", "simple-git-hooks@2.5.1@d41d8cd9",
+        "refmterr@3.3.2@d41d8cd9", "ava@3.15.0@d41d8cd9",
+        "@opam/odoc@opam:1.5.3@29f53af8",
         "@opam/ocaml-lsp-server@opam:1.4.0@c9583433",
         "@opam/merlin@opam:3.5.0@f8ae5d56"
       ]
@@ -2288,14 +2318,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "is-core-module@2.4.0@d41d8cd9": {
-      "id": "is-core-module@2.4.0@d41d8cd9",
+    "is-core-module@2.5.0@d41d8cd9": {
+      "id": "is-core-module@2.5.0@d41d8cd9",
       "name": "is-core-module",
-      "version": "2.4.0",
+      "version": "2.5.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/is-core-module/-/is-core-module-2.4.0.tgz#sha1:8e9fc8e15027b011418026e98f0e6f4d86305cc1"
+          "archive:https://registry.npmjs.org/is-core-module/-/is-core-module-2.5.0.tgz#sha1:f754843617c70bfd29b7bd87327400cda5c18491"
         ]
       },
       "overrides": [],
@@ -2647,7 +2677,7 @@
       "overrides": [],
       "dependencies": [
         "slash@3.0.0@d41d8cd9", "merge2@1.4.1@d41d8cd9",
-        "ignore@5.1.8@d41d8cd9", "fast-glob@3.2.6@d41d8cd9",
+        "ignore@5.1.8@d41d8cd9", "fast-glob@3.2.7@d41d8cd9",
         "dir-glob@3.0.1@d41d8cd9", "array-union@2.1.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -2840,34 +2870,34 @@
       "dependencies": [ "escape-string-regexp@1.0.5@d41d8cd9" ],
       "devDependencies": []
     },
-    "fastq@1.11.0@d41d8cd9": {
-      "id": "fastq@1.11.0@d41d8cd9",
+    "fastq@1.11.1@d41d8cd9": {
+      "id": "fastq@1.11.1@d41d8cd9",
       "name": "fastq",
-      "version": "1.11.0",
+      "version": "1.11.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/fastq/-/fastq-1.11.0.tgz#sha1:bb9fb955a07130a918eb63c1f5161cc32a5d0858"
+          "archive:https://registry.npmjs.org/fastq/-/fastq-1.11.1.tgz#sha1:5d8175aae17db61947f8b162cfc7f63264d22807"
         ]
       },
       "overrides": [],
       "dependencies": [ "reusify@1.0.4@d41d8cd9" ],
       "devDependencies": []
     },
-    "fast-glob@3.2.6@d41d8cd9": {
-      "id": "fast-glob@3.2.6@d41d8cd9",
+    "fast-glob@3.2.7@d41d8cd9": {
+      "id": "fast-glob@3.2.7@d41d8cd9",
       "name": "fast-glob",
-      "version": "3.2.6",
+      "version": "3.2.7",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/fast-glob/-/fast-glob-3.2.6.tgz#sha1:434dd9529845176ea049acc9343e8282765c6e1a"
+          "archive:https://registry.npmjs.org/fast-glob/-/fast-glob-3.2.7.tgz#sha1:fd6cb7a2d7e9aa7a7846111e85a196d6b2f766a1"
         ]
       },
       "overrides": [],
       "dependencies": [
         "micromatch@4.0.4@d41d8cd9", "merge2@1.4.1@d41d8cd9",
-        "glob-parent@5.1.2@d41d8cd9", "@nodelib/fs.walk@1.2.7@d41d8cd9",
+        "glob-parent@5.1.2@d41d8cd9", "@nodelib/fs.walk@1.2.8@d41d8cd9",
         "@nodelib/fs.stat@2.0.5@d41d8cd9"
       ],
       "devDependencies": []
@@ -4181,14 +4211,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "@types/normalize-package-data@2.4.0@d41d8cd9": {
-      "id": "@types/normalize-package-data@2.4.0@d41d8cd9",
+    "@types/normalize-package-data@2.4.1@d41d8cd9": {
+      "id": "@types/normalize-package-data@2.4.1@d41d8cd9",
       "name": "@types/normalize-package-data",
-      "version": "2.4.0",
+      "version": "2.4.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@types/normalize-package-data/-/normalize-package-data-2.4.0.tgz#sha1:e486d0d97396d79beedd0a6e33f4534ff6b4973e"
+          "archive:https://registry.npmjs.org/@types/normalize-package-data/-/normalize-package-data-2.4.1.tgz#sha1:d3357479a0fdfdd5907fe67e17e0a85c906e1301"
         ]
       },
       "overrides": [],
@@ -4655,20 +4685,20 @@
         "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.9.0@489e77a9"
       ]
     },
-    "@opam/odoc@opam:1.5.2@3d78163d": {
-      "id": "@opam/odoc@opam:1.5.2@3d78163d",
+    "@opam/odoc@opam:1.5.3@29f53af8": {
+      "id": "@opam/odoc@opam:1.5.3@29f53af8",
       "name": "@opam/odoc",
-      "version": "opam:1.5.2",
+      "version": "opam:1.5.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/d2/d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871#sha256:d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871",
-          "archive:https://github.com/ocaml/odoc/releases/download/1.5.2/odoc-1.5.2.tbz#sha256:d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871"
+          "archive:https://opam.ocaml.org/cache/sha256/f2/f2b76f811658c4b52cb48ac4ffc2ec37cedd2a805111c7f8ec20f8f36b8bbf45#sha256:f2b76f811658c4b52cb48ac4ffc2ec37cedd2a805111c7f8ec20f8f36b8bbf45",
+          "archive:https://github.com/ocaml/odoc/releases/download/1.5.3/odoc-1.5.3.tbz#sha256:f2b76f811658c4b52cb48ac4ffc2ec37cedd2a805111c7f8ec20f8f36b8bbf45"
         ],
         "opam": {
           "name": "odoc",
-          "version": "1.5.2",
-          "path": "esy.lock/opam/odoc.1.5.2"
+          "version": "1.5.3",
+          "path": "esy.lock/opam/odoc.1.5.3"
         }
       },
       "overrides": [],
@@ -5374,19 +5404,19 @@
       ],
       "devDependencies": [ "ocaml@4.10.2000@d41d8cd9" ]
     },
-    "@nodelib/fs.walk@1.2.7@d41d8cd9": {
-      "id": "@nodelib/fs.walk@1.2.7@d41d8cd9",
+    "@nodelib/fs.walk@1.2.8@d41d8cd9": {
+      "id": "@nodelib/fs.walk@1.2.8@d41d8cd9",
       "name": "@nodelib/fs.walk",
-      "version": "1.2.7",
+      "version": "1.2.8",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@nodelib/fs.walk/-/fs.walk-1.2.7.tgz#sha1:94c23db18ee4653e129abd26fb06f870ac9e1ee2"
+          "archive:https://registry.npmjs.org/@nodelib/fs.walk/-/fs.walk-1.2.8.tgz#sha1:e95737e8bb6746ddedf69c556953494f196fe69a"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "fastq@1.11.0@d41d8cd9", "@nodelib/fs.scandir@2.1.5@d41d8cd9"
+        "fastq@1.11.1@d41d8cd9", "@nodelib/fs.scandir@2.1.5@d41d8cd9"
       ],
       "devDependencies": []
     },
