@@ -7,8 +7,6 @@ module IO: Odiff.ImageIO.ImageIO = {
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
     let (width, height, image) = ReadTiff.load(filename);
 
-    WritePng.write_png_bigarray("./input.png", image, width, height);
-
     {width, height, image};
   };
 
