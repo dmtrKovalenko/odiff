@@ -10,7 +10,6 @@ depends: [
   "dune" {>= "2.8"}
   "conf-libpng"
   "odiff-core"
-  "camlimages" {= "5.4.0"}
   "reason" {>= "3.6.0" & < "4.0.0"}
   "ocaml" {>= "4.10.0" & < "4.11.0"}
   "odoc" {with-doc}

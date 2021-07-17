@@ -41,7 +41,6 @@
   dune
   conf-libpng
   odiff-core
-  (camlimages (= 5.4.0))
   (reason (and (>= 3.6.0) (< 4.0.0)))
   (ocaml (and (>= 4.10.0) (< 4.11.0)))
  )
