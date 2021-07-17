@@ -123,8 +123,7 @@ row_pointers_to_bigarray(png_bytep *row_pointers, value rowbytes_val, value heig
     memcpy(total_pixels + y * rowbytes, row_pointers[y], rowbytes);
   }
 
-  long dims[1] = {width * height};
-  CAMLreturn(caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, total_pixels, dims));
+  CAMLreturn(caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, total_pixels, width * height));
 }
 
 CAMLprim value
@@ -153,8 +152,7 @@ read_row(png_bytep *row_pointers, value y_val, value img_width_val)
 
   png_bytep row = row_pointers[y];
 
-  long dims[] = {img_width};
-  CAMLreturn(caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, row, dims));
+  CAMLreturn(caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, row, img_width));
 }
 
 CAMLprim value

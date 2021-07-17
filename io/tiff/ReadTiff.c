@@ -48,9 +48,7 @@ read_tiff_file_to_tuple(value file)
   }
 
   res = caml_alloc(4, 0);
-
-  long dims[1] = {buffer_size};
-  ba = caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer, dims);
+  ba = caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer, buffer_size);
 
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
