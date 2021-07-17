@@ -3,9 +3,11 @@ open Bigarray;
 module IO: Odiff.ImageIO.ImageIO = {
   type t = Array1.t(int32, int32_elt, c_layout);
   type row = int;
+  let buffer = ref(None);
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, image) = ReadJpg.read_jpeg_image(filename);
+    let (width, height, image, b) = ReadJpg.read_jpeg_image(filename);
+    buffer := Some(b);
 
     {width, height, image};
   };
@@ -37,7 +39,7 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
-    ();
+    buffer^ |> Option.iter(ReadJpg.cleanup_jpg);
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {

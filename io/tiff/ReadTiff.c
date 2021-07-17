@@ -14,7 +14,7 @@ CAMLprim value
 read_tiff_file_to_tuple(value file)
 {
   CAMLparam1(file);
-  CAMLlocal1(res);
+  CAMLlocal2(res, ba);
 
   const char *filename = String_val(file);
   uint32_t *buffer = NULL;
@@ -47,15 +47,25 @@ read_tiff_file_to_tuple(value file)
     caml_failwith("reading input file failed");
   }
 
-  res = caml_alloc(3, 0);
+  res = caml_alloc(4, 0);
 
   long dims[1] = {buffer_size};
+  ba = caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer, dims);
 
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
-  Store_field(res, 2, caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer, dims));
+  Store_field(res, 2, ba);
+  Store_field(res, 3, Val_bp(buffer));
 
   TIFFClose(image);
 
   CAMLreturn(res);
+}
+
+CAMLprim value
+cleanup_tiff(value buffer)
+{
+  CAMLparam1(buffer);
+  free(Bp_val(buffer));
+  CAMLreturn(Val_unit);
 }

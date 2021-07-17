@@ -14,7 +14,7 @@ CAMLprim value
 read_jpeg_file_to_tuple(value file)
 {
   CAMLparam1(file);
-  CAMLlocal1(res);
+  CAMLlocal2(res, ba);
 
   size_t size;
   struct jpeg_error_mgr jerr;
@@ -66,16 +66,26 @@ read_jpeg_file_to_tuple(value file)
 
   jpeg_finish_decompress(&cinfo);
 
-  res = caml_alloc(3, 0);
+  res = caml_alloc(4, 0);
 
   long dims[1] = {buffer_size};
+  ba = caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, image_buffer, dims);
 
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
-  Store_field(res, 2, caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, image_buffer, dims));
+  Store_field(res, 2, ba);
+  Store_field(res, 3, Val_bp(image_buffer));
 
   jpeg_destroy_decompress(&cinfo);
   fclose(fp);
 
   CAMLreturn(res);
+}
+
+CAMLprim value
+cleanup_jpg(value buffer)
+{
+  CAMLparam1(buffer);
+  free(Bp_val(buffer));
+  CAMLreturn(Val_unit);
 }

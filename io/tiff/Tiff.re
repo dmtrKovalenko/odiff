@@ -4,8 +4,12 @@ module IO: Odiff.ImageIO.ImageIO = {
   type t = Array1.t(int32, int32_elt, c_layout);
   type row = int;
 
+  let buffer = ref(None);
+
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, image) = ReadTiff.load(filename);
+    let (width, height, image, b) = ReadTiff.load(filename);
+
+    buffer := Some(b);
 
     {width, height, image};
   };
@@ -37,7 +41,7 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
-    ();
+    buffer^ |> Option.iter(ReadTiff.cleanup_tiff);
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
