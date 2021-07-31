@@ -1,0 +1,19 @@
+(library
+ (name Jpg)
+ (public_name odiff-io.jpg)
+ (flags
+  (-w -40 -w +26)
+  (:include jpg_flags.sexp))
+ (foreign_stubs
+  (language c)
+  (names ReadJpg)
+  (flags
+   (:include jpg_c_flags.sexp)))
+ (c_library_flags
+  (:include jpg_c_library_flags.sexp))
+ (libraries odiff-core WritePng))
+
+(rule
+ (targets jpg_flags.sexp jpg_c_flags.sexp jpg_c_library_flags.sexp)
+ (action
+  (run ../config/discover.exe)))
