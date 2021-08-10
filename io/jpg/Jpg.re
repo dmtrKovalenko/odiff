@@ -1,7 +1,9 @@
 open Bigarray;
 
-module IO: Odiff.ImageIO.ImageIO = {
-  type t = Array1.t(int32, int32_elt, c_layout);
+type data = Array1.t(int32, int32_elt, c_layout);
+
+module IO = {
+  type t = data;
   type row = int;
   let buffer = ref(None);
 

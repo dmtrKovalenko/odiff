@@ -6,7 +6,7 @@ let getIOModule = (filename, ~antialiasing) =>
   |> (
     fun
     | ".png" when antialiasing => (
-        (module ODiffIO.Png.BigarrayIO): (module ImageIO)
+        (module ODiffIO.Png_Bigarray.IO): (module ImageIO)
       )
     | ".png" => ((module ODiffIO.Png.IO): (module ImageIO))
     | ".jpg"

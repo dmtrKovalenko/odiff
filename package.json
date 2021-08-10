@@ -36,9 +36,9 @@
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
-    "ava": "^3.15.0",
     "esy-libtiff": "*",
     "esy-libpng": "*",
+    "esy-libspng": "*",
     "esy-libjpeg": "*",
     "esy-zlib": "*",
     "ocaml": "~4.10.0"
@@ -53,6 +53,7 @@
     "refmterr": "*"
   },
   "resolutions": {
+    "esy-libspng": "link:../esy-packages/esy-libspng/package.json",
     "esy-libjpeg": "eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d",
     "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
     "esy-libtiff": "esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",

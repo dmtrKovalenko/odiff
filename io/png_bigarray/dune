@@ -1,0 +1,19 @@
+(library
+ (name Png_Bigarray)
+ (public_name odiff-io.png_bigarray)
+ (flags
+  (-w -40 -w +26)
+  (:include png_ba_flags.sexp))
+ (foreign_stubs
+  (language c)
+  (names ReadPng_Bigarray)
+  (flags
+   (:include png_ba_c_flags.sexp)))
+ (c_library_flags
+  (:include png_ba_c_library_flags.sexp))
+ (libraries odiff-core WritePng))
+
+(rule
+ (targets png_ba_flags.sexp png_ba_c_flags.sexp png_ba_c_library_flags.sexp)
+ (action
+  (run ../config/discover.exe)))

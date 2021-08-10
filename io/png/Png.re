@@ -1,5 +1,3 @@
-module BigarrayIO = PureC_IO_Bigarray.IO;
-
 module IO: Odiff.ImageIO.ImageIO = {
   type t = int;
   type row = Bigarray.Array1.t(int32, Bigarray.int32_elt, Bigarray.c_layout);

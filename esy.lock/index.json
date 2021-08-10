@@ -1,5 +1,5 @@
 {
-  "checksum": "f3ecae1e054832e57ef4792158eeea14",
+  "checksum": "39457988fac30e065f3478e601967991",
   "root": "odiff@link-dev:./package.json",
   "node": {
     "yargs-parser@20.2.9@d41d8cd9": {
@@ -229,7 +229,7 @@
         "is-npm@5.0.0@d41d8cd9", "is-installed-globally@0.4.0@d41d8cd9",
         "is-ci@2.0.0@d41d8cd9", "import-lazy@2.1.0@d41d8cd9",
         "has-yarn@2.1.0@d41d8cd9", "configstore@5.0.1@d41d8cd9",
-        "chalk@4.1.1@d41d8cd9", "boxen@5.0.1@d41d8cd9"
+        "chalk@4.1.2@d41d8cd9", "boxen@5.0.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -654,7 +654,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "source-map@0.6.1@d41d8cd9", "buffer-from@1.1.1@d41d8cd9"
+        "source-map@0.6.1@d41d8cd9", "buffer-from@1.1.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -1507,7 +1507,7 @@
         "wcwidth@1.0.1@d41d8cd9", "strip-ansi@6.0.0@d41d8cd9",
         "log-symbols@4.1.0@d41d8cd9", "is-unicode-supported@0.1.0@d41d8cd9",
         "is-interactive@1.0.0@d41d8cd9", "cli-spinners@2.6.0@d41d8cd9",
-        "cli-cursor@3.1.0@d41d8cd9", "chalk@4.1.1@d41d8cd9",
+        "cli-cursor@3.1.0@d41d8cd9", "chalk@4.1.2@d41d8cd9",
         "bl@4.1.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -1554,9 +1554,10 @@
         "ocaml@4.10.2000@d41d8cd9",
         "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
         "esy-libtiff@github:esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066@d41d8cd9",
+        "esy-libspng@link:../esy-packages/esy-libspng/package.json",
         "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
         "esy-libjpeg@github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d@d41d8cd9",
-        "ava@3.15.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
+        "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/pastel@0.3.0@d41d8cd9",
         "@reason-native/console@0.1.0@d41d8cd9",
         "@opam/reason@opam:3.7.0@494dd52d",
@@ -1569,7 +1570,7 @@
         "refmterr@3.3.2@d41d8cd9", "ava@3.15.0@d41d8cd9",
         "@opam/odoc@opam:1.5.3@29f53af8",
         "@opam/ocaml-lsp-server@opam:1.4.0@c9583433",
-        "@opam/merlin@opam:3.5.0@f8ae5d56"
+        "@opam/merlin@opam:3.6.1@b2fb327d"
       ]
     },
     "ocaml@4.10.2000@d41d8cd9": {
@@ -1884,7 +1885,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "is-unicode-supported@0.1.0@d41d8cd9", "chalk@4.1.1@d41d8cd9"
+        "is-unicode-supported@0.1.0@d41d8cd9", "chalk@4.1.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -1946,7 +1947,7 @@
       "dependencies": [
         "type-fest@0.3.1@d41d8cd9", "strip-bom@3.0.0@d41d8cd9",
         "pify@4.0.1@d41d8cd9", "parse-json@4.0.0@d41d8cd9",
-        "graceful-fs@4.2.6@d41d8cd9"
+        "graceful-fs@4.2.8@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -2628,14 +2629,14 @@
       "dependencies": [ "function-bind@1.1.1@d41d8cd9" ],
       "devDependencies": []
     },
-    "graceful-fs@4.2.6@d41d8cd9": {
-      "id": "graceful-fs@4.2.6@d41d8cd9",
+    "graceful-fs@4.2.8@d41d8cd9": {
+      "id": "graceful-fs@4.2.8@d41d8cd9",
       "name": "graceful-fs",
-      "version": "4.2.6",
+      "version": "4.2.8",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.6.tgz#sha1:ff040b2b0853b23c3d31027523706f1885d76bee"
+          "archive:https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.8.tgz#sha1:e412b8d33f5e006593cbd3cee6df9f2cebbe802a"
         ]
       },
       "overrides": [],
@@ -2950,6 +2951,22 @@
       ],
       "devDependencies": []
     },
+    "esy-libspng@link:../esy-packages/esy-libspng/package.json": {
+      "id": "esy-libspng@link:../esy-packages/esy-libspng/package.json",
+      "name": "esy-libspng",
+      "version": "link:../esy-packages/esy-libspng/package.json",
+      "source": {
+        "type": "link",
+        "path": "../esy-packages/esy-libspng",
+        "manifest": "package.json"
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-zlib@github:eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf@d41d8cd9",
+        "esy-cmake@github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6@d41d8cd9"
+      ],
+      "devDependencies": []
+    },
     "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9": {
       "id":
         "esy-libpng@github:eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506@d41d8cd9",
@@ -2978,6 +2995,22 @@
         "type": "install",
         "source": [
           "github:eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
+    "esy-cmake@github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6@d41d8cd9": {
+      "id":
+        "esy-cmake@github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6@d41d8cd9",
+      "name": "esy-cmake",
+      "version":
+        "github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:esy-packages/esy-cmake#e96690ff46924fe74ad3617d89314ecfd6b5c6a6"
         ]
       },
       "overrides": [],
@@ -3223,7 +3256,7 @@
         "slash@3.0.0@d41d8cd9", "rimraf@3.0.2@d41d8cd9",
         "p-map@4.0.0@d41d8cd9", "is-path-inside@3.0.3@d41d8cd9",
         "is-path-cwd@2.2.0@d41d8cd9", "is-glob@4.0.1@d41d8cd9",
-        "graceful-fs@4.2.6@d41d8cd9", "globby@11.0.4@d41d8cd9"
+        "graceful-fs@4.2.8@d41d8cd9", "globby@11.0.4@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -3381,7 +3414,7 @@
       "dependencies": [
         "xdg-basedir@4.0.0@d41d8cd9", "write-file-atomic@3.0.3@d41d8cd9",
         "unique-string@2.0.0@d41d8cd9", "make-dir@3.1.0@d41d8cd9",
-        "graceful-fs@4.2.6@d41d8cd9", "dot-prop@5.3.0@d41d8cd9"
+        "graceful-fs@4.2.8@d41d8cd9", "dot-prop@5.3.0@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -3694,14 +3727,14 @@
       ],
       "devDependencies": []
     },
-    "chalk@4.1.1@d41d8cd9": {
-      "id": "chalk@4.1.1@d41d8cd9",
+    "chalk@4.1.2@d41d8cd9": {
+      "id": "chalk@4.1.2@d41d8cd9",
       "name": "chalk",
-      "version": "4.1.1",
+      "version": "4.1.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/chalk/-/chalk-4.1.1.tgz#sha1:c80b3fab28bf6371e6863325eee67e618b77e6ad"
+          "archive:https://registry.npmjs.org/chalk/-/chalk-4.1.2.tgz#sha1:aac4e2b7734a740867aeb16bf02aad556a1e7a01"
         ]
       },
       "overrides": [],
@@ -3774,14 +3807,14 @@
       ],
       "devDependencies": []
     },
-    "buffer-from@1.1.1@d41d8cd9": {
-      "id": "buffer-from@1.1.1@d41d8cd9",
+    "buffer-from@1.1.2@d41d8cd9": {
+      "id": "buffer-from@1.1.2@d41d8cd9",
       "name": "buffer-from",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.1.tgz#sha1:32713bc028f75c02fdb710d7c7bcec1f2c6070ef"
+          "archive:https://registry.npmjs.org/buffer-from/-/buffer-from-1.1.2.tgz#sha1:2b146a6fd72e80b4f55d255f35ed59a3a9a41bd5"
         ]
       },
       "overrides": [],
@@ -3848,7 +3881,7 @@
       "dependencies": [
         "wrap-ansi@7.0.0@d41d8cd9", "widest-line@3.1.0@d41d8cd9",
         "type-fest@0.20.2@d41d8cd9", "string-width@4.2.2@d41d8cd9",
-        "cli-boxes@2.2.1@d41d8cd9", "chalk@4.1.1@d41d8cd9",
+        "cli-boxes@2.2.1@d41d8cd9", "chalk@4.1.2@d41d8cd9",
         "camelcase@6.2.0@d41d8cd9", "ansi-align@3.0.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -3962,7 +3995,7 @@
         "clean-yaml-object@0.1.0@d41d8cd9",
         "ci-parallel-vars@1.0.1@d41d8cd9", "ci-info@2.0.0@d41d8cd9",
         "chunkd@2.0.1@d41d8cd9", "chokidar@3.5.2@d41d8cd9",
-        "chalk@4.1.1@d41d8cd9", "callsites@3.1.0@d41d8cd9",
+        "chalk@4.1.2@d41d8cd9", "callsites@3.1.0@d41d8cd9",
         "arrify@2.0.1@d41d8cd9", "arrgv@1.0.2@d41d8cd9",
         "ansi-styles@5.2.0@d41d8cd9", "acorn-walk@8.1.1@d41d8cd9",
         "acorn@8.4.1@d41d8cd9", "@concordance/react@2.0.0@d41d8cd9"
@@ -4837,20 +4870,20 @@
         "ocaml@4.10.2000@d41d8cd9", "@opam/dune@opam:2.9.0@489e77a9"
       ]
     },
-    "@opam/merlin@opam:3.5.0@f8ae5d56": {
-      "id": "@opam/merlin@opam:3.5.0@f8ae5d56",
+    "@opam/merlin@opam:3.6.1@b2fb327d": {
+      "id": "@opam/merlin@opam:3.6.1@b2fb327d",
       "name": "@opam/merlin",
-      "version": "opam:3.5.0",
+      "version": "opam:3.6.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/cd/cdf5426a0f2702a862d8a0290f6175daee53e044659899060597134ad2485328#sha256:cdf5426a0f2702a862d8a0290f6175daee53e044659899060597134ad2485328",
-          "archive:https://github.com/ocaml/merlin/releases/download/v3.5.0/merlin-v3.5.0.tbz#sha256:cdf5426a0f2702a862d8a0290f6175daee53e044659899060597134ad2485328"
+          "archive:https://opam.ocaml.org/cache/sha256/b6/b611b2b0bdc424629d2f6aa625fca81bb7734cb10c997eedc184c922d95cb9f6#sha256:b611b2b0bdc424629d2f6aa625fca81bb7734cb10c997eedc184c922d95cb9f6",
+          "archive:https://github.com/ocaml/merlin/releases/download/v3.6.1/merlin-v3.6.1.tbz#sha256:b611b2b0bdc424629d2f6aa625fca81bb7734cb10c997eedc184c922d95cb9f6"
         ],
         "opam": {
           "name": "merlin",
-          "version": "3.5.0",
-          "path": "esy.lock/opam/merlin.3.5.0"
+          "version": "3.6.1",
+          "path": "esy.lock/opam/merlin.3.6.1"
         }
       },
       "overrides": [],
@@ -5512,18 +5545,18 @@
       "overrides": [],
       "dependencies": [
         "js-tokens@4.0.0@d41d8cd9", "chalk@2.4.2@d41d8cd9",
-        "@babel/helper-validator-identifier@7.14.5@d41d8cd9"
+        "@babel/helper-validator-identifier@7.14.9@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "@babel/helper-validator-identifier@7.14.5@d41d8cd9": {
-      "id": "@babel/helper-validator-identifier@7.14.5@d41d8cd9",
+    "@babel/helper-validator-identifier@7.14.9@d41d8cd9": {
+      "id": "@babel/helper-validator-identifier@7.14.9@d41d8cd9",
       "name": "@babel/helper-validator-identifier",
-      "version": "7.14.5",
+      "version": "7.14.9",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.14.5.tgz#sha1:d0f0e277c512e0c938277faa85a3968c9a44c0e8"
+          "archive:https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.14.9.tgz#sha1:6654d171b2024f6d8ee151bf2509699919131d48"
         ]
       },
       "overrides": [],

@@ -3,8 +3,8 @@ maintainer:   "defree@gmail.com"
 authors:      "The Merlin team"
 homepage:     "https://github.com/ocaml/merlin"
 bug-reports:  "https://github.com/ocaml/merlin/issues"
-dev-repo: "git+https://github.com/ocaml/merlin.git"
-license: "MIT"
+dev-repo:     "git+https://github.com/ocaml/merlin.git"
+license:      "MIT"
 build: [
   ["dune" "subst"] {dev}
   ["dune" "build" "-p" name "-j" jobs]
@@ -66,18 +66,13 @@ should take care of basic setup.
 See https://github.com/OCamlPro/opam-user-setup
 "
   {success & !user-setup:installed}
-"Since version 3.5.0, Merlin integration with completion packages company
-and auto-complete has moved to separate modules. Make sure to add
-`(require 'merlin-company)` or `(require 'merlin-ac)` to your emacs
-configuration if you were using one of these."
-  {success}
 ]
-x-commit-hash: "353bcb82443b37cc1924039578d2b22cdb6951a9"
+x-commit-hash: "9f6504e9585f8e67101d869494f9efb6dc348c9d"
 url {
   src:
-    "https://github.com/ocaml/merlin/releases/download/v3.5.0/merlin-v3.5.0.tbz"
+    "https://github.com/ocaml/merlin/releases/download/v3.6.1/merlin-v3.6.1.tbz"
   checksum: [
-    "sha256=cdf5426a0f2702a862d8a0290f6175daee53e044659899060597134ad2485328"
-    "sha512=77b89009ac57a7c4e524d1a091211dd75451fd7d342bccc37012ce0a7a488bf269631fede6cb75d345f521be7ad488416ec0282090d377225dba7e8b385bc1e2"
+    "sha256=b611b2b0bdc424629d2f6aa625fca81bb7734cb10c997eedc184c922d95cb9f6"
+    "sha512=47764d6b9483eee7e51da67d04c83b19a3b0dd406911eeef20a59dab88ab7d11ba45ae43131c61de69e3d88c65a204e76110000020871d64a2abe9cdcd361a61"
   ]
 }
