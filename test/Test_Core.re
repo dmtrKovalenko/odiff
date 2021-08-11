@@ -2,17 +2,16 @@ open TestFramework;
 open ODiffIO;
 
 module PNG_Diff = Odiff.Diff.MakeDiff(Png.IO, Png.IO);
-module PNG_BA_Diff = Odiff.Diff.MakeDiff(Png_Bigarray.IO, Png_Bigarray.IO);
 
 describe("CORE: Antialiasing", ({test, _}) => {
-  open Png_Bigarray.IO;
+  open Png.IO;
 
   test("does not count anti-aliased pixels as different", ({expect, _}) => {
     let img1 = loadImage("test/test-images/aa/antialiasing-on.png");
     let img2 = loadImage("test/test-images/aa/antialiasing-off.png");
 
     let (_, diffPixels, diffPercentage) =
-      PNG_BA_Diff.compare(
+      PNG_Diff.compare(
         img1,
         img2,
         ~outputDiffMask=true,
@@ -29,7 +28,7 @@ describe("CORE: Antialiasing", ({test, _}) => {
     let img2 = loadImage("test/test-images/aa/antialiasing-off-small.png");
 
     let (_, diffPixels, diffPercentage) =
-      PNG_BA_Diff.compare(
+      PNG_Diff.compare(
         img1,
         img2,
         ~outputDiffMask=true,

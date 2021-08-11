@@ -24,13 +24,9 @@ C.main(~name="odiff-c-lib-package-resolver", _c => {
   C.Flags.write_sexp("png_write_c_library_flags.sexp", [libpng16, zlib]);
   C.Flags.write_sexp("png_write_flags.sexp", ["-cclib", libpng16]);
 
-  C.Flags.write_sexp("png_c_flags.sexp", ["-I" ++ png_include_path]);
-  C.Flags.write_sexp("png_c_library_flags.sexp", [libpng16, zlib]);
-  C.Flags.write_sexp("png_flags.sexp", ["-cclib", libpng16]);
-
-  C.Flags.write_sexp("png_ba_c_flags.sexp", ["-I" ++ spng_include_path]);
-  C.Flags.write_sexp("png_ba_c_library_flags.sexp", [libspng, zlib]);
-  C.Flags.write_sexp("png_ba_flags.sexp", ["-cclib", libspng]);
+  C.Flags.write_sexp("png_c_flags.sexp", ["-I" ++ spng_include_path]);
+  C.Flags.write_sexp("png_c_library_flags.sexp", [libspng, zlib]);
+  C.Flags.write_sexp("png_flags.sexp", ["-cclib", libspng]);
 
   C.Flags.write_sexp("jpg_c_flags.sexp", ["-I" ++ jpeg_include_path]);
   C.Flags.write_sexp("jpg_c_library_flags.sexp", [libjpeg]);

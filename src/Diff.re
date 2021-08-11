@@ -26,32 +26,36 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         ~ignoreRegions=[],
         (),
       ) => {
+    let (r, g, b) = diffPixel;
+    let a = (255 land 0xFF) lsl 24;
+    let b = (b land 0xFF) lsl 16;
+    let g = (g land 0xFF) lsl 8;
+    let r = (r land 0xFF) lsl 0;
+    let diffPixel = Int32.of_int(a lor b lor g lor r);
+
     let diffCount = ref(0);
     let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
     let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
     let countDifference = (x, y) => {
       incr(diffCount);
-      diffOutput |> IO1.setImgColor(x, y, diffPixel);
+      diffOutput |> IO1.setImgColor(~x, ~y, diffPixel);
     };
 
     for (y in 0 to base.height - 1) {
-      let row = IO1.readRow(base, y);
-      let row2 = IO2.readRow(comp, y);
-
       for (x in 0 to base.width - 1) {
         if (isInIgnoreRegion(x, y, ignoreRegions)) {
           ();
         } else if (x >= comp.width || y >= comp.height) {
           let alpha =
-            Int32.to_int(IO1.readImgColor(x, row, base)) lsr 24 land 0xFF;
+            Int32.to_int(IO1.readDirectPixel(x, y, base)) lsr 24 land 0xFF;
 
           if (alpha != 0) {
             countDifference(x, y);
           };
         } else {
-          let baseColor = IO1.readImgColor(x, row, base);
-          let compColor = IO2.readImgColor(x, row2, comp);
+          let baseColor = IO1.readDirectPixel(x, y, base);
+          let compColor = IO2.readDirectPixel(x, y, comp);
 
           if (baseColor != compColor) {
             let delta =
