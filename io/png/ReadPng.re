@@ -7,5 +7,3 @@ external read_png_image:
     'a,
   ) =
   "read_png_file";
-
-[@noalloc] external cleanup_png: 'a => unit = "cleanup_png";

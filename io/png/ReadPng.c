@@ -53,41 +53,24 @@ read_png_file(value file)
     free(out);
   }
 
-  size_t out_size, out_width;
+  size_t out_size;
   result = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &out_size);
   if(result) {
     spng_ctx_free(ctx);
   };
 
-  /* This is required to initialize for progressive decoding */
-  result = spng_decode_image(ctx, NULL, 0, SPNG_FMT_RGBA8, SPNG_DECODE_PROGRESSIVE);
-  if(result) {
-    spng_ctx_free(ctx);
-    caml_failwith(spng_strerror(result));
-  }
-
-  /* ihdr.height will always be non-zero if spng_get_ihdr() succeeds */
-  out_width = out_size / ihdr.height;
 
   out = malloc(out_size);
   if(out == NULL) {
     spng_ctx_free(ctx);
     free(out);
   };
-  struct spng_row_info row_info = {0};
 
-  do {
-    result = spng_get_row_info(ctx, &row_info);
-    if(result) break;
-
-    result = spng_decode_row(ctx, out + row_info.row_num * out_width, out_width);
-  }
-  while(!result);
-
-  if(result != SPNG_EOI) {
-    caml_failwith(spng_strerror(result));
+  result = spng_decode_image(ctx, out, out_size, SPNG_FMT_RGBA8, 0);
+  if(result) {
     spng_ctx_free(ctx);
     free(out);
+    caml_failwith(spng_strerror(result));
   }
 
   res = caml_alloc(4, 0);
@@ -101,12 +84,4 @@ read_png_file(value file)
   spng_ctx_free(ctx);
 
   CAMLreturn(res);
-}
-
-CAMLprim value
-cleanup_png(value buffer)
-{
-  CAMLparam1(buffer);
-  free(Bp_val(buffer));
-  CAMLreturn(Val_unit);
 }
