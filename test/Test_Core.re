@@ -14,7 +14,7 @@ describe("CORE: Antialiasing", ({test, _}) => {
       PNG_Diff.compare(
         img1,
         img2,
-        ~outputDiffMask=true,
+        ~outputDiffMask=false,
         ~antialiasing=true,
         (),
       );

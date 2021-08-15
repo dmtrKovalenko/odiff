@@ -26,20 +26,12 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         ~ignoreRegions=[],
         (),
       ) => {
-    let (r, g, b) = diffPixel;
-    let a = (255 land 0xFF) lsl 24;
-    let b = (b land 0xFF) lsl 16;
-    let g = (g land 0xFF) lsl 8;
-    let r = (r land 0xFF) lsl 0;
-    let diffPixel = Int32.of_int(a lor b lor g lor r);
-
-    let diffCount = ref(0);
     let maxDelta = maxYIQPossibleDelta *. threshold ** 2.;
     let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
+    let diffPixelQueue = Queue.create();
     let countDifference = (x, y) => {
-      incr(diffCount);
-      diffOutput |> IO1.setImgColor(~x, ~y, diffPixel);
+      diffPixelQueue |> Queue.push((x, y));
     };
 
     for (y in 0 to base.height - 1) {
@@ -79,12 +71,28 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       };
     };
 
+    let diffCount = diffPixelQueue |> Queue.length;
+
+    if (diffCount > 0) {
+      let (r, g, b) = diffPixel;
+      let a = (255 land 0xFF) lsl 24;
+      let b = (b land 0xFF) lsl 16;
+      let g = (g land 0xFF) lsl 8;
+      let r = (r land 0xFF) lsl 0;
+      let diffPixel = Int32.of_int(a lor b lor g lor r);
+
+      diffPixelQueue
+      |> Queue.iter(((x, y)) => {
+           diffOutput |> IO1.setImgColor(~x, ~y, diffPixel)
+         });
+    };
+
     let diffPercentage =
       100.0
-      *. Float.of_int(diffCount^)
+      *. Float.of_int(diffCount)
       /. (Float.of_int(base.width) *. Float.of_int(base.height));
 
-    (diffOutput, diffCount^, diffPercentage);
+    (diffOutput, diffCount, diffPercentage);
   };
 
   let diff =
