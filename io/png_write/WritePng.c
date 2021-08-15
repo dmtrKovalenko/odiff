@@ -1,150 +1,92 @@
 #define CAML_NAME_SPACE
 #include <stdio.h>
-#include <string.h>
-#include <png.h>
-#include <caml/mlvalues.h>
-#include <caml/alloc.h>
+
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include <caml/bigarray.h>
 
-CAMLprim value write_png_file(png_bytep *row_pointers, value width_value, value height_value, value filename_value)
+#include <spng.h>
+
+value write_png_bigarray(value filename_val, value bigarray, value width_val, value height_val)
 {
-  CAMLparam3(height_value, width_value, filename_value);
-  int height = Int_val(height_value);
-  int width = Int_val(width_value);
+  CAMLparam4(filename_val, bigarray, width_val, height_val);
 
-  FILE *fp = fopen(String_val(filename_value), "wb");
-  if (!fp)
-    caml_failwith("Can not save the output :(");
+  int width = Int_val(width_val);
+  int height = Int_val(height_val);
+  const char *data = Caml_ba_data_val(bigarray);
+  const char *filename = String_val(filename_val);
 
-  png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-  if (!png)
-    caml_failwith("Can not save the output :(");
-
-  png_infop info = png_create_info_struct(png);
-  if (!info)
-    caml_failwith("Can not save the output :(");
-
-  if (setjmp(png_jmpbuf(png)))
-    caml_failwith("Can not save the output :(");
-
-  png_init_io(png, fp);
-
-  // Output is 8bit depth, RGBA format.
-  png_set_IHDR(
-      png,
-      info,
-      width, height,
-      8,
-      PNG_COLOR_TYPE_RGBA,
-      PNG_INTERLACE_NONE,
-      PNG_COMPRESSION_TYPE_DEFAULT,
-      PNG_FILTER_TYPE_DEFAULT);
-
-  png_write_info(png, info);
-
-  if (!row_pointers)
-    caml_failwith("Can not save the output :(");
-
-  png_set_compression_level(png, 2);
-  png_set_filter(png, 0, PNG_FILTER_NONE);
-  png_write_image(png, row_pointers);
-  png_write_end(png, NULL);
-
-  fclose(fp);
-
-  png_destroy_write_struct(&png, &info);
-
-  CAMLreturn(Val_unit);
-}
-
-void write_png(const char *name, const char *data, int w, int h)
-{
   FILE *fp;
-  png_structp png_ptr;
-  png_infop info_ptr;
 
-  if (( fp = fopen(name, "wb")) == NULL ){
+  if (( fp = fopen(filename, "wb")) == NULL ){
     caml_failwith("Can not save the output :(");
   }
 
-  if ((png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL)) == NULL){
+  int result = 0;
+
+  uint8_t bit_depth = 8;
+  uint8_t color_type = SPNG_COLOR_TYPE_TRUECOLOR_ALPHA;
+  uint8_t compression_method = 0;
+  uint8_t filter_method = SPNG_FILTER_NONE;
+  uint8_t interlace_method = SPNG_INTERLACE_NONE;
+
+  size_t out_size = width * height * 4;
+  size_t out_width = out_size / height;
+
+  spng_ctx *ctx = spng_ctx_new(SPNG_CTX_ENCODER);
+  struct spng_ihdr ihdr = {
+    width,
+    height,
+    bit_depth,
+    color_type,
+    compression_method,
+    filter_method,
+    interlace_method,
+  };
+
+  result = spng_set_ihdr(ctx, &ihdr);
+  if(result) {
+    spng_ctx_free(ctx);
     fclose(fp);
-    caml_failwith("Can not save the output :(");
+    caml_failwith(spng_strerror(result));
   }
 
-  if( (info_ptr = png_create_info_struct(png_ptr)) == NULL ){
+  result = spng_set_option(ctx, SPNG_FILTER_CHOICE, SPNG_DISABLE_FILTERING);
+  if(result) {
+    spng_ctx_free(ctx);
     fclose(fp);
-    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-    caml_failwith("Can not save the output :(");
+    caml_failwith(spng_strerror(result));
   }
 
-  /* error handling */
-  if (setjmp(png_jmpbuf(png_ptr))) {
-    /* Free all of the memory associated with the png_ptr and info_ptr */
-    png_destroy_write_struct(&png_ptr, &info_ptr);
+  result = spng_set_png_file(ctx, fp);
+  if(result) {
     fclose(fp);
-    /* If we get here, we had a problem writing the file */
-    caml_failwith("Can not save the output :(");
+    spng_ctx_free(ctx);
+    caml_failwith(spng_strerror(result));
   }
 
-  png_init_io(png_ptr, fp);
+  result = spng_encode_image(ctx, 0, 0, SPNG_FMT_PNG, SPNG_ENCODE_PROGRESSIVE);
 
-  png_set_IHDR(
-    png_ptr, info_ptr, w, h,
-    8,
-    PNG_COLOR_TYPE_RGB_ALPHA,
-    PNG_INTERLACE_ADAM7,
-    PNG_COMPRESSION_TYPE_DEFAULT,
-    PNG_FILTER_TYPE_DEFAULT
-  );
-
-  png_write_info(png_ptr, info_ptr);
-
-  png_bytep *row_pointers;
-
-  row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * h);
-  int rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-
-  for (int y = 0; y < h; y++)
-  {
-    row_pointers[y] = (png_bytep)(data + rowbytes * y);
+  if(result) {
+    fclose(fp);
+    spng_ctx_free(ctx);
+    caml_failwith(spng_strerror(result));
   }
 
-  png_write_image(png_ptr, row_pointers);
-  free((void*)row_pointers);
+  for(int i = 0; i < ihdr.height; i++) {
+    const char *row = data + out_width * i;
+    result = spng_encode_scanline(ctx, row, out_width);
+    if(result) break;
+  }
 
-  png_write_end(png_ptr, info_ptr);
-  png_destroy_write_struct(&png_ptr, &info_ptr);
+  if(result != SPNG_EOI) {
+    spng_ctx_free(ctx);
+    fclose(fp);
+    caml_failwith(spng_strerror(result));
+  }
 
+  spng_ctx_free(ctx);
   fclose(fp);
-}
-
-value write_png_bigarray(value name, value bigarray, value width, value height)
-{
-  CAMLparam4(name, bigarray, width, height);
-
-  int w = Int_val(width);
-  int h = Int_val(height);
-  const char *buf = Caml_ba_data_val(bigarray);
-  const char *filename = String_val(name);
-
-  write_png(filename, buf, w, h);
-
-  CAMLreturn(Val_unit);
-}
-
-value write_png_buffer(value name, value buffer, value width, value height)
-{
-  CAMLparam4(name, buffer, width, height);
-
-  int w = Int_val(width);
-  int h = Int_val(height);
-  const char *buf = String_val(buffer);
-  const char *filename = String_val(name);
-
-  write_png(filename, buf, w, h);
 
   CAMLreturn(Val_unit);
 }

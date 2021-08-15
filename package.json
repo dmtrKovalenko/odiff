@@ -37,7 +37,6 @@
     "@reason-native/pastel": "*",
     "@reason-native/rely": "^3.2.1",
     "esy-libtiff": "*",
-    "esy-libpng": "*",
     "esy-libspng": "*",
     "esy-libjpeg": "*",
     "esy-zlib": "*",
@@ -53,9 +52,8 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-libspng": "link:../esy-packages/esy-libspng/package.json",
+    "esy-libspng": "eWert-Online/esy-libspng#ceedeee4195ecc170be7ec67ba3ca0197b8c844f",
     "esy-libjpeg": "eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d",
-    "esy-libpng": "eWert-Online/esy-libpng#485fec4990dbb0f6b0ecb3ced53f5bd7bc9a4506",
     "esy-libtiff": "esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
     "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"
   },

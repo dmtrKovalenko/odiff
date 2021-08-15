@@ -32,8 +32,12 @@ module IO: Odiff.ImageIO.ImageIO = {
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    ();
-      // WritePng.write_png_bigarray(filename, img.image, img.width, img.height);
+    WritePng.write_png_bigarray(
+      filename,
+      img.image.data,
+      img.width,
+      img.height,
+    );
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
