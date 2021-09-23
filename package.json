@@ -52,7 +52,7 @@
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-libspng": "eWert-Online/esy-libspng#37a342bfb59d44bfab0c778acf732c697173bb33",
+    "esy-libspng": "eWert-Online/esy-libspng#198f841e97e66cad8423a8263cb224405c31402a",
     "esy-libjpeg": "eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d",
     "esy-libtiff": "esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
     "esy-zlib": "eWert-Online/esy-zlib#9b0394f07551d9fde386e28a6ff269984b63ffcf"

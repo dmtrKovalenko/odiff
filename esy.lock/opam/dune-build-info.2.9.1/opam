@@ -32,11 +32,11 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-x-commit-hash: "641a95d2254ca7c51c97f07f2eed85b7a95db954"
+x-commit-hash: "e41c66259135d6d1d72b031be6684bf8826a2586"
 url {
-  src: "https://github.com/ocaml/dune/releases/download/2.9.0/dune-2.9.0.tbz"
+  src: "https://github.com/ocaml/dune/releases/download/2.9.1/dune-2.9.1.tbz"
   checksum: [
-    "sha256=bb217cfb17e893a0b1eb002ac83c14f96adc9d0703cb51ff34ed3ef5a639a41e"
-    "sha512=fcd8bc3ea7e9a14e6787a3b0384a488e45fa51e164a175ad1b147bebb3fbcccfd8f321b9b6a7665ac3dafeb18a2a6f8626d182af3b1796691f6ed79c166a5f44"
+    "sha256=b374feb22b34099ccc6dd32128e18d088ff9a81837952b29f05110b308c09f26"
+    "sha512=fce1aa520db785c25ded75a959e9dafeb7887d4f5deeb14b044cd5b9e2d235dca24589d794d2f01513765bc4764cf72f8659bd15f3a4fc06efa61363dc5d709b"
   ]
 }
