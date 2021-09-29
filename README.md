@@ -1,7 +1,6 @@
 <p align="center">
   <img src="./logo.png"/>
 </p>
-
 <h1 align="center"> ODIFF </h1>
 <h3 align="center"> The fastest* (one-thread) pixel-by-pixel image difference tool in the world. </h3>
 
