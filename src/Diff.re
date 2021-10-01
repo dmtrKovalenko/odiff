@@ -5,10 +5,16 @@ type diffVariant('a) =
   | Layout
   | Pixel(('a, int, float));
 
-let isInIgnoreRegion = (x, y) => {
-  List.exists((((x1, y1), (x2, y2))) =>
-    x >= x1 && x <= x2 && y >= y1 && y <= y2
-  );
+let computeIngoreRegionOffsets = width => {
+  List.map((((x1, y1), (x2, y2))) => {
+    let p1 = y1 * width + x1;
+    let p2 = y2 * width + x2;
+    (p1, p2);
+  });
+};
+
+let isInIgnoreRegion = offset => {
+  List.exists(((p1: int, p2: int)) => offset >= p1 && offset <= p2);
 };
 
 module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
@@ -34,40 +40,56 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       diffPixelQueue |> Queue.push((x, y));
     };
 
-    for (y in 0 to base.height - 1) {
-      for (x in 0 to base.width - 1) {
-        if (isInIgnoreRegion(x, y, ignoreRegions)) {
-          ();
-        } else if (x >= comp.width || y >= comp.height) {
-          let alpha =
-            Int32.to_int(IO1.readDirectPixel(x, y, base)) lsr 24 land 0xFF;
+    let ignoreRegions =
+      ignoreRegions |> computeIngoreRegionOffsets(base.width);
 
-          if (alpha != 0) {
-            countDifference(x, y);
-          };
-        } else {
-          let baseColor = IO1.readDirectPixel(x, y, base);
-          let compColor = IO2.readDirectPixel(x, y, comp);
+    let size = base.height * base.width - 1;
 
-          if (baseColor != compColor) {
-            let delta =
-              ColorDelta.calculatePixelColorDelta(baseColor, compColor);
+    let x = ref(0);
+    let y = ref(0);
 
-            if (delta > maxDelta) {
+    for (offset in 0 to size) {
+      if (x^ >= comp.width || y^ >= comp.height) {
+        let alpha =
+          Int32.to_int(IO1.readDirectPixel(~x=x^, ~y=y^, base))
+          lsr 24
+          land 0xFF;
+
+        if (alpha != 0) {
+          countDifference(x^, y^);
+        };
+      } else {
+        let baseColor = IO1.readDirectPixel(~x=x^, ~y=y^, base);
+        let compColor = IO2.readDirectPixel(~x=x^, ~y=y^, comp);
+
+        if (baseColor != compColor) {
+          let delta =
+            ColorDelta.calculatePixelColorDelta(baseColor, compColor);
+
+          if (delta > maxDelta) {
+            let isIgnored = isInIgnoreRegion(offset, ignoreRegions);
+
+            if (!isIgnored) {
               let isAntialiased =
                 if (!antialiasing) {
                   false;
                 } else {
-                  BaseAA.detect(~x, ~y, ~baseImg=base, ~compImg=comp)
-                  || CompAA.detect(~x, ~y, ~baseImg=comp, ~compImg=base);
+                  BaseAA.detect(~x=x^, ~y=y^, ~baseImg=base, ~compImg=comp)
+                  || CompAA.detect(~x=x^, ~y=y^, ~baseImg=comp, ~compImg=base);
                 };
 
               if (!isAntialiased) {
-                countDifference(x, y);
+                countDifference(x^, y^);
               };
             };
           };
         };
+      };
+      if (x^ == base.width - 1) {
+        x := 0;
+        incr(y);
+      } else {
+        incr(x);
       };
     };
 
