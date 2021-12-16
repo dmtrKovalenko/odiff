@@ -48,8 +48,10 @@ function optionsToArgs(options) {
 
       case "ignoreRegions": {
         const regions = value
-          .map((region) => `${region.x1}:${region.y1}-${region.x2}:${region.y2}`)
-          .join(',');
+          .map(
+            (region) => `${region.x1}:${region.y1}-${region.x2}:${region.y2}`
+          )
+          .join(",");
 
         setArgWithValue("ignore", regions);
         break;
@@ -92,9 +94,10 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
   return new Promise((resolve, reject) => {
     let producedStdout, producedStdError;
 
-    const binaryPath = options && options.__binaryPath
-      ? options.__binaryPath
-      : path.join(__dirname, "bin", "odiff");
+    const binaryPath =
+      options && options.__binaryPath
+        ? options.__binaryPath
+        : path.join(__dirname, "bin", "odiff");
 
     execFile(
       binaryPath,
@@ -119,14 +122,24 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
           });
           break;
         case 124:
-          reject(
-            new TypeError(
-              (producedStdError || "Invalid Argument Exception").replace(
-                CMD_BIN_HELPER_MSG,
-                ""
-              )
-            )
+          /** @type string */
+          const originalErrorMessage = (
+            producedStdError || "Invalid Argument Exception"
+          ).replace(CMD_BIN_HELPER_MSG, "");
+
+          const noFileOrDirectoryMatches = originalErrorMessage.match(
+            /no\n\s*`(.*)'\sfile or\n\s*directory/
           );
+
+          if (options.noFailOnFsErrors && noFileOrDirectoryMatches[1]) {
+            resolve({
+              match: false,
+              reason: "file-not-exists",
+              file: noFileOrDirectoryMatches[1],
+            });
+          } else {
+            reject(new TypeError(originalErrorMessage));
+          }
           break;
 
         default:

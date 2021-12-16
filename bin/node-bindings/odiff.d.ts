@@ -5,16 +5,18 @@ export type ODiffOptions = Partial<{
   outputDiffMask: boolean;
   /** Do not compare images and produce output if images layout is different. */
   failOnLayoutDiff: boolean;
+  /** Return { match: false, reason: '...' } instead of throwing error if file is missing. */
+  noFailOnFsErrors: boolean;
   /** Color difference threshold (from 0 to 1). Less more precise. */
   threshold: number;
   /** If this is true, antialiased pixels are not counted to the diff of an image */
   antialiasing: boolean;
   /** An array of regions to ignore in the diff. */
   ignoreRegions: Array<{
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
   }>;
 }>;
 
@@ -33,6 +35,12 @@ declare function compare(
       diffCount: number;
       /** Percentage of different pixels in the whole image */
       diffPercentage: number;
+    }
+  | {
+      match: false;
+      reason: "file-not-exists";
+      /** Errored file path */
+      file: string;
     }
 >;
 
