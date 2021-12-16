@@ -23,26 +23,25 @@ read_tiff_file_to_tuple(value file)
 
   TIFF *image;
 
-
-
-  if (!(image = TIFFOpen(filename, "r"))) {
+  if (!(image = TIFFOpen(filename, "r")))
+  {
     caml_failwith("opening input file failed!");
   }
 
   TIFFGetField(image, TIFFTAG_IMAGEWIDTH, &width);
   TIFFGetField(image, TIFFTAG_IMAGELENGTH, &height);
 
-
   int buffer_size = width * height;
-  buffer = (uint32_t*)malloc(buffer_size * 4);
+  buffer = (uint32_t *)malloc(buffer_size * 4);
 
-  if (!buffer) {
+  if (!buffer)
+  {
     TIFFClose(image);
     caml_failwith("allocating TIFF buffer failed");
   }
 
-
-  if (!(TIFFReadRGBAImageOriented(image, width, height, buffer, ORIENTATION_TOPLEFT, 0))) {
+  if (!(TIFFReadRGBAImageOriented(image, width, height, buffer, ORIENTATION_TOPLEFT, 0)))
+  {
     TIFFClose(image);
     caml_failwith("reading input file failed");
   }

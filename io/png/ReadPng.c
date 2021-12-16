@@ -21,13 +21,15 @@ read_png_file(value file)
   const char *filename = String_val(file);
 
   png = fopen(filename, "rb");
-  if(png == NULL) {
+  if (png == NULL)
+  {
     caml_failwith("error opening input file");
   }
 
   ctx = spng_ctx_new(0);
 
-  if(ctx == NULL) {
+  if (ctx == NULL)
+  {
     caml_failwith("spng_ctx_new() failed");
     spng_ctx_free(ctx);
     free(out);
@@ -47,7 +49,8 @@ read_png_file(value file)
   struct spng_ihdr ihdr;
   result = spng_get_ihdr(ctx, &ihdr);
 
-  if(result) {
+  if (result)
+  {
     caml_failwith("spng_get_ihdr() error!");
     spng_ctx_free(ctx);
     free(out);
@@ -55,19 +58,21 @@ read_png_file(value file)
 
   size_t out_size;
   result = spng_decoded_image_size(ctx, SPNG_FMT_RGBA8, &out_size);
-  if(result) {
+  if (result)
+  {
     spng_ctx_free(ctx);
   };
 
-
   out = malloc(out_size);
-  if(out == NULL) {
+  if (out == NULL)
+  {
     spng_ctx_free(ctx);
     free(out);
   };
 
   result = spng_decode_image(ctx, out, out_size, SPNG_FMT_RGBA8, 0);
-  if(result) {
+  if (result)
+  {
     spng_ctx_free(ctx);
     free(out);
     caml_failwith(spng_strerror(result));
