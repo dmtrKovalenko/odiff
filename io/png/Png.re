@@ -1,41 +1,37 @@
-module BigarrayIO = PureC_IO_Bigarray.IO;
+open Bigarray;
+open Odiff.ImageIO;
+
+type data = Array1.t(int32, int32_elt, c_layout);
 
 module IO: Odiff.ImageIO.ImageIO = {
-  type t = int;
-  type row = Bigarray.Array1.t(int32, Bigarray.int32_elt, Bigarray.c_layout);
+  type t = data;
 
-  let readRow = (img: Odiff.ImageIO.img(t), y): row => {
-    ReadPng.read_row(img.image, y, img.width);
+  let readDirectPixel = (~x: int, ~y: int, img: Odiff.ImageIO.img(t)) => {
+    let image: data = img.image;
+    Array1.unsafe_get(image, y * img.width + x);
   };
 
-  let readImgColor = (x, row: row, _img: Odiff.ImageIO.img(t)) => {
-    row.{x};
-  };
-
-  let setImgColor = (x, y, pixel, img: Odiff.ImageIO.img(t)) => {
-    ReadPng.set_pixel_data(img.image, x, y, pixel);
+  let setImgColor = (~x, ~y, color, img: Odiff.ImageIO.img(t)) => {
+    let image: data = img.image;
+    Array1.unsafe_set(image, y * img.width + x, color);
   };
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, _rowbytes, rowPointers) =
-      ReadPng.read_png_image(filename);
+    let (width, height, data, _buffer) = ReadPng.read_png_image(filename);
 
-    {width, height, image: rowPointers};
+    {width, height, image: data};
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    WritePng.write_png_file(img.image, img.width, img.height, filename);
+    WritePng.write_png_bigarray(filename, img.image, img.width, img.height);
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
-    ReadPng.free_row_pointers(img.image, img.height);
+    ();
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
-    {...img, image: ReadPng.create_empty_img(img.height, img.width)};
-  };
-
-  let readDirectPixel = (~x, ~y, _img) => {
-    failwith("Direct pixel access is not allowed for imperative C IO");
+    let image = Array1.create(int32, c_layout, Array1.dim(img.image));
+    {...img, image};
   };
 };

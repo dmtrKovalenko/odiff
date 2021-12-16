@@ -1,52 +1,56 @@
 open Bigarray;
 
-module IO: Odiff.ImageIO.ImageIO = {
-  type t = Array1.t(int32, int32_elt, c_layout);
-  type row = int;
+type data = Array1.t(int32, int32_elt, c_layout);
 
-  let buffer = ref(None);
+module IO: Odiff.ImageIO.ImageIO = {
+  type buffer;
+  type t = {
+    data,
+    buffer,
+  };
 
   let loadImage = (filename): Odiff.ImageIO.img(t) => {
-    let (width, height, image, b) = ReadTiff.load(filename);
+    let (width, height, data, buffer) = ReadTiff.load(filename);
 
-    buffer := Some(b);
-
-    {width, height, image};
+    {
+      width,
+      height,
+      image: {
+        data,
+        buffer,
+      },
+    };
   };
 
-  let readRow = (img: Odiff.ImageIO.img(t), y): row => y;
-
-  let readDirectPixel = (~x, ~y, img: Odiff.ImageIO.img(t)) => {
-    (img.image).{y * img.width + x};
+  let readDirectPixel = (~x: int, ~y: int, img: Odiff.ImageIO.img(t)) => {
+    Array1.unsafe_get(img.image.data, y * img.width + x);
   };
 
-  let readImgColor = (x, row: row, img: Odiff.ImageIO.img(t)) => {
-    readDirectPixel(~x, ~y=row, img);
-  };
-
-  let setImgColor = (x, y, (r, g, b), img: Odiff.ImageIO.img(t)) => {
-    let a = (255 land 0xFF) lsl 24;
-    let b = (b land 0xFF) lsl 16;
-    let g = (g land 0xFF) lsl 8;
-    let r = (r land 0xFF) lsl 0;
-    Array1.set(
-      img.image,
-      y * img.width + x,
-      Int32.of_int(a lor b lor g lor r),
-    );
+  let setImgColor = (~x, ~y, color, img: Odiff.ImageIO.img(t)) => {
+    Array1.unsafe_set(img.image.data, y * img.width + x, color);
   };
 
   let saveImage = (img: Odiff.ImageIO.img(t), filename) => {
-    WritePng.write_png_bigarray(filename, img.image, img.width, img.height);
+    WritePng.write_png_bigarray(
+      filename,
+      img.image.data,
+      img.width,
+      img.height,
+    );
   };
 
   let freeImage = (img: Odiff.ImageIO.img(t)) => {
-    buffer^ |> Option.iter(ReadTiff.cleanup_tiff);
+    ReadTiff.cleanup_tiff(img.image.buffer);
   };
 
   let makeSameAsLayout = (img: Odiff.ImageIO.img(t)) => {
-    let image = Array1.create(int32, c_layout, Array1.dim(img.image));
-
-    {...img, image};
+    let data = Array1.create(int32, c_layout, Array1.dim(img.image.data));
+    {
+      ...img,
+      image: {
+        data,
+        buffer: img.image.buffer,
+      },
+    };
   };
 };

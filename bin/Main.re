@@ -1,13 +1,10 @@
 open Odiff.ImageIO;
 open Odiff.Diff;
 
-let getIOModule = (filename, ~antialiasing) =>
+let getIOModule = filename =>
   Filename.extension(filename)
   |> (
     fun
-    | ".png" when antialiasing => (
-        (module ODiffIO.Png.BigarrayIO): (module ImageIO)
-      )
     | ".png" => ((module ODiffIO.Png.IO): (module ImageIO))
     | ".jpg"
     | ".jpeg" => ((module ODiffIO.Jpg.IO): (module ImageIO))
@@ -34,8 +31,8 @@ let main =
       antialiasing,
       ignoreRegions,
     ) => {
-  module IO1 = (val getIOModule(img1Path, ~antialiasing));
-  module IO2 = (val getIOModule(img2Path, ~antialiasing));
+  module IO1 = (val getIOModule(img1Path));
+  module IO2 = (val getIOModule(img2Path));
 
   module Diff = MakeDiff(IO1, IO2);
 
