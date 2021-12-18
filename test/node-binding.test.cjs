@@ -14,7 +14,7 @@ const BINARY_PATH = path.resolve(
   "ODiffBin.exe"
 );
 
-console.log(`Testing binary ${BINARY_PATH}`)
+console.log(`Testing binary ${BINARY_PATH}`);
 
 test("Outputs correct parsed result when images different", async (t) => {
   const { reason, diffCount, diffPercentage } = await compare(
@@ -24,9 +24,9 @@ test("Outputs correct parsed result when images different", async (t) => {
     {
       __binaryPath: BINARY_PATH,
     }
-  )
+  );
 
-  t.is(reason, 'pixel-diff')
+  t.is(reason, "pixel-diff");
   t.is(diffCount, 109861);
   t.is(diffPercentage, 2.85952484323);
 });
@@ -40,9 +40,9 @@ test("Correctly parses threshold", async (t) => {
       threshold: 0.6,
       __binaryPath: BINARY_PATH,
     }
-  )
+  );
 
-  t.is(reason, 'pixel-diff')
+  t.is(reason, "pixel-diff");
   t.is(diffCount, 50332);
   t.is(diffPercentage, 1.31007003768);
 });
@@ -56,9 +56,9 @@ test("Correctly parses antialiasing", async (t) => {
       antialiasing: true,
       __binaryPath: BINARY_PATH,
     }
-  )
+  );
 
-  t.is(reason, 'pixel-diff')
+  t.is(reason, "pixel-diff");
   t.is(diffCount, 108208);
   t.is(diffPercentage, 2.8164996153);
 });
@@ -71,17 +71,21 @@ test("Correctly parses ignore regions", async (t) => {
     {
       ignoreRegions: [
         {
-          x1: 749,  y1: 1155,
-          x2: 1170, y2: 1603,
+          x1: 749,
+          y1: 1155,
+          x2: 1170,
+          y2: 1603,
         },
         {
-          x1: 657, y1: 1278,
-          x2: 742, y2: 1334,
-        }
+          x1: 657,
+          y1: 1278,
+          x2: 742,
+          y2: 1334,
+        },
       ],
       __binaryPath: BINARY_PATH,
     }
-  )
+  );
 
   t.is(match, true);
 });
@@ -94,9 +98,9 @@ test("Outputs correct parsed result when images different for cypress image", as
     {
       __binaryPath: BINARY_PATH,
     }
-  )
+  );
 
-  t.is(reason, 'pixel-diff')
+  t.is(reason, "pixel-diff");
   t.is(diffCount, 1091034);
   t.is(diffPercentage, 2.95123808559);
 });
@@ -109,7 +113,23 @@ test("Correctly handles same images", async (t) => {
     {
       __binaryPath: BINARY_PATH,
     }
-  )
+  );
 
-  t.is(match, true)
+  t.is(match, true);
+});
+
+test("Returns meaningful error if file does not exist and noFailOnFsErrors", async (t) => {
+  const { match, reason, file } = await compare(
+    path.join(IMAGES_PATH, "not-existing.png"),
+    path.join(IMAGES_PATH, "not-existing.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      noFailOnFsErrors: true,
+      __binaryPath: BINARY_PATH,
+    }
+  );
+
+  t.is(match, false);
+  t.is(reason, "file-not-exists");
+  t.is(file, path.join(IMAGES_PATH, "not-existing.png"));
 });

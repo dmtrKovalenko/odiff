@@ -18,7 +18,8 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
 
   FILE *fp;
 
-  if (( fp = fopen(filename, "wb")) == NULL ){
+  if ((fp = fopen(filename, "wb")) == NULL)
+  {
     caml_failwith("Can not save the output :(");
   }
 
@@ -35,31 +36,34 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
 
   spng_ctx *ctx = spng_ctx_new(SPNG_CTX_ENCODER);
   struct spng_ihdr ihdr = {
-    width,
-    height,
-    bit_depth,
-    color_type,
-    compression_method,
-    filter_method,
-    interlace_method,
+      width,
+      height,
+      bit_depth,
+      color_type,
+      compression_method,
+      filter_method,
+      interlace_method,
   };
 
   result = spng_set_ihdr(ctx, &ihdr);
-  if(result) {
+  if (result)
+  {
     spng_ctx_free(ctx);
     fclose(fp);
     caml_failwith(spng_strerror(result));
   }
 
   result = spng_set_option(ctx, SPNG_FILTER_CHOICE, SPNG_DISABLE_FILTERING);
-  if(result) {
+  if (result)
+  {
     spng_ctx_free(ctx);
     fclose(fp);
     caml_failwith(spng_strerror(result));
   }
 
   result = spng_set_png_file(ctx, fp);
-  if(result) {
+  if (result)
+  {
     fclose(fp);
     spng_ctx_free(ctx);
     caml_failwith(spng_strerror(result));
@@ -67,19 +71,23 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
 
   result = spng_encode_image(ctx, 0, 0, SPNG_FMT_PNG, SPNG_ENCODE_PROGRESSIVE);
 
-  if(result) {
+  if (result)
+  {
     fclose(fp);
     spng_ctx_free(ctx);
     caml_failwith(spng_strerror(result));
   }
 
-  for(int i = 0; i < ihdr.height; i++) {
+  for (int i = 0; i < ihdr.height; i++)
+  {
     const char *row = data + out_width * i;
     result = spng_encode_scanline(ctx, row, out_width);
-    if(result) break;
+    if (result)
+      break;
   }
 
-  if(result != SPNG_EOI) {
+  if (result != SPNG_EOI)
+  {
     spng_ctx_free(ctx);
     fclose(fp);
     caml_failwith(spng_strerror(result));
