@@ -132,7 +132,7 @@ let cmd = {
     ),
     Term.info(
       "odiff",
-      ~version="2.4.2",
+      ~version="2.5.0",
       ~doc="Find difference between 2 images.",
       ~exits=[
         Term.exit_info(0, ~doc="on image match"),
