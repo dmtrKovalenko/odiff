@@ -65,6 +65,9 @@ const { match, reason } = await compare(
 );
 ```
 
+### Cypress
+Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress plugin to add visual regression tests using `odiff-bin`.
+
 ## Api
 
 Here is an api reference:
