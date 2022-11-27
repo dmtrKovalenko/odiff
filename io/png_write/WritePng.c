@@ -4,6 +4,7 @@
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include <caml/bigarray.h>
+#include <string.h>
 
 #include <spng.h>
 
@@ -17,10 +18,10 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
   const char *filename = String_val(filename_val);
 
   FILE *fp;
-
+  int errno = 0;
   if ((fp = fopen(filename, "wb")) == NULL)
   {
-    caml_failwith("Can not save the output :(");
+    caml_failwith(strerror(errno));
   }
 
   int result = 0;
