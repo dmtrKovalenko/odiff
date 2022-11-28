@@ -22,7 +22,11 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
   FILE *fp;
   if ((fp = fopen(filename, "wb")) == NULL)
   {
-    caml_failwith(strerror(errno));
+    char error[] = "Can not write diff output. fopen error: ";
+    const char* reason = strerror(errno);
+
+    strncat(error, reason, strlen(reason));
+    caml_failwith(*error);
   }
 
   int result = 0;
