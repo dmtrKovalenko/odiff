@@ -26,7 +26,7 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
     const char* reason = strerror(errno);
 
     strncat(error, reason, strlen(reason));
-    caml_failwith(*error);
+    caml_failwith(error);
   }
 
   int result = 0;
