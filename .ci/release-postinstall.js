@@ -150,28 +150,34 @@ var copyPlatformBinaries = (platformPath) => {
   });
 };
 
-try {
-  fs.mkdirSync("_export");
-} catch (e) {
-  console.log("Could not create _export folder");
-}
+if (!fs.existsSync("_export")) {
+  try {
+    fs.mkdirSync("_export");
+  } catch (e) {
+    console.log("Could not create _export folder");
+  }
 
-switch (platform) {
-  case "win32":
-    if (arch() !== "x64") {
-      console.warn("error: x86 is currently not supported on Windows");
+  switch (platform) {
+    case "win32":
+      if (arch() !== "x64") {
+        console.warn("error: x86 is currently not supported on Windows");
+        process.exit(1);
+      }
+
+      copyPlatformBinaries("windows-x64");
+      break;
+    case "linux":
+    case "darwin":
+      copyPlatformBinaries(platform);
+      break;
+    default:
+      console.warn("error: no release built for the " + platform + " platform");
       process.exit(1);
-    }
+  }
 
-    copyPlatformBinaries("windows-x64");
-    break;
-  case "linux":
-  case "darwin":
-    copyPlatformBinaries(platform);
-    break;
-  default:
-    console.warn("error: no release built for the " + platform + " platform");
-    process.exit(1);
+  require("./esyInstallRelease");
+} else {
+  console.log(
+    "✨ It looks like the binary was already linked (maybe you are using node_modules cache). Skipping the installation step."
+  );
 }
-
-require("./esyInstallRelease");
