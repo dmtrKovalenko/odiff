@@ -1,11 +1,30 @@
 #define CAML_NAME_SPACE
+
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <stdlib.h>
 
 #include <caml/memory.h>
 #include <caml/fail.h>
 #include <caml/bigarray.h>
 
 #include <spng.h>
+
+char *concat(const char *s1, const char *s2)
+{
+  char *result = malloc(strlen(s1) + strlen(s2) + 1); // +1 for the null-terminator
+
+  if (result == NULL)
+  {
+    caml_failwith("Can not concat strings");
+  }
+
+  strcpy(result, s1);
+  strcat(result, s2);
+
+  return result;
+}
 
 value write_png_bigarray(value filename_val, value bigarray, value width_val, value height_val)
 {
@@ -17,10 +36,15 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
   const char *filename = String_val(filename_val);
 
   FILE *fp;
-
   if ((fp = fopen(filename, "wb")) == NULL)
   {
-    caml_failwith("Can not save the output :(");
+    char *err = strerror(errno);
+    char *message = concat("Can not write diff output. fopen error: ", err);
+
+    caml_failwith(message);
+
+    free(err);
+    free(message);
   }
 
   int result = 0;
