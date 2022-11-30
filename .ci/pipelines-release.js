@@ -35,11 +35,11 @@ const packageJson = JSON.stringify(
     typings: "./odiff.d.ts",
     main: "./odiff.js",
     scripts: {
-      "postinstall": "node ./postinstall.js"
+      postinstall: "node ./postinstall.js",
     },
-    "bin": {
-      "odiff": "bin/odiff"
-    }
+    bin: {
+      odiff: "bin/odiff",
+    },
   },
   null,
   2
@@ -88,16 +88,19 @@ fs.copyFileSync(
 
 if (!fs.existsSync(path.join(__dirname, "..", "_release", "bin"))) {
   console.log("Creating placeholder files");
-  const placeholderFile = `:; echo "Binary was not linked. You need to have postinstall enabled. Please rerun 'npm install'"; exit $?
-@ECHO OFF
-ECHO Binary was not linked. You need to have postinstall enabled. Please rerun 'npm install'`;
+  const placeholderFile = `
+#!/bin/bash
+echo "Binary was not linked. You need to have postinstall enabled, please make sure to not use --ignore-scripts when installing deps.";
+exit 1;
+`;
+
   fs.mkdirSync(path.join(__dirname, "..", "_release", "bin"));
 
   Object.keys(bins).forEach((name) => {
     if (bins[name]) {
       const binPath = path.join(__dirname, "..", "_release", "bin", name);
       fs.writeFileSync(binPath, placeholderFile);
-      fs.chmodSync(binPath, 0777);
+      fs.chmodSync(binPath, 511);
     } else {
       console.log("bins[name] name=" + name + " was empty. Weird.");
       console.log(bins);
