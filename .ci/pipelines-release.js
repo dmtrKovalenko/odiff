@@ -100,7 +100,7 @@ exit 1;
     if (bins[name]) {
       const binPath = path.join(__dirname, "..", "_release", "bin", name);
       fs.writeFileSync(binPath, placeholderFile);
-      fs.chmodSync(binPath, 511);
+      fs.chmodSync(binPath, '777');
     } else {
       console.log("bins[name] name=" + name + " was empty. Weird.");
       console.log(bins);
