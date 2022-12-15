@@ -68,6 +68,16 @@ const { match, reason } = await compare(
 ### Cypress
 Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress plugin to add visual regression tests using `odiff-bin`.
 
+### Visual regression services
+
+[LostPixel](https://github.com/lost-pixel/lost-pixel) – Holistic visual testing for your Frontend allows very easy integration with storybook and uses odiff for comparison
+
+[Argos CI](https://argos-ci.com/) – Visual regression service powering projects like material-ui. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
+
+[Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) – Self hosted visual regression service that allows to use odiff as screenshot comparison engine 
+
+[OSnap](https://github.com/eWert-Online/OSnap) – Snapshot testing tool written in OCaml that uses config based declaration to define test and was built by odiff collaborator. 
+
 ## Api
 
 Here is an api reference:
@@ -159,20 +169,6 @@ Then give it a try 👀
 ```
 odiff --help
 ```
- 
-### MacOS
-
-> ⛔️ Doesn't work. Waiting for brew approve ⛔️
-
-```
-brew install odiff
-```
-
-### Alpine Linux
-
-```
-apk add odiff
-```
 
 ### From binaries
 
@@ -192,7 +188,7 @@ Performance matters. At least for sort of tasks like visual regression. For exam
 
 Here is `odiff` performance comparison with other popular visual difference solutions. We are going to compare some real-world use cases.
 
-Lets compare 2 screenshots of full-size [https://cypress.io](cypress.io) page:
+Lets compare 2 screenshots of full-size [https::/cypress.io](cypress.io) page:
 
 | Command                                                                                    |      Mean [s] | Min [s] | Max [s] |    Relative |
 | :----------------------------------------------------------------------------------------- | ------------: | ------: | ------: | ----------: |
