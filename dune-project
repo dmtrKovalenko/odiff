@@ -11,6 +11,7 @@
 
 (generate_opam_files true)
 
+(name odiff)
 (source (github dmtrKovalenko/odiff))
 (license MIT)
 (authors "Dmitriy Kovalenko")
