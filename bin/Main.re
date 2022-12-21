@@ -1,17 +1,24 @@
 open Odiff.ImageIO;
 open Odiff.Diff;
 
-let getIOModule = filename =>
+let getTypeFromFilename = filename =>
   Filename.extension(filename)
   |> (
     fun
-    | ".png" => ((module ODiffIO.Png.IO): (module ImageIO))
+    | ".png" => `png
     | ".jpg"
-    | ".jpeg" => ((module ODiffIO.Jpg.IO): (module ImageIO))
-    | ".bmp" => ((module ODiffIO.Bmp.IO): (module ImageIO))
-    | ".tiff" => ((module ODiffIO.Tiff.IO): (module ImageIO))
+    | ".jpeg" => `jpg
+    | ".bmp" => `bmp
+    | ".tiff" => `tiff
     | f => failwith("This format is not supported: " ++ f)
   );
+
+let getIOModule =
+  fun
+  | `png => ((module ODiffIO.Png.IO): (module ImageIO))
+  | `jpg => ((module ODiffIO.Jpg.IO): (module ImageIO))
+  | `bmp => ((module ODiffIO.Bmp.IO): (module ImageIO))
+  | `tiff => ((module ODiffIO.Tiff.IO): (module ImageIO));
 
 type diffResult('output) = {
   exitCode: int,
@@ -20,24 +27,63 @@ type diffResult('output) = {
 
 let main =
     (
-      img1Path,
-      img2Path,
+      img1,
+      img2,
+      img1Type,
+      img2Type,
       diffPath,
       threshold,
       outputDiffMask,
       failOnLayoutChange,
       diffColorHex,
       stdoutParsableString,
+      img1IsBuffer,
+      img2IsBuffer,
       antialiasing,
       ignoreRegions,
     ) => {
-  module IO1 = (val getIOModule(img1Path));
-  module IO2 = (val getIOModule(img2Path));
+  let img1Type =
+    switch (img1Type) {
+    | `auto when img1IsBuffer =>
+      failwith("--base-type has to be not auto, when using buffer as input")
+    | `auto => getTypeFromFilename(Filename.extension(img1))
+    | `bmp => `bmp
+    | `jpg => `jpg
+    | `png => `png
+    | `tiff => `tiff
+    };
+
+  let img2Type =
+    switch (img2Type) {
+    | `auto when img2IsBuffer =>
+      failwith(
+        "--compare-type has to be not auto, when using buffer as input",
+      )
+    | `auto => getTypeFromFilename(Filename.extension(img1))
+    | `bmp => `bmp
+    | `jpg => `jpg
+    | `png => `png
+    | `tiff => `tiff
+    };
+
+  module IO1 = (val getIOModule(img1Type));
+  module IO2 = (val getIOModule(img2Type));
 
   module Diff = MakeDiff(IO1, IO2);
 
-  let img1 = IO1.loadImage(img1Path);
-  let img2 = IO2.loadImage(img2Path);
+  let img1 =
+    if (img1IsBuffer) {
+      IO1.loadImageFromBuffer(img1);
+    } else {
+      IO1.loadImageFromPath(img1);
+    };
+
+  let img2 =
+    if (img2IsBuffer) {
+      IO2.loadImageFromBuffer(img2);
+    } else {
+      IO2.loadImageFromPath(img2);
+    };
 
   let {diff, exitCode} =
     Diff.diff(

@@ -1,6 +1,7 @@
 const path = require("path");
 const test = require("ava");
 const { compare } = require("../bin/node-bindings/odiff");
+const { readFile } = require("fs/promises");
 
 const IMAGES_PATH = path.resolve(__dirname, "..", "images");
 const BINARY_PATH = path.resolve(
@@ -132,4 +133,20 @@ test("Returns meaningful error if file does not exist and noFailOnFsErrors", asy
   t.is(match, false);
   t.is(reason, "file-not-exists");
   t.is(file, path.join(IMAGES_PATH, "not-existing.png"));
+});
+
+test("Accepts buffers as input", async (t) => {
+  const buffer = await readFile(path.join(IMAGES_PATH, "donkey.png"), { encoding: "utf-8" });
+  const { match } = await compare(
+    buffer.toString(),
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      __binaryPath: BINARY_PATH,
+      baseImageType: "png",
+      compareImageType: "filepath"
+    }
+  );
+
+  t.is(match, true);
 });

@@ -26,6 +26,20 @@ function optionsToArgs(options) {
     const [option, value] = optionEntry;
 
     switch (option) {
+      case "baseImageType":
+        if(value !== "filepath") {
+          setFlag("base-is-buffer");
+          setArgWithValue("base-type", value);
+        }
+        break;
+      
+      case "compareImageType":
+        if(value !== "filepath") {
+          setFlag("compare-is-buffer");
+          setArgWithValue("compare-type", value);
+        }
+        break;
+
       case "failOnLayoutDiff":
         setFlag("fail-on-layout", value);
         break;
@@ -90,7 +104,7 @@ function parsePixelDiffStdout(stdout) {
 const CMD_BIN_HELPER_MSG =
   "Usage: odiff [OPTION]... [BASE] [COMPARING] [DIFF]\nTry `odiff --help' for more information.\n";
 
-async function compare(basePath, comparePath, diffOutput, options = {}) {
+async function compare(baseImage, compareImage, diffOutput, options = {}) {
   return new Promise((resolve, reject) => {
     let producedStdout, producedStdError;
 
@@ -101,7 +115,7 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
 
     execFile(
       binaryPath,
-      [basePath, comparePath, diffOutput, ...optionsToArgs(options)],
+      [baseImage, compareImage, diffOutput, ...optionsToArgs(options)],
       (_, stdout, stderr) => {
         producedStdout = stdout;
         producedStdError = stderr;

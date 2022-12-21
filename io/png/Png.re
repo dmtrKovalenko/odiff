@@ -16,8 +16,15 @@ module IO: Odiff.ImageIO.ImageIO = {
     Array1.unsafe_set(image, y * img.width + x, color);
   };
 
-  let loadImage = (filename): Odiff.ImageIO.img(t) => {
+  let loadImageFromPath = (filename): Odiff.ImageIO.img(t) => {
     let (width, height, data, _buffer) = ReadPng.read_png_image(filename);
+
+    {width, height, image: data};
+  };
+
+  let loadImageFromBuffer = (buffer): Odiff.ImageIO.img(t) => {
+    let (width, height, data, _buffer) =
+      ReadPng.read_png_buffer(buffer, String.length(buffer));
 
     {width, height, image: data};
   };

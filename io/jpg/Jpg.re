@@ -9,7 +9,7 @@ module IO = {
     buffer,
   };
 
-  let loadImage = (filename): Odiff.ImageIO.img(t) => {
+  let loadImageFromPath = (filename): Odiff.ImageIO.img(t) => {
     let (width, height, data, buffer) = ReadJpg.read_jpeg_image(filename);
 
     {
@@ -20,6 +20,10 @@ module IO = {
         buffer,
       },
     };
+  };
+
+  let loadImageFromBuffer = (buffer): Odiff.ImageIO.img(t) => {
+    failwith("Not implemented");
   };
 
   let readDirectPixel = (~x, ~y, img: Odiff.ImageIO.img(t)) => {

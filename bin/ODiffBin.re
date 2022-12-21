@@ -1,5 +1,12 @@
 open Cmdliner;
 
+let supported_formats = [
+  ("jpg", `jpg),
+  ("png", `png),
+  ("bmp", `bmp),
+  ("tiff", `tiff),
+];
+
 let diffPath =
   Arg.(
     value
@@ -14,11 +21,35 @@ let base =
     & info([], ~docv="BASE", ~doc="Path to base image")
   );
 
+let baseType =
+  Arg.(
+    value
+    & opt(enum([("auto", `auto), ...supported_formats]), `auto)
+    & info(
+        ["base-type"],
+        ~docv="FORMAT",
+        ~doc=
+          "The type of the base image (required to be not auto when a buffer is used as input)",
+      )
+  );
+
 let comp =
   Arg.(
     value
     & pos(1, file, "")
     & info([], ~docv="COMPARING", ~doc="Path to comparing image")
+  );
+
+let compType =
+  Arg.(
+    value
+    & opt(enum([("auto", `auto), ...supported_formats]), `auto)
+    & info(
+        ["compare-type"],
+        ~docv="FORMAT",
+        ~doc=
+          "The type of the comparing image (required to be not auto when a buffer is used as input)",
+      )
   );
 
 let threshold = {
@@ -65,6 +96,26 @@ let parsableOutput =
         ["parsable-stdout"],
         ~docv="PARSABLE_OUTPUT",
         ~doc="Stdout parsable output",
+      )
+  );
+
+let baseImageIsBuffer =
+  Arg.(
+    value
+    & flag
+    & info(
+        ["base-is-buffer"],
+        ~doc="Wether the base image is a raw image buffer",
+      )
+  );
+
+let compareImageIsBuffer =
+  Arg.(
+    value
+    & flag
+    & info(
+        ["compare-is-buffer"],
+        ~doc="Wether the compare image is a raw image buffer",
       )
   );
 
@@ -121,12 +172,16 @@ let cmd = {
       const(Main.main)
       $ base
       $ comp
+      $ baseType
+      $ compType
       $ diffPath
       $ threshold
       $ diffMask
       $ failOnLayout
       $ diffColor
       $ parsableOutput
+      $ baseImageIsBuffer
+      $ compareImageIsBuffer
       $ antialiasing
       $ ignoreRegions
     ),
