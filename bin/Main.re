@@ -25,6 +25,19 @@ type diffResult('output) = {
   diff: option('output),
 };
 
+let readFromStdin = () => {
+  /* We use 65536 because that is the size of OCaml's IO buffers. */
+  let chunk_size = 65536;
+  let buffer = Buffer.create(chunk_size);
+  let rec loop = () => {
+    Buffer.add_channel(buffer, stdin, chunk_size);
+    loop();
+  };
+  try(loop()) {
+  | End_of_file => Buffer.contents(buffer)
+  };
+};
+
 let main =
     (
       img1,
@@ -37,16 +50,14 @@ let main =
       failOnLayoutChange,
       diffColorHex,
       stdoutParsableString,
-      img1IsBuffer,
-      img2IsBuffer,
       antialiasing,
       ignoreRegions,
     ) => {
   let img1Type =
     switch (img1Type) {
-    | `auto when img1IsBuffer =>
+    | `auto when img1 == "_" =>
       failwith("--base-type has to be not auto, when using buffer as input")
-    | `auto => getTypeFromFilename(Filename.extension(img1))
+    | `auto => getTypeFromFilename(img1)
     | `bmp => `bmp
     | `jpg => `jpg
     | `png => `png
@@ -55,11 +66,11 @@ let main =
 
   let img2Type =
     switch (img2Type) {
-    | `auto when img2IsBuffer =>
+    | `auto when img2 == "_" =>
       failwith(
         "--compare-type has to be not auto, when using buffer as input",
       )
-    | `auto => getTypeFromFilename(Filename.extension(img1))
+    | `auto => getTypeFromFilename(img2)
     | `bmp => `bmp
     | `jpg => `jpg
     | `png => `png
@@ -72,17 +83,23 @@ let main =
   module Diff = MakeDiff(IO1, IO2);
 
   let img1 =
-    if (img1IsBuffer) {
-      IO1.loadImageFromBuffer(img1);
-    } else {
-      IO1.loadImageFromPath(img1);
+    switch (img1) {
+    | "_" =>
+      if (!stdoutParsableString) {
+        print_endline("Please provide the buffer for the base image:");
+      };
+      readFromStdin() |> IO1.loadImageFromBuffer;
+    | path => IO1.loadImageFromPath(path)
     };
 
   let img2 =
-    if (img2IsBuffer) {
-      IO2.loadImageFromBuffer(img2);
-    } else {
-      IO2.loadImageFromPath(img2);
+    switch (img2) {
+    | "_" =>
+      if (!stdoutParsableString) {
+        print_endline("Please provide the buffer for the compare image:");
+      };
+      readFromStdin() |> IO2.loadImageFromBuffer;
+    | path => IO2.loadImageFromPath(path)
     };
 
   let {diff, exitCode} =

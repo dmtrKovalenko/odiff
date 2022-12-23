@@ -21,7 +21,7 @@
   "scripts": {
     "run": "esy x ODiffBin",
     "test": "esy x RunTests.exe",
-    "test-js": "esy ava",
+    "test-js": "esy ava --verbose",
     "test-ts": "esy tsc --noEmit test/node-bindings.test.ts",
     "format": "esy dune build @fmt --auto-promote",
     "doc": "esy dune build @doc",

@@ -25,8 +25,8 @@ export type ODiffOptions = Partial<{
 }>;
 
 declare function compare(
-  baseImage: string,
-  compareImage: string,
+  baseImage: string | Buffer,
+  compareImage: string | Buffer,
   diffPath: string,
   options?: ODiffOptions
 ): Promise<

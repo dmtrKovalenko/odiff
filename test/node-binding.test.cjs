@@ -135,18 +135,38 @@ test("Returns meaningful error if file does not exist and noFailOnFsErrors", asy
   t.is(file, path.join(IMAGES_PATH, "not-existing.png"));
 });
 
-test("Accepts buffers as input", async (t) => {
-  const buffer = await readFile(path.join(IMAGES_PATH, "donkey.png"), { encoding: "utf-8" });
-  const { match } = await compare(
-    buffer.toString(),
+test("Accepts buffer as input for compare image", async (t) => {
+  const buffer = await readFile(path.join(IMAGES_PATH, "donkey-2.png"), { encoding: "binary" });
+  const { reason, diffCount, diffPercentage } = await compare(
     path.join(IMAGES_PATH, "donkey.png"),
+    buffer,
     path.join(IMAGES_PATH, "diff.png"),
     {
       __binaryPath: BINARY_PATH,
-      baseImageType: "png",
-      compareImageType: "filepath"
+      compareImageType: "png"
     }
   );
 
-  t.is(match, true);
+  t.is(reason, "pixel-diff");
+  t.is(diffCount, 109861);
+  t.is(diffPercentage, 2.85952484323);
+});
+
+test.skip("Accepts buffer as input for base and compare image at the same time", async (t) => {
+  const buffer1 = await readFile(path.join(IMAGES_PATH, "donkey.png"), { encoding: "binary" });
+  const buffer2 = await readFile(path.join(IMAGES_PATH, "donkey-2.png"), { encoding: "binary" });
+  const { reason, diffCount, diffPercentage } = await compare(
+    buffer1,
+    buffer2,
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      baseImageType: "png",
+      compareImageType: "png",
+      __binaryPath: BINARY_PATH,
+    }
+  );
+
+  t.is(reason, "pixel-diff");
+  t.is(diffCount, 109861);
+  t.is(diffPercentage, 2.85952484323);
 });

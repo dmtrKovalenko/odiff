@@ -7,6 +7,15 @@ let supported_formats = [
   ("tiff", `tiff),
 ];
 
+let underscore_or = ((parse, print)) => {
+  let parse = s =>
+    switch (s) {
+    | "_" => `Ok(s)
+    | s => parse(s)
+    };
+  (parse, print);
+};
+
 let diffPath =
   Arg.(
     value
@@ -17,8 +26,13 @@ let diffPath =
 let base =
   Arg.(
     value
-    & pos(0, file, "")
-    & info([], ~docv="BASE", ~doc="Path to base image")
+    & pos(0, underscore_or(non_dir_file), "_")
+    & info(
+        [],
+        ~docv="BASE",
+        ~doc=
+          "Path to base image (or \"_\" when you want to provide the base image from stdin)",
+      )
   );
 
 let baseType =
@@ -29,15 +43,23 @@ let baseType =
         ["base-type"],
         ~docv="FORMAT",
         ~doc=
-          "The type of the base image (required to be not auto when a buffer is used as input)",
+          Printf.sprintf(
+            "The type of the base image (required to be not auto when a buffer is used as input).\nSupported values are: auto,%s",
+            supported_formats |> List.map(fst) |> String.concat(","),
+          ),
       )
   );
 
 let comp =
   Arg.(
     value
-    & pos(1, file, "")
-    & info([], ~docv="COMPARING", ~doc="Path to comparing image")
+    & pos(1, underscore_or(non_dir_file), "_")
+    & info(
+        [],
+        ~docv="COMPARING",
+        ~doc=
+          "Path to comparing image (or \"_\" when you want to provide the comparing image from stdin)",
+      )
   );
 
 let compType =
@@ -48,7 +70,10 @@ let compType =
         ["compare-type"],
         ~docv="FORMAT",
         ~doc=
-          "The type of the comparing image (required to be not auto when a buffer is used as input)",
+          Printf.sprintf(
+            "The type of the comparing image (required to be not auto when a buffer is used as input).\nSupported values are: auto,%s",
+            supported_formats |> List.map(fst) |> String.concat(","),
+          ),
       )
   );
 
@@ -99,26 +124,6 @@ let parsableOutput =
       )
   );
 
-let baseImageIsBuffer =
-  Arg.(
-    value
-    & flag
-    & info(
-        ["base-is-buffer"],
-        ~doc="Wether the base image is a raw image buffer",
-      )
-  );
-
-let compareImageIsBuffer =
-  Arg.(
-    value
-    & flag
-    & info(
-        ["compare-is-buffer"],
-        ~doc="Wether the compare image is a raw image buffer",
-      )
-  );
-
 let diffColor =
   Arg.(
     value
@@ -164,7 +169,7 @@ let cmd = {
   let man = [
     `S(Manpage.s_description),
     `P("$(tname) is the fastest pixel-by-pixel image comparison tool."),
-    `P("Supported image types: .png, .jpg, .jpeg, .bitmap"),
+    `P("Supported image types: .png, .jpg, .jpeg, .bmp, .tiff"),
   ];
 
   (
@@ -180,8 +185,6 @@ let cmd = {
       $ failOnLayout
       $ diffColor
       $ parsableOutput
-      $ baseImageIsBuffer
-      $ compareImageIsBuffer
       $ antialiasing
       $ ignoreRegions
     ),

@@ -1,6 +1,7 @@
 // @ts-check
 const path = require("path");
 const { execFile } = require("child_process");
+var stream = require('stream');
 
 function optionsToArgs(options) {
   let argArray = ["--parsable-stdout"];
@@ -28,14 +29,12 @@ function optionsToArgs(options) {
     switch (option) {
       case "baseImageType":
         if(value !== "filepath") {
-          setFlag("base-is-buffer");
           setArgWithValue("base-type", value);
         }
         break;
       
       case "compareImageType":
         if(value !== "filepath") {
-          setFlag("compare-is-buffer");
           setArgWithValue("compare-type", value);
         }
         break;
@@ -113,9 +112,23 @@ async function compare(baseImage, compareImage, diffOutput, options = {}) {
         ? options.__binaryPath
         : path.join(__dirname, "bin", "odiff");
 
-    execFile(
+    let baseImageArg = baseImage;
+    let baseImageIsBuffer = false;
+    if(options.baseImageType && options.baseImageType !== "filepath") {
+      baseImageArg = "_";
+      baseImageIsBuffer = true;
+    }
+
+    let compareImageArg = compareImage;
+    let compareImageIsBuffer = false;
+    if(options.compareImageType && options.compareImageType !== "filepath") {
+      compareImageArg = "_";
+      compareImageIsBuffer = true;
+    }
+
+    const cp = execFile(
       binaryPath,
-      [baseImage, compareImage, diffOutput, ...optionsToArgs(options)],
+      [baseImageArg, compareImageArg, diffOutput, ...optionsToArgs(options)],
       (_, stdout, stderr) => {
         producedStdout = stdout;
         producedStdError = stderr;
@@ -142,7 +155,7 @@ async function compare(baseImage, compareImage, diffOutput, options = {}) {
           ).replace(CMD_BIN_HELPER_MSG, "");
 
           const noFileOrDirectoryMatches = originalErrorMessage.match(
-            /no\n\s*`(.*)'\sfile or\n\s*directory/
+            /no\n\s*`(.*)'\sfile/
           );
 
           if (options.noFailOnFsErrors && noFileOrDirectoryMatches[1]) {
@@ -167,7 +180,24 @@ async function compare(baseImage, compareImage, diffOutput, options = {}) {
           );
           break;
       }
-    });
+    })
+
+    if(baseImageIsBuffer) {
+      cp.stdin?.write(baseImage, 'binary');
+      cp.stdin?.end();
+    }
+
+    if(compareImageIsBuffer) {
+      cp.stdin?.write(compareImage, 'binary');
+      cp.stdin?.end();
+    }
+
+    // const stdinStream = new stream.Readable();
+    // if(compareImageIsBuffer) {
+    //   stdinStream.push(compareImage, 'binary');
+    //   stdinStream.push("\n");
+    //   stdinStream.pipe(cp?.stdin, { end: false });
+    // }
   });
 }
 
