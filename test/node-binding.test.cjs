@@ -1,6 +1,7 @@
 const path = require("path");
 const test = require("ava");
 const { compare } = require("../bin/node-bindings/odiff");
+const { readFile } = require("fs/promises");
 
 const IMAGES_PATH = path.resolve(__dirname, "..", "images");
 const BINARY_PATH = path.resolve(
@@ -132,4 +133,40 @@ test("Returns meaningful error if file does not exist and noFailOnFsErrors", asy
   t.is(match, false);
   t.is(reason, "file-not-exists");
   t.is(file, path.join(IMAGES_PATH, "not-existing.png"));
+});
+
+test("Accepts buffer as input for compare image", async (t) => {
+  const buffer = await readFile(path.join(IMAGES_PATH, "donkey-2.png"), { encoding: "binary" });
+  const { reason, diffCount, diffPercentage } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    buffer,
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      __binaryPath: BINARY_PATH,
+      compareImageType: "png"
+    }
+  );
+
+  t.is(reason, "pixel-diff");
+  t.is(diffCount, 109861);
+  t.is(diffPercentage, 2.85952484323);
+});
+
+test.skip("Accepts buffer as input for base and compare image at the same time", async (t) => {
+  const buffer1 = await readFile(path.join(IMAGES_PATH, "donkey.png"), { encoding: "binary" });
+  const buffer2 = await readFile(path.join(IMAGES_PATH, "donkey-2.png"), { encoding: "binary" });
+  const { reason, diffCount, diffPercentage } = await compare(
+    buffer1,
+    buffer2,
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      baseImageType: "png",
+      compareImageType: "png",
+      __binaryPath: BINARY_PATH,
+    }
+  );
+
+  t.is(reason, "pixel-diff");
+  t.is(diffCount, 109861);
+  t.is(diffPercentage, 2.85952484323);
 });

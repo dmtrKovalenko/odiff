@@ -1,5 +1,21 @@
 open Cmdliner;
 
+let supported_formats = [
+  ("jpg", `jpg),
+  ("png", `png),
+  ("bmp", `bmp),
+  ("tiff", `tiff),
+];
+
+let underscore_or = ((parse, print)) => {
+  let parse = s =>
+    switch (s) {
+    | "_" => `Ok(s)
+    | s => parse(s)
+    };
+  (parse, print);
+};
+
 let diffPath =
   Arg.(
     value
@@ -10,15 +26,55 @@ let diffPath =
 let base =
   Arg.(
     value
-    & pos(0, file, "")
-    & info([], ~docv="BASE", ~doc="Path to base image")
+    & pos(0, underscore_or(non_dir_file), "_")
+    & info(
+        [],
+        ~docv="BASE",
+        ~doc=
+          "Path to base image (or \"_\" when you want to provide the base image from stdin)",
+      )
+  );
+
+let baseType =
+  Arg.(
+    value
+    & opt(enum([("auto", `auto), ...supported_formats]), `auto)
+    & info(
+        ["base-type"],
+        ~docv="FORMAT",
+        ~doc=
+          Printf.sprintf(
+            "The type of the base image (required to be not auto when a buffer is used as input).\nSupported values are: auto,%s",
+            supported_formats |> List.map(fst) |> String.concat(","),
+          ),
+      )
   );
 
 let comp =
   Arg.(
     value
-    & pos(1, file, "")
-    & info([], ~docv="COMPARING", ~doc="Path to comparing image")
+    & pos(1, underscore_or(non_dir_file), "_")
+    & info(
+        [],
+        ~docv="COMPARING",
+        ~doc=
+          "Path to comparing image (or \"_\" when you want to provide the comparing image from stdin)",
+      )
+  );
+
+let compType =
+  Arg.(
+    value
+    & opt(enum([("auto", `auto), ...supported_formats]), `auto)
+    & info(
+        ["compare-type"],
+        ~docv="FORMAT",
+        ~doc=
+          Printf.sprintf(
+            "The type of the comparing image (required to be not auto when a buffer is used as input).\nSupported values are: auto,%s",
+            supported_formats |> List.map(fst) |> String.concat(","),
+          ),
+      )
   );
 
 let threshold = {
@@ -113,7 +169,7 @@ let cmd = {
   let man = [
     `S(Manpage.s_description),
     `P("$(tname) is the fastest pixel-by-pixel image comparison tool."),
-    `P("Supported image types: .png, .jpg, .jpeg, .bitmap"),
+    `P("Supported image types: .png, .jpg, .jpeg, .bmp, .tiff"),
   ];
 
   (
@@ -121,6 +177,8 @@ let cmd = {
       const(Main.main)
       $ base
       $ comp
+      $ baseType
+      $ compType
       $ diffPath
       $ threshold
       $ diffMask

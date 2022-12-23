@@ -5,10 +5,14 @@ type data = Array1.t(int32, int32_elt, c_layout);
 module IO: Odiff.ImageIO.ImageIO = {
   type t = data;
 
-  let loadImage = (filename): Odiff.ImageIO.img(t) => {
+  let loadImageFromPath = (filename): Odiff.ImageIO.img(t) => {
     let (width, height, data) = ReadBmp.load(filename);
 
     {width, height, image: data};
+  };
+
+  let loadImageFromBuffer = (buffer): Odiff.ImageIO.img(t) => {
+    failwith("Not implemented");
   };
 
   [@inline]

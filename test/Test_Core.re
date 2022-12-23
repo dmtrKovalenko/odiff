@@ -7,8 +7,8 @@ describe("CORE: Antialiasing", ({test, _}) => {
   open Png.IO;
 
   test("does not count anti-aliased pixels as different", ({expect, _}) => {
-    let img1 = loadImage("test/test-images/aa/antialiasing-on.png");
-    let img2 = loadImage("test/test-images/aa/antialiasing-off.png");
+    let img1 = loadImageFromPath("test/test-images/aa/antialiasing-on.png");
+    let img2 = loadImageFromPath("test/test-images/aa/antialiasing-off.png");
 
     let (_, diffPixels, diffPercentage) =
       PNG_Diff.compare(
@@ -24,8 +24,9 @@ describe("CORE: Antialiasing", ({test, _}) => {
   });
 
   test("tests diffrent sized AA images", ({expect, _}) => {
-    let img1 = loadImage("test/test-images/aa/antialiasing-on.png");
-    let img2 = loadImage("test/test-images/aa/antialiasing-off-small.png");
+    let img1 = loadImageFromPath("test/test-images/aa/antialiasing-on.png");
+    let img2 =
+      loadImageFromPath("test/test-images/aa/antialiasing-off-small.png");
 
     let (_, diffPixels, diffPercentage) =
       PNG_Diff.compare(
@@ -43,8 +44,9 @@ describe("CORE: Antialiasing", ({test, _}) => {
 
 describe("CORE: Threshold", ({test, _}) => {
   test("uses provided threshold", ({expect, _}) => {
-    let img1 = Png.IO.loadImage("test/test-images/png/orange.png");
-    let img2 = Png.IO.loadImage("test/test-images/png/orange_changed.png");
+    let img1 = Png.IO.loadImageFromPath("test/test-images/png/orange.png");
+    let img2 =
+      Png.IO.loadImageFromPath("test/test-images/png/orange_changed.png");
 
     let (_, diffPixels, diffPercentage) =
       PNG_Diff.compare(img1, img2, ~threshold=0.5, ());
@@ -55,8 +57,9 @@ describe("CORE: Threshold", ({test, _}) => {
 
 describe("CORE: Ignore Regions", ({test, _}) => {
   test("uses provided irgnore regions", ({expect, _}) => {
-    let img1 = Png.IO.loadImage("test/test-images/png/orange.png");
-    let img2 = Png.IO.loadImage("test/test-images/png/orange_changed.png");
+    let img1 = Png.IO.loadImageFromPath("test/test-images/png/orange.png");
+    let img2 =
+      Png.IO.loadImageFromPath("test/test-images/png/orange_changed.png");
 
     let (_diffOutput, diffPixels, diffPercentage) =
       PNG_Diff.compare(
@@ -76,14 +79,15 @@ describe("CORE: Ignore Regions", ({test, _}) => {
 
 describe("CORE: Diff Color", ({test, _}) => {
   test("creates diff output image with custom diff color", ({expect, _}) => {
-    let img1 = Png.IO.loadImage("test/test-images/png/orange.png");
-    let img2 = Png.IO.loadImage("test/test-images/png/orange_changed.png");
+    let img1 = Png.IO.loadImageFromPath("test/test-images/png/orange.png");
+    let img2 =
+      Png.IO.loadImageFromPath("test/test-images/png/orange_changed.png");
 
     let (diffOutput, _, _) =
       PNG_Diff.compare(img1, img2, ~diffPixel=(0, 255, 0), ());
 
     let originalDiff =
-      Png.IO.loadImage("test/test-images/png/orange_diff_green.png");
+      Png.IO.loadImageFromPath("test/test-images/png/orange_diff_green.png");
     let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
       PNG_Diff.compare(originalDiff, diffOutput, ());
 

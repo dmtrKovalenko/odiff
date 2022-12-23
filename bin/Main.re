@@ -1,27 +1,49 @@
 open Odiff.ImageIO;
 open Odiff.Diff;
 
-let getIOModule = filename =>
+let getTypeFromFilename = filename =>
   Filename.extension(filename)
   |> (
     fun
-    | ".png" => ((module ODiffIO.Png.IO): (module ImageIO))
+    | ".png" => `png
     | ".jpg"
-    | ".jpeg" => ((module ODiffIO.Jpg.IO): (module ImageIO))
-    | ".bmp" => ((module ODiffIO.Bmp.IO): (module ImageIO))
-    | ".tiff" => ((module ODiffIO.Tiff.IO): (module ImageIO))
+    | ".jpeg" => `jpg
+    | ".bmp" => `bmp
+    | ".tiff" => `tiff
     | f => failwith("This format is not supported: " ++ f)
   );
+
+let getIOModule =
+  fun
+  | `png => ((module ODiffIO.Png.IO): (module ImageIO))
+  | `jpg => ((module ODiffIO.Jpg.IO): (module ImageIO))
+  | `bmp => ((module ODiffIO.Bmp.IO): (module ImageIO))
+  | `tiff => ((module ODiffIO.Tiff.IO): (module ImageIO));
 
 type diffResult('output) = {
   exitCode: int,
   diff: option('output),
 };
 
+let readFromStdin = () => {
+  /* We use 65536 because that is the size of OCaml's IO buffers. */
+  let chunk_size = 65536;
+  let buffer = Buffer.create(chunk_size);
+  let rec loop = () => {
+    Buffer.add_channel(buffer, stdin, chunk_size);
+    loop();
+  };
+  try(loop()) {
+  | End_of_file => Buffer.contents(buffer)
+  };
+};
+
 let main =
     (
-      img1Path,
-      img2Path,
+      img1,
+      img2,
+      img1Type,
+      img2Type,
       diffPath,
       threshold,
       outputDiffMask,
@@ -31,13 +53,54 @@ let main =
       antialiasing,
       ignoreRegions,
     ) => {
-  module IO1 = (val getIOModule(img1Path));
-  module IO2 = (val getIOModule(img2Path));
+  let img1Type =
+    switch (img1Type) {
+    | `auto when img1 == "_" =>
+      failwith("--base-type has to be not auto, when using buffer as input")
+    | `auto => getTypeFromFilename(img1)
+    | `bmp => `bmp
+    | `jpg => `jpg
+    | `png => `png
+    | `tiff => `tiff
+    };
+
+  let img2Type =
+    switch (img2Type) {
+    | `auto when img2 == "_" =>
+      failwith(
+        "--compare-type has to be not auto, when using buffer as input",
+      )
+    | `auto => getTypeFromFilename(img2)
+    | `bmp => `bmp
+    | `jpg => `jpg
+    | `png => `png
+    | `tiff => `tiff
+    };
+
+  module IO1 = (val getIOModule(img1Type));
+  module IO2 = (val getIOModule(img2Type));
 
   module Diff = MakeDiff(IO1, IO2);
 
-  let img1 = IO1.loadImage(img1Path);
-  let img2 = IO2.loadImage(img2Path);
+  let img1 =
+    switch (img1) {
+    | "_" =>
+      if (!stdoutParsableString) {
+        print_endline("Please provide the buffer for the base image:");
+      };
+      readFromStdin() |> IO1.loadImageFromBuffer;
+    | path => IO1.loadImageFromPath(path)
+    };
+
+  let img2 =
+    switch (img2) {
+    | "_" =>
+      if (!stdoutParsableString) {
+        print_endline("Please provide the buffer for the compare image:");
+      };
+      readFromStdin() |> IO2.loadImageFromBuffer;
+    | path => IO2.loadImageFromPath(path)
+    };
 
   let {diff, exitCode} =
     Diff.diff(

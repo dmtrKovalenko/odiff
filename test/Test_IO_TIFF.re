@@ -6,8 +6,10 @@ module Output_Diff = Odiff.Diff.MakeDiff(Png.IO, Tiff.IO);
 
 describe("IO: TIFF", ({test, _}) => {
   test("finds difference between 2 images", ({expect, _}) => {
-    let img1 = Tiff.IO.loadImage("test/test-images/tiff/laptops.tiff");
-    let img2 = Tiff.IO.loadImage("test/test-images/tiff/laptops-2.tiff");
+    let img1 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops.tiff");
+    let img2 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops-2.tiff");
 
     let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
 
@@ -16,14 +18,18 @@ describe("IO: TIFF", ({test, _}) => {
   });
 
   test("Diff of mask and no mask are equal", ({expect, _}) => {
-    let img1 = Tiff.IO.loadImage("test/test-images/tiff/laptops.tiff");
-    let img2 = Tiff.IO.loadImage("test/test-images/tiff/laptops-2.tiff");
+    let img1 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops.tiff");
+    let img2 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops-2.tiff");
 
     let (_, diffPixels, diffPercentage) =
       Diff.compare(img1, img2, ~outputDiffMask=false, ());
 
-    let img1 = Tiff.IO.loadImage("test/test-images/tiff/laptops.tiff");
-    let img2 = Tiff.IO.loadImage("test/test-images/tiff/laptops-2.tiff");
+    let img1 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops.tiff");
+    let img2 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops-2.tiff");
 
     let (_, diffPixelsMask, diffPercentageMask) =
       Diff.compare(img1, img2, ~outputDiffMask=true, ());
@@ -33,13 +39,15 @@ describe("IO: TIFF", ({test, _}) => {
   });
 
   test("Creates correct diff output image", ({expect, _}) => {
-    let img1 = Tiff.IO.loadImage("test/test-images/tiff/laptops.tiff");
-    let img2 = Tiff.IO.loadImage("test/test-images/tiff/laptops-2.tiff");
+    let img1 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops.tiff");
+    let img2 =
+      Tiff.IO.loadImageFromPath("test/test-images/tiff/laptops-2.tiff");
 
     let (diffOutput, _, _) = Diff.compare(img1, img2, ());
 
     let originalDiff =
-      Png.IO.loadImage("test/test-images/tiff/laptops-diff.png");
+      Png.IO.loadImageFromPath("test/test-images/tiff/laptops-diff.png");
     let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
       Output_Diff.compare(originalDiff, diffOutput, ());
 
@@ -53,5 +61,19 @@ describe("IO: TIFF", ({test, _}) => {
 
     expect.int(diffOfDiffPixels).toBe(0);
     expect.float(diffOfDiffPercentage).toBeCloseTo(0.0);
+  });
+
+  test("Can load images with a provided buffer", ({expect, _}) => {
+    let img1 =
+      TestUtils.getFileContents("test/test-images/tiff/laptops.tiff")
+      |> Tiff.IO.loadImageFromBuffer;
+    let img2 =
+      TestUtils.getFileContents("test/test-images/tiff/laptops-2.tiff")
+      |> Tiff.IO.loadImageFromBuffer;
+
+    let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
+
+    expect.int(diffPixels).toBe(8569);
+    expect.float(diffPercentage).toBeCloseTo(3.79);
   });
 });
