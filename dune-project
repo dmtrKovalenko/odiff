@@ -30,8 +30,8 @@
  (synopsis "Pixel-by-pixel image difference algorithm")
  (depends
   dune
-  (reason (and (>= 3.6.0) (< 4.0.0)))
-  (ocaml (and (>= 4.10.0) (< 5.0.0)))
+  (reason (>= 3.6.0))
+  (ocaml (>= 4.10.0))
  )
 )
 
@@ -42,7 +42,7 @@
   dune
   conf-libpng
   odiff-core
-  (reason (and (>= 3.6.0) (< 4.0.0)))
-  (ocaml (and (>= 4.10.0) (< 4.11.0)))
+  (reason (>= 3.6.0))
+  (ocaml (>= 4.10.0))
  )
 )
