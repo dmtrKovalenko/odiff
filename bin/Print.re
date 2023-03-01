@@ -11,8 +11,10 @@ let printDiffResult = (makeParsableOutput, result) => {
       </Pastel>
 
     // SUCCESS
-    | (Pixel((_output, diffCount, _percentage)), true) when diffCount === 0 => ""
-    | (Pixel((_output, diffCount, _percentage)), false) when diffCount === 0 =>
+    | (Pixel((_output, diffCount, _percentage, _lines)), true)
+        when diffCount === 0 => ""
+    | (Pixel((_output, diffCount, _percentage, _lines)), false)
+        when diffCount === 0 =>
       <Pastel>
         <Pastel color=Green bold=true> "Success! " </Pastel>
         "Images are equal.\n"
@@ -20,10 +22,23 @@ let printDiffResult = (makeParsableOutput, result) => {
       </Pastel>
 
     // FAILURE
-    | (Pixel((_output, diffCount, diffPercentage)), true) =>
+    | (Pixel((_output, diffCount, diffPercentage, Some(stack))), true) =>
+      Int.to_string(diffCount)
+      ++ ";"
+      ++ Float.to_string(diffPercentage)
+      ++ ";"
+      ++ (
+        stack
+        |> Stack.fold(
+             (acc, line) => (line |> Int.to_string) ++ "," ++ acc,
+             "",
+           )
+      )
+
+    | (Pixel((_output, diffCount, diffPercentage, None)), true) =>
       Int.to_string(diffCount) ++ ";" ++ Float.to_string(diffPercentage)
 
-    | (Pixel((_output, diffCount, diffPercentage)), false) =>
+    | (Pixel((_output, diffCount, diffPercentage, _lines)), false) =>
       <Pastel>
         <Pastel color=Red bold=true> "Failure! " </Pastel>
         "Images are different.\n"

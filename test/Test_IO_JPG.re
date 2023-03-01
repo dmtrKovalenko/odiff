@@ -9,7 +9,7 @@ describe("IO: JPG / JPEG", ({test, _}) => {
     let img1 = Jpg.IO.loadImage("test/test-images/jpg/tiger.jpg");
     let img2 = Jpg.IO.loadImage("test/test-images/jpg/tiger-2.jpg");
 
-    let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
+    let (_, diffPixels, diffPercentage, _) = Diff.compare(img1, img2, ());
 
     expect.int(diffPixels).toBe(7586);
     expect.float(diffPercentage).toBeCloseTo(1.14);
@@ -19,13 +19,13 @@ describe("IO: JPG / JPEG", ({test, _}) => {
     let img1 = Jpg.IO.loadImage("test/test-images/jpg/tiger.jpg");
     let img2 = Jpg.IO.loadImage("test/test-images/jpg/tiger-2.jpg");
 
-    let (_, diffPixels, diffPercentage) =
+    let (_, diffPixels, diffPercentage, _) =
       Diff.compare(img1, img2, ~outputDiffMask=false, ());
 
     let img1 = Jpg.IO.loadImage("test/test-images/jpg/tiger.jpg");
     let img2 = Jpg.IO.loadImage("test/test-images/jpg/tiger-2.jpg");
 
-    let (_, diffPixelsMask, diffPercentageMask) =
+    let (_, diffPixelsMask, diffPercentageMask, _) =
       Diff.compare(img1, img2, ~outputDiffMask=true, ());
 
     expect.int(diffPixels).toBe(diffPixelsMask);
@@ -36,11 +36,11 @@ describe("IO: JPG / JPEG", ({test, _}) => {
     let img1 = Jpg.IO.loadImage("test/test-images/jpg/tiger.jpg");
     let img2 = Jpg.IO.loadImage("test/test-images/jpg/tiger-2.jpg");
 
-    let (diffOutput, _, _) = Diff.compare(img1, img2, ());
+    let (diffOutput, _, _, _) = Diff.compare(img1, img2, ());
 
     let originalDiff =
       Png.IO.loadImage("test/test-images/jpg/tiger-diff.png");
-    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
+    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _) =
       Output_Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {

@@ -30,6 +30,7 @@ let main =
       stdoutParsableString,
       antialiasing,
       ignoreRegions,
+      diffLines,
     ) => {
   module IO1 = (val getIOModule(img1Path));
   module IO2 = (val getIOModule(img2Path));
@@ -48,6 +49,7 @@ let main =
       ~failOnLayoutChange,
       ~antialiasing,
       ~ignoreRegions,
+      ~diffLines,
       ~diffPixel=
         Color.ofHexString(diffColorHex)
         |> (
@@ -61,12 +63,12 @@ let main =
     |> (
       fun
       | Layout => {diff: None, exitCode: 21}
-      | Pixel((diffOutput, diffCount, stdoutParsableString))
+      | Pixel((diffOutput, diffCount, stdoutParsableString, _))
           when diffCount == 0 => {
           exitCode: 0,
           diff: Some(diffOutput),
         }
-      | Pixel((diffOutput, diffCount, diffPercentage)) => {
+      | Pixel((diffOutput, diffCount, diffPercentage, _)) => {
           IO1.saveImage(diffOutput, diffPath);
           {exitCode: 22, diff: Some(diffOutput)};
         }
