@@ -10,7 +10,7 @@ describe("CORE: Antialiasing", ({test, _}) => {
     let img1 = loadImage("test/test-images/aa/antialiasing-on.png");
     let img2 = loadImage("test/test-images/aa/antialiasing-off.png");
 
-    let (_, diffPixels, diffPercentage) =
+    let (_, diffPixels, diffPercentage, _) =
       PNG_Diff.compare(
         img1,
         img2,
@@ -27,7 +27,7 @@ describe("CORE: Antialiasing", ({test, _}) => {
     let img1 = loadImage("test/test-images/aa/antialiasing-on.png");
     let img2 = loadImage("test/test-images/aa/antialiasing-off-small.png");
 
-    let (_, diffPixels, diffPercentage) =
+    let (_, diffPixels, diffPercentage, _) =
       PNG_Diff.compare(
         img1,
         img2,
@@ -46,7 +46,7 @@ describe("CORE: Threshold", ({test, _}) => {
     let img1 = Png.IO.loadImage("test/test-images/png/orange.png");
     let img2 = Png.IO.loadImage("test/test-images/png/orange_changed.png");
 
-    let (_, diffPixels, diffPercentage) =
+    let (_, diffPixels, diffPercentage, _) =
       PNG_Diff.compare(img1, img2, ~threshold=0.5, ());
     expect.int(diffPixels).toBe(222);
     expect.float(diffPercentage).toBeCloseTo(0.19);
@@ -58,7 +58,7 @@ describe("CORE: Ignore Regions", ({test, _}) => {
     let img1 = Png.IO.loadImage("test/test-images/png/orange.png");
     let img2 = Png.IO.loadImage("test/test-images/png/orange_changed.png");
 
-    let (_diffOutput, diffPixels, diffPercentage) =
+    let (_diffOutput, diffPixels, diffPercentage, _) =
       PNG_Diff.compare(
         img1,
         img2,
@@ -79,12 +79,12 @@ describe("CORE: Diff Color", ({test, _}) => {
     let img1 = Png.IO.loadImage("test/test-images/png/orange.png");
     let img2 = Png.IO.loadImage("test/test-images/png/orange_changed.png");
 
-    let (diffOutput, _, _) =
+    let (diffOutput, _, _, _) =
       PNG_Diff.compare(img1, img2, ~diffPixel=(0, 255, 0), ());
 
     let originalDiff =
       Png.IO.loadImage("test/test-images/png/orange_diff_green.png");
-    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
+    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _) =
       PNG_Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {

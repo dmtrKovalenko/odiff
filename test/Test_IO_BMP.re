@@ -9,7 +9,7 @@ describe("IO: BMP", ({test, _}) => {
     let img1 = Bmp.IO.loadImage("test/test-images/bmp/clouds.bmp");
     let img2 = Bmp.IO.loadImage("test/test-images/bmp/clouds-2.bmp");
 
-    let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
+    let (_, diffPixels, diffPercentage, _) = Diff.compare(img1, img2, ());
 
     expect.int(diffPixels).toBe(191);
     expect.float(diffPercentage).toBeCloseTo(0.076);
@@ -19,13 +19,13 @@ describe("IO: BMP", ({test, _}) => {
     let img1 = Bmp.IO.loadImage("test/test-images/bmp/clouds.bmp");
     let img2 = Bmp.IO.loadImage("test/test-images/bmp/clouds-2.bmp");
 
-    let (_, diffPixels, diffPercentage) =
+    let (_, diffPixels, diffPercentage, _) =
       Diff.compare(img1, img2, ~outputDiffMask=false, ());
 
     let img1 = Bmp.IO.loadImage("test/test-images/bmp/clouds.bmp");
     let img2 = Bmp.IO.loadImage("test/test-images/bmp/clouds-2.bmp");
 
-    let (_, diffPixelsMask, diffPercentageMask) =
+    let (_, diffPixelsMask, diffPercentageMask, _) =
       Diff.compare(img1, img2, ~outputDiffMask=true, ());
 
     expect.int(diffPixels).toBe(diffPixelsMask);
@@ -36,11 +36,11 @@ describe("IO: BMP", ({test, _}) => {
     let img1 = Bmp.IO.loadImage("test/test-images/bmp/clouds.bmp");
     let img2 = Bmp.IO.loadImage("test/test-images/bmp/clouds-2.bmp");
 
-    let (diffOutput, _, _) = Diff.compare(img1, img2, ());
+    let (diffOutput, _, _, _) = Diff.compare(img1, img2, ());
 
     let originalDiff =
       Png.IO.loadImage("test/test-images/bmp/clouds-diff.png");
-    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
+    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _) =
       Output_Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {

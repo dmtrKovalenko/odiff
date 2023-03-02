@@ -46,6 +46,10 @@ function optionsToArgs(options) {
         setFlag("antialiasing", value);
         break;
 
+      case "captureDiffLines":
+        setFlag("output-diff-lines", value);
+        break;
+
       case "ignoreRegions": {
         const regions = value
           .map(
@@ -62,7 +66,7 @@ function optionsToArgs(options) {
   return argArray;
 }
 
-/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number }>} */
+/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number, diffLines: number[] }>} */
 function parsePixelDiffStdout(stdout) {
   try {
     const parts = stdout.split(";");
@@ -73,6 +77,18 @@ function parsePixelDiffStdout(stdout) {
       return {
         diffCount: parseInt(diffCount),
         diffPercentage: parseFloat(diffPercentage),
+      };
+    } else if (parts.length === 3) {
+      const [diffCount, diffPercentage, linesPart] = parts;
+
+      return {
+        diffCount: parseInt(diffCount),
+        diffPercentage: parseFloat(diffPercentage),
+        diffLines: linesPart.split(",").flatMap((line) => {
+          let parsedInt = parseInt(line);
+
+          return isNaN(parsedInt) ? [] : parsedInt;
+        }),
       };
     } else {
       throw new Error(`Weird pixel diff stdout: ${stdout}`);
@@ -131,7 +147,7 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
             /no\n\s*`(.*)'\sfile or\n\s*directory/
           );
 
-          if (options.noFailOnFsErrors && noFileOrDirectoryMatches[1]) {
+          if (options.noFailOnFsErrors && noFileOrDirectoryMatches?.[1]) {
             resolve({
               match: false,
               reason: "file-not-exists",

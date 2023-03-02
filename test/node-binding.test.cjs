@@ -118,6 +118,21 @@ test("Correctly handles same images", async (t) => {
   t.is(match, true);
 });
 
+test("Correctly outputs diff lines", async (t) => {
+  const { match, diffLines } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      captureDiffLines: true,
+      __binaryPath: BINARY_PATH,
+    }
+  );
+
+  t.is(match, false);
+  t.is(diffLines.length, 411);
+});
+
 test("Returns meaningful error if file does not exist and noFailOnFsErrors", async (t) => {
   const { match, reason, file } = await compare(
     path.join(IMAGES_PATH, "not-existing.png"),

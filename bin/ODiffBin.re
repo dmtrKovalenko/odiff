@@ -91,6 +91,18 @@ let antialiasing = {
   );
 };
 
+let diffLines = {
+  Arg.(
+    value
+    & flag
+    & info(
+        ["output-diff-lines"],
+        ~doc=
+          "With this flag enabled, output result in case of different images will output lines for all the different pixels",
+      )
+  );
+};
+
 let ignoreRegions = {
   Arg.(
     value
@@ -129,10 +141,11 @@ let cmd = {
       $ parsableOutput
       $ antialiasing
       $ ignoreRegions
+      $ diffLines
     ),
     Term.info(
       "odiff",
-      ~version="2.5.0",
+      ~version="2.6.0",
       ~doc="Find difference between 2 images.",
       ~exits=[
         Term.exit_info(0, ~doc="on image match"),

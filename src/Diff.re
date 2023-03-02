@@ -3,7 +3,7 @@ let maxYIQPossibleDelta = 35215.;
 
 type diffVariant('a) =
   | Layout
-  | Pixel(('a, int, float));
+  | Pixel(('a, int, float, Stack.t(int)));
 
 let computeIngoreRegionOffsets = width => {
   List.map((((x1, y1), (x2, y2))) => {
@@ -27,6 +27,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         comp: ImageIO.img(IO2.t),
         ~antialiasing=false,
         ~outputDiffMask=false,
+        ~diffLines=false,
         ~diffPixel: (int, int, int)=redPixel,
         ~threshold=0.1,
         ~ignoreRegions=[],
@@ -36,8 +37,14 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
     let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
     let diffPixelQueue = Queue.create();
+    let diffLinesStack = Stack.create();
+
     let countDifference = (x, y) => {
       diffPixelQueue |> Queue.push((x, y));
+
+      if (diffLinesStack |> Stack.is_empty || diffLinesStack |> Stack.top < y) {
+        diffLinesStack |> Stack.push(y);
+      }
     };
 
     let ignoreRegions =
@@ -114,7 +121,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
       *. Float.of_int(diffCount)
       /. (Float.of_int(base.width) *. Float.of_int(base.height));
 
-    (diffOutput, diffCount, diffPercentage);
+    (diffOutput, diffCount, diffPercentage, diffLinesStack);
   };
 
   let diff =
@@ -126,6 +133,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
         ~diffPixel=redPixel,
         ~failOnLayoutChange=true,
         ~antialiasing=false,
+        ~diffLines=false,
         ~ignoreRegions=[],
         (),
       ) =>
@@ -141,6 +149,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
           ~diffPixel,
           ~outputDiffMask,
           ~antialiasing,
+          ~diffLines,
           ~ignoreRegions,
           (),
         );

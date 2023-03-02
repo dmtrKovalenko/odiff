@@ -10,7 +10,7 @@ describe("IO: PNG", ({test, _}) => {
     let img1 = loadImage("test/test-images/png/orange.png");
     let img2 = loadImage("test/test-images/png/orange_changed.png");
 
-    let (_, diffPixels, diffPercentage) = Diff.compare(img1, img2, ());
+    let (_, diffPixels, diffPercentage, _) = Diff.compare(img1, img2, ());
 
     expect.int(diffPixels).toBe(1430);
     expect.float(diffPercentage).toBeCloseTo(1.20);
@@ -20,13 +20,13 @@ describe("IO: PNG", ({test, _}) => {
     let img1 = loadImage("test/test-images/png/orange.png");
     let img2 = loadImage("test/test-images/png/orange_changed.png");
 
-    let (_, diffPixels, diffPercentage) =
+    let (_, diffPixels, diffPercentage, _) =
       Diff.compare(img1, img2, ~outputDiffMask=false, ());
 
     let img1 = loadImage("test/test-images/png/orange.png");
     let img2 = loadImage("test/test-images/png/orange_changed.png");
 
-    let (_, diffPixelsMask, diffPercentageMask) =
+    let (_, diffPixelsMask, diffPercentageMask, _) =
       Diff.compare(img1, img2, ~outputDiffMask=true, ());
 
     expect.int(diffPixels).toBe(diffPixelsMask);
@@ -37,10 +37,10 @@ describe("IO: PNG", ({test, _}) => {
     let img1 = loadImage("test/test-images/png/orange.png");
     let img2 = loadImage("test/test-images/png/orange_changed.png");
 
-    let (diffOutput, _, _) = Diff.compare(img1, img2, ());
+    let (diffOutput, _, _, _) = Diff.compare(img1, img2, ());
 
     let originalDiff = loadImage("test/test-images/png/orange_diff.png");
-    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage) =
+    let (diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _) =
       Diff.compare(originalDiff, diffOutput, ());
 
     if (diffOfDiffPixels > 0) {
