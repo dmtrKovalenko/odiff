@@ -38,7 +38,7 @@ jobs:
       - MacOS
       - Windows_x64
     pool:
-      vmImage: macOS-latest
+      vmImage: macOS-11
       demands: node.js
     steps:
       - template: .ci/cross-release.yml
