@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v2
         with:
-          node-version: '13'
+          node-version: '18'
       - uses: actions/checkout@v2.3.2 
 
       - name: Install esy
