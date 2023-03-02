@@ -22,7 +22,7 @@ let printDiffResult = (makeParsableOutput, result) => {
       </Pastel>
 
     // FAILURE
-    | (Pixel((_output, diffCount, diffPercentage, Some(stack))), true) =>
+    | (Pixel((_output, diffCount, diffPercentage, stack)), true) when !Stack.is_empty(stack) =>
       Int.to_string(diffCount)
       ++ ";"
       ++ Float.to_string(diffPercentage)
@@ -35,7 +35,7 @@ let printDiffResult = (makeParsableOutput, result) => {
            )
       )
 
-    | (Pixel((_output, diffCount, diffPercentage, None)), true) =>
+    | (Pixel((_output, diffCount, diffPercentage, _)), true) =>
       Int.to_string(diffCount) ++ ";" ++ Float.to_string(diffPercentage)
 
     | (Pixel((_output, diffCount, diffPercentage, _lines)), false) =>

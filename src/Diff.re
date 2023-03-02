@@ -3,7 +3,7 @@ let maxYIQPossibleDelta = 35215.;
 
 type diffVariant('a) =
   | Layout
-  | Pixel(('a, int, float, Option.t(Stack.t(int))));
+  | Pixel(('a, int, float, Stack.t(int)));
 
 let computeIngoreRegionOffsets = width => {
   List.map((((x1, y1), (x2, y2))) => {
@@ -37,16 +37,14 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
     let diffOutput = outputDiffMask ? IO1.makeSameAsLayout(base) : base;
 
     let diffPixelQueue = Queue.create();
-    let diffLinesStack = diffLines ? Some(Stack.create()) : None;
+    let diffLinesStack = Stack.create();
 
     let countDifference = (x, y) => {
       diffPixelQueue |> Queue.push((x, y));
 
-      switch (diffLinesStack) {
-      | Some(stack) when stack |> Stack.is_empty => stack |> Stack.push(y)
-      | Some(stack) when stack |> Stack.top < y => stack |> Stack.push(y)
-      | _ => ()
-      };
+      if (diffLinesStack |> Stack.is_empty || diffLinesStack |> Stack.top < y) {
+        diffLinesStack |> Stack.push(y);
+      }
     };
 
     let ignoreRegions =
