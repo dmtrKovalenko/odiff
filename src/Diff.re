@@ -42,7 +42,7 @@ module MakeDiff = (IO1: ImageIO.ImageIO, IO2: ImageIO.ImageIO) => {
     let countDifference = (x, y) => {
       diffPixelQueue |> Queue.push((x, y));
 
-      if (diffLinesStack |> Stack.is_empty || diffLinesStack |> Stack.top < y) {
+      if (diffLines && (diffLinesStack |> Stack.is_empty || diffLinesStack |> Stack.top < y)) {
         diffLinesStack |> Stack.push(y);
       }
     };
