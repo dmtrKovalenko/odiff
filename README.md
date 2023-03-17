@@ -34,7 +34,7 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ Anti-aliasing detection
 - ✅ Ignoring regions
 - ✅ Using [YIQ NTSC
-  transmission algorithm](http://www.progmat.uaem.mx:8080/artVol2Num2/Articulo3Vol2Num2.pdf) to determine visual difference.
+  transmission algorithm](https://progmat.uaem.mx/progmat/index.php/progmat/article/view/2010-2-2-03/2010-2-2-03) to determine visual difference.
 
 ### Coming in the nearest future:
 
