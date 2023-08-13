@@ -29,30 +29,38 @@
     "process:readme": "esy node scripts/process-readme.js"
   },
   "dependencies": {
-    "@opam/reason": ">= 3.6.0 < 4.0.0",
+    "@opam/reason": "3.9.0",
     "@opam/cmdliner": "1.0.4",
-    "@opam/dune": "< 3.0.0",
-    "@opam/dune-configurator": "< 3.0.0",
+    "@opam/dune": "< 4.0.0",
+    "@opam/dune-configurator": "< 4.0.0",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
-    "@reason-native/rely": "^3.2.1",
+    "@reason-native/rely": "*",
     "esy-libtiff": "*",
     "esy-libspng": "*",
     "esy-libjpeg": "*",
     "esy-zlib": "*",
-    "ocaml": "~4.10.0"
+    "ocaml": "4.14.x"
   },
   "devDependencies": {
     "ava": "^3.15.0",
     "typescript": "^4.3.5",
     "simple-git-hooks": "^2.5.1",
     "@opam/merlin": "*",
-    "@opam/ocaml-lsp-server": "1.4.0",
+    "@opam/ocaml-lsp-server": "*",
     "@opam/odoc": "*",
     "refmterr": "*"
   },
   "resolutions": {
-    "esy-libspng": "eWert-Online/esy-libspng#cc9f448dc3b2809513241194ec8ac799c9ef6c8a",
+    "esy-cmake": "ManasJayanth/esy-cmake:esy.json#dcc7909f7ea0604f1d644b14a3e83d7ebaf64272",
+    "@opam/reason": "3.9.0",
+    "@reason-native/file-context-printer": "reasonml/reason-native:file-context-printer.json#a0ddab6ab25237961e32d8732b0a222ec2372d4a",
+    "@reason-native/cli": "reasonml/reason-native:cli.json#a0ddab6ab25237961e32d8732b0a222ec2372d4a",
+    "@reason-native/rely": "reasonml/reason-native:rely.json#a0ddab6ab25237961e32d8732b0a222ec2372d4a",
+    "@reason-native/pastel": "reasonml/reason-native:pastel.json#a0ddab6ab25237961e32d8732b0a222ec2372d4a",
+    "@reason-native/console": "reasonml/reason-native:console.json#a0ddab6ab25237961e32d8732b0a222ec2372d4a",
+    "refmterr": "reasonml/reason-native:refmterr.json#a0ddab6ab25237961e32d8732b0a222ec2372d4a",
+    "esy-libspng": "ManasJayanth/esy-libspng:esy.json#255c1531255d71d59a66b57af6d893a16c75dc0e",
     "esy-libjpeg": "eWert-Online/esy-libjpeg#76b287add2732e191a2c4a1c14a34bab63c4f74d",
     "esy-libtiff": "esy-packages/esy-libtiff#83b1f5c8f76ad42acb5c008f537b5b3f0902c066",
     "esy-zlib": "esy-packages/esy-zlib#65faba12e4aed539d8fd2444fede2f1136389f6f"

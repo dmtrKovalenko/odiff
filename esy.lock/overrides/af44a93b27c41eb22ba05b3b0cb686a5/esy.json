@@ -1,0 +1,27 @@
+{
+  "name": "esy-cmake",
+  "version": "3.26.3000",
+  "description": "CMake packaged for esy",
+  "source": "https://github.com/Kitware/CMake/releases/download/v3.26.3/cmake-3.26.3.tar.gz#sha256:bbd8d39217509d163cb544a40d6428ac666ddc83e22905d3e52c925781f0f659",
+  "override": {
+    "buildEnv": {
+      "CXX": "#{os == 'windows' ? 'x86_64-w64-mingw32-g++': 'c++'}",
+      "PATH": "#{$PATH:'/usr/x86_64-w64-mingw32/sys-root/mingw/bin'}",
+      "CC": "#{os == 'windows' ? 'x86_64-w64-mingw32-gcc' : 'cc'}"
+    },
+    "build": [
+      "bash -c '#{os == 'windows' ? 'patch -p1 < ./windows.patch' : 'true'}'",
+      "./bootstrap --prefix=#{self.install} --no-system-libs --parallel=8 -- -DCMake_INSTALL_BASH_COMP_DIR=#{self.etc} -DCMake_INSTALL_EMACS_DIR=#{self.etc / 'elisp'} -DCMake_BUILD_LTO=OFF",
+      "make"
+    ],
+    "install": "make install",
+    "buildsInSource": true,
+    "exportedEnv": {
+      "PKG_CONFIG_PATH": {
+        "val": "#{self.lib / 'pkgconfig'}",
+        "scope": "global"
+      }
+    },
+    "dependencies": {}
+  }
+}

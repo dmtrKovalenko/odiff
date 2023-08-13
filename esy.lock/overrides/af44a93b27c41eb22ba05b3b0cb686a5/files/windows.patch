@@ -1,0 +1,193 @@
+--- ./bootstrap
++++ ./bootstrap
+@@ -501,13 +501,11 @@
+   cmcmd  \
+ "
+ 
+-if ${cmake_system_mingw}; then
+   CMAKE_CXX_SOURCES="${CMAKE_CXX_SOURCES}\
+     cmGlobalMSYSMakefileGenerator \
+     cmGlobalMinGWMakefileGenerator \
+     cmVSSetupHelper \
+   "
+-fi
+ 
+ CMAKE_STD_CXX_HEADERS="\
+   filesystem \
+@@ -534,21 +532,12 @@
+   cmListFileLexer \
+ "
+ 
+-if ${cmake_system_mingw}; then
+-  KWSYS_C_SOURCES="\
+-    EncodingC \
+-    ProcessWin32 \
+-    String \
+-    System \
+-    Terminal"
+-else
+-  KWSYS_C_SOURCES="\
+-    EncodingC \
+-    ProcessUNIX \
+-    String \
+-    System \
+-    Terminal"
+-fi
++KWSYS_C_SOURCES="\
++  EncodingC \
++  ProcessWin32 \
++  String \
++  System \
++  Terminal"
+ 
+ KWSYS_CXX_SOURCES="\
+   Directory \
+@@ -586,7 +575,6 @@
+   librhash/sha512.c \
+   "
+ 
+-if ${cmake_system_mingw}; then
+   LIBUV_C_SOURCES="\
+     src/fs-poll.c \
+     src/idna.c
+@@ -621,29 +609,6 @@
+     src/win/winapi.c \
+     src/win/winsock.c \
+     "
+-else
+-  LIBUV_C_SOURCES="\
+-    src/strscpy.c \
+-    src/strtok.c \
+-    src/timer.c \
+-    src/uv-common.c \
+-    src/unix/cmake-bootstrap.c \
+-    src/unix/core.c \
+-    src/unix/fs.c \
+-    src/unix/loop.c \
+-    src/unix/loop-watcher.c \
+-    src/unix/no-fsevents.c \
+-    src/unix/pipe.c \
+-    src/unix/poll.c \
+-    src/unix/posix-hrtime.c \
+-    src/unix/posix-poll.c \
+-    src/unix/process.c \
+-    src/unix/signal.c \
+-    src/unix/stream.c \
+-    src/unix/tcp.c \
+-    src/unix/tty.c \
+-    "
+-fi
+ 
+ # Display CMake bootstrap usage
+ cmake_usage()
+@@ -1594,8 +1559,8 @@
+     CMAKE_BOOTSTRAP_SOURCE_DIR=`cd "${cmake_source_dir}"; pwd -W`
+     CMAKE_BOOTSTRAP_BINARY_DIR=`cd "${cmake_binary_dir}"; pwd -W`
+ else
+-    CMAKE_BOOTSTRAP_SOURCE_DIR="${cmake_source_dir}"
+-    CMAKE_BOOTSTRAP_BINARY_DIR="${cmake_binary_dir}"
++    CMAKE_BOOTSTRAP_SOURCE_DIR=$(cygpath -w $cmake_source_dir | sed 's/\\/\//g')
++    CMAKE_BOOTSTRAP_BINARY_DIR=$(cygpath -w $cmake_binary_dir | sed 's/\\/\//g')
+ fi
+ 
+ # Write CMake version
+@@ -1616,14 +1581,12 @@
+   cmake_report cmConfigure.h${_tmp} "#define CMAKE_BOOTSTRAP_MAKEFILES"
+ fi
+ 
+-if ${cmake_system_mingw}; then
+   cmake_report cmConfigure.h${_tmp} "#if defined(_WIN32) && !defined(NOMINMAX)"
+   cmake_report cmConfigure.h${_tmp} "#  define NOMINMAX"
+   cmake_report cmConfigure.h${_tmp} "#endif"
+   cmake_report cmConfigure.h${_tmp} "#if defined(_WIN32) && !defined(KWSYS_ENCODING_DEFAULT_CODEPAGE)"
+   cmake_report cmConfigure.h${_tmp} "#  define KWSYS_ENCODING_DEFAULT_CODEPAGE CP_UTF8"
+   cmake_report cmConfigure.h${_tmp} "#endif"
+-fi
+ 
+ # Regenerate configured headers
+ for h in Configure VersionConfig; do
+@@ -1699,50 +1662,12 @@
+ libs=""
+ 
+ uv_c_flags=""
+-if ${cmake_system_mingw}; then
+-  uv_c_flags="${uv_c_flags} -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600"
+-  libs="${libs} -lws2_32 -lpsapi -liphlpapi -lshell32 -luserenv -lole32 -loleaut32"
+-else
+-  case "${cmake_system}" in
+-    *AIX*)
+-      uv_c_flags="${uv_c_flags} -D_ALL_SOURCE -D_XOPEN_SOURCE=500 -D_LINUX_SOURCE_COMPAT"
+-      libs="${libs} -lperfstat"
+-      ;;
+-    *Darwin*)
+-      uv_c_flags="${uv_c_flags} -D_DARWIN_USE_64_BIT_INODE=1 -D_DARWIN_UNLIMITED_SELECT=1"
+-      ;;
+-    *HP-UX*)
+-      uv_c_flags="${uv_c_flags} -D_XOPEN_SOURCE_EXTENDED"
+-      ;;
+-    *Linux*)
+-      uv_c_flags="${uv_c_flags} -D_GNU_SOURCE"
+-      libs="${libs} -ldl -lrt"
+-      ;;
+-    *kFreeBSD*)
+-      libs="${libs} -lkvm -lfreebsd-glue"
+-      ;;
+-    *BSD*)
+-      libs="${libs} -lkvm"
+-      ;;
+-    *SunOS*)
+-      # Normally libuv uses '-D_XOPEN_SOURCE=500 -std=c90' on Solaris 5.10,
+-      # but we do not need to do that because we bootstrap using POSIX APIs.
+-      uv_c_flags="${uv_c_flags} -D__EXTENSIONS__ -D_XOPEN_SOURCE=600"
+-      libs="${libs} -lkstat -lnsl -lsendfile -lsocket -lrt"
+-      ;;
+-    *QNX*)
+-      uv_c_flags="${uv_c_flags} -D_XOPEN_SOURCE=700"
+-      libs="${libs} -lsocket"
+-      ;;
+-  esac
+-fi
++uv_c_flags="${uv_c_flags} -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0600"
++libs="${libs} -lws2_32 -lpsapi -liphlpapi -lshell32 -luserenv -lole32 -loleaut32"
++
+ if test "x${bootstrap_system_libuv}" = "x"; then
+   uv_c_flags="${uv_c_flags} `cmake_escape_shell "-I${cmake_source_dir}/Utilities/cmlibuv/include"`"
+-  if ${cmake_system_mingw}; then
+-    uv_c_flags="${uv_c_flags} `cmake_escape_shell "-I${cmake_source_dir}/Utilities/cmlibuv/src/win"`"
+-  else
+-    uv_c_flags="${uv_c_flags} `cmake_escape_shell "-I${cmake_source_dir}/Utilities/cmlibuv/src/unix"`"
+-  fi
++  uv_c_flags="${uv_c_flags} `cmake_escape_shell "-I${cmake_source_dir}/Utilities/cmlibuv/src/win"`"
+   uv_c_flags="${uv_c_flags} `cmake_escape_shell "-I${cmake_source_dir}/Utilities/cmlibuv/src"`"
+ else
+   if test `which pkg-config`; then
+@@ -1823,11 +1748,10 @@
+ }
+ 
+ cmake_c_flags_String="-DKWSYS_STRING_C"
+-if ${cmake_system_mingw}; then
+-  cmake_c_flags_EncodingC="-DKWSYS_ENCODING_DEFAULT_CODEPAGE=CP_ACP"
+-  cmake_cxx_flags_EncodingCXX="${cmake_c_flags_EncodingC}"
+-  cmake_cxx_flags_cmProcessOutput="${cmake_c_flags_EncodingC}"
+-fi
++cmake_c_flags_EncodingC="-DKWSYS_ENCODING_DEFAULT_CODEPAGE=CP_ACP"
++cmake_cxx_flags_EncodingCXX="${cmake_c_flags_EncodingC}"
++cmake_cxx_flags_cmProcessOutput="${cmake_c_flags_EncodingC}"
++
+ cmake_cxx_flags_SystemTools="
+   -DKWSYS_CXX_HAS_SETENV=${KWSYS_CXX_HAS_SETENV}
+   -DKWSYS_CXX_HAS_UNSETENV=${KWSYS_CXX_HAS_UNSETENV}
+@@ -2039,6 +1963,11 @@
+ if test -n "${cmake_verbose}"; then
+   cmake_options="${cmake_options} -DCMAKE_VERBOSE_MAKEFILE=1"
+ fi
++cmake_bootstrap_dir=`cygpath -w $cmake_bootstrap_dir`
++cmake_source_dir=`cygpath -w $cmake_source_dir`
++echo "${cmake_bootstrap_dir}/cmake" "${cmake_source_dir}" "-C${cmake_bootstrap_dir}/InitialCacheFlags.cmake" "-G${cmake_bootstrap_generator}" ${cmake_options} ${cmake_bootstrap_system_libs} "$@"
++# read -p "Press any key to continue"
++# export PWD=`cygpath -w $PWD`
+ "${cmake_bootstrap_dir}/cmake" "${cmake_source_dir}" "-C${cmake_bootstrap_dir}/InitialCacheFlags.cmake" "-G${cmake_bootstrap_generator}" ${cmake_options} ${cmake_bootstrap_system_libs} "$@"
+ RES=$?
+ if test "${RES}" -ne "0"; then
+
+Diff finished.  Fri May 19 12:52:59 2023
