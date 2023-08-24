@@ -1,0 +1,59 @@
+{
+  "name": "esy-libspng",
+  "version": "0.7.4000",
+  "description": "libspng packaged for esy",
+  "source": "https://github.com/randy408/libspng/archive/refs/tags/v0.7.4.tar.gz#sha256:47ec02be6c0a6323044600a9221b049f63e1953faf816903e7383d4dc4234487",
+  "override": {
+    "buildEnv": {
+      "PATH": "#{$PATH:'/usr/x86_64-w64-mingw32/sys-root/mingw/bin'}",
+      "CFLAGS": "-O3 -fPIC $CFLAGS",
+      "CPPFLAGS": "$CFLAGS",
+      "CC": "#{os == 'windows' ? 'x86_64-w64-mingw32-gcc' : ''}",
+      "CXX": "#{os == 'windows' ? 'x86_64-w64-mingw32-g++' : ''}",
+      "CXXFLAGS": "#{os == 'windows' ? '--std c++11' : ''}"
+    },
+    "build": [
+      [
+        "cmake",
+        "#{os == 'windows' ? '-DCMAKE_MAKE_PROGRAM=make' : ''}",
+        "#{os == 'windows' ? '-GUnix Makefiles' : ''}",
+        "#{os == 'windows' ? '-DCMAKE_HOST_WIN32=true' : ''}",
+        "-DZLIB_LIBRARY=#{esy-zlib.lib / 'libz.a'}",
+        "-DZLIB_INCLUDE_DIR=#{esy-zlib.install / 'include'}",
+        "-DCMAKE_BUILD_TYPE=RELEASE",
+        "-DCMAKE_INSTALL_PREFIX=#{self.install}",
+        "-S #{self.root}",
+        "-B #{self.target_dir}"
+      ],
+      "make -j4"
+    ],
+    "install": ["make install"],
+    "buildsInSource": true,
+    "exportedEnv": {
+      "CFLAGS": {
+        "scope": "global",
+        "val": "-I#{self.install / 'include'} $CFLAGS"
+      },
+      "LDFLAGS": {
+        "scope": "global",
+        "val": "-L#{self.lib} -lspng $LDFLAGS"
+      },
+      "PKG_CONFIG_PATH": {
+        "scope": "global",
+        "val": "#{self.lib / 'pkgconfig' : $PKG_CONFIG_PATH }"
+      },
+      "SPNG_INCLUDE_PATH": {
+        "val": "#{self.install / 'include' }",
+        "scope": "global"
+      },
+      "SPNG_LIB_PATH": {
+        "val": "#{self.lib}",
+        "scope": "global"
+      }
+    },
+    "dependencies": {
+      "esy-cmake": "*",
+      "esy-zlib": "*"
+    }
+  }
+}
