@@ -2,17 +2,15 @@
 
 #include <stdio.h>
 
-#include <caml/mlvalues.h>
 #include <caml/alloc.h>
-#include <caml/memory.h>
-#include <caml/fail.h>
 #include <caml/bigarray.h>
+#include <caml/fail.h>
+#include <caml/memory.h>
+#include <caml/mlvalues.h>
 
 #include <tiffio.h>
 
-CAMLprim value
-read_tiff_file_to_tuple(value file)
-{
+CAMLprim value read_tiff_file_to_tuple(value file) {
   CAMLparam1(file);
   CAMLlocal2(res, ba);
 
@@ -23,8 +21,7 @@ read_tiff_file_to_tuple(value file)
 
   TIFF *image;
 
-  if (!(image = TIFFOpen(filename, "r")))
-  {
+  if (!(image = TIFFOpen(filename, "r"))) {
     caml_failwith("opening input file failed!");
   }
 
@@ -34,20 +31,20 @@ read_tiff_file_to_tuple(value file)
   int buffer_size = width * height;
   buffer = (uint32_t *)malloc(buffer_size * 4);
 
-  if (!buffer)
-  {
+  if (!buffer) {
     TIFFClose(image);
     caml_failwith("allocating TIFF buffer failed");
   }
 
-  if (!(TIFFReadRGBAImageOriented(image, width, height, buffer, ORIENTATION_TOPLEFT, 0)))
-  {
+  if (!(TIFFReadRGBAImageOriented(image, width, height, buffer,
+                                  ORIENTATION_TOPLEFT, 0))) {
     TIFFClose(image);
     caml_failwith("reading input file failed");
   }
 
   res = caml_alloc(4, 0);
-  ba = caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer, buffer_size);
+  ba = caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer,
+                          buffer_size);
 
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
@@ -59,9 +56,7 @@ read_tiff_file_to_tuple(value file)
   CAMLreturn(res);
 }
 
-CAMLprim value
-cleanup_tiff(value buffer)
-{
+CAMLprim value cleanup_tiff(value buffer) {
   CAMLparam1(buffer);
   free(Bp_val(buffer));
   CAMLreturn(Val_unit);

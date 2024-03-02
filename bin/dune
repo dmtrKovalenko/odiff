@@ -2,5 +2,6 @@
  (name ODiffBin)
  (public_name ODiffBin)
  (package odiff)
- (flags (:standard  -w -27))
+ (flags
+  (:standard -w -27))
  (libraries console.lib pastel.lib odiff-core odiff-io cmdliner))

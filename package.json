@@ -1,6 +1,6 @@
 {
   "name": "odiff",
-  "version": "2.6.1",
+  "version": "3.0.0",
   "description": "The fastest image difference tool.",
   "license": "MIT",
   "esy": {
@@ -10,6 +10,7 @@
       "bin": {
         "odiff": "ODiffBin"
       },
+      "rewritePrefix": true,
       "includePackages": [
         "odiff"
       ]
@@ -29,23 +30,22 @@
     "process:readme": "esy node scripts/process-readme.js"
   },
   "dependencies": {
-    "@opam/reason": "3.9.0",
     "@opam/cmdliner": "1.0.4",
     "@opam/dune": "< 4.0.0",
     "@opam/dune-configurator": "< 4.0.0",
+    "@opam/reason": "3.9.0",
     "@reason-native/console": "*",
     "@reason-native/pastel": "*",
     "@reason-native/rely": "*",
-    "esy-libtiff": "*",
-    "esy-libspng": "*",
     "esy-libjpeg": "*",
+    "esy-libspng": "*",
+    "esy-libtiff": "*",
     "esy-zlib": "*",
     "ocaml": "4.14.x"
   },
   "devDependencies": {
     "ava": "^3.15.0",
     "typescript": "^4.3.5",
-    "simple-git-hooks": "^2.5.1",
     "@opam/merlin": "*",
     "@opam/ocaml-lsp-server": "*",
     "@opam/odoc": "*",

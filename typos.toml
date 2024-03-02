@@ -1,0 +1,8 @@
+[files]
+extend-exclude = [
+   "package.json"
+]
+[default.extend-words]
+esy = "esy"
+
+
