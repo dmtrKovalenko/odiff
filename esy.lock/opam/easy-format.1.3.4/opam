@@ -23,7 +23,7 @@ maintainer: ["martin@mjambon.com" "rudi.grinberg@gmail.com"]
 authors: ["Martin Jambon"]
 license: "BSD-3-Clause"
 homepage: "https://github.com/ocaml-community/easy-format"
-doc: "https://mjambon.github.io/easy-format/"
+doc: "https://mjambon.github.io/mjambon2016/easy-format.html"
 bug-reports: "https://github.com/ocaml-community/easy-format/issues"
 depends: [
   "dune" {>= "3.2" & >= "1.10"}

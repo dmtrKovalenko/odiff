@@ -1,0 +1,63 @@
+opam-version: "2.0"
+synopsis: "Standard infrastructure for ppx rewriters"
+description: """
+Ppxlib is the standard infrastructure for ppx rewriters
+and other programs that manipulate the in-memory representation of
+OCaml programs, a.k.a the "Parsetree".
+
+It also comes bundled with two ppx rewriters that are commonly used to
+write tools that manipulate and/or generate Parsetree values;
+`ppxlib.metaquot` which allows to construct Parsetree values using the
+OCaml syntax directly and `ppxlib.traverse` which provides various
+ways of automatically traversing values of a given type, in particular
+allowing to inject a complex structured value into generated code.
+"""
+maintainer: ["opensource@janestreet.com"]
+authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
+license: "MIT"
+homepage: "https://github.com/ocaml-ppx/ppxlib"
+doc: "https://ocaml-ppx.github.io/ppxlib/"
+bug-reports: "https://github.com/ocaml-ppx/ppxlib/issues"
+depends: [
+  "dune" {>= "2.7"}
+  "ocaml" {>= "4.04.1" & < "5.3.0"}
+  "ocaml-compiler-libs" {>= "v0.11.0"}
+  "ppx_derivers" {>= "1.0"}
+  "sexplib0" {>= "v0.12"}
+  "sexplib0" {with-test & >= "v0.15"}
+  "stdlib-shims"
+  "ocamlfind" {with-test}
+  "re" {with-test & >= "1.9.0"}
+  "cinaps" {with-test & >= "v0.12.1"}
+  "odoc" {with-doc}
+]
+conflicts: [
+  "ocaml-migrate-parsetree" {< "2.0.0"}
+  "base-effects"
+  "ocaml-base-compiler" {= "5.1.0~alpha1"}
+  "ocaml-variants" {= "5.1.0~alpha1+options"}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+]
+dev-repo: "git+https://github.com/ocaml-ppx/ppxlib.git"
+flags: avoid-version
+available: opam-version >= "2.1.0"
+url {
+  src: "https://github.com/ocaml-ppx/ppxlib/archive/51851b4f9b18fe75a0bc24c383d5843855de87e3.tar.gz"
+  checksum: [
+    "sha256=71c606dc9214769e5ea767b65559ae1d8296f5096dac30bd9ef91f645f1f60a3"
+    "sha512=dd7e6524789d99bd7394e1e7b1177ec3e36f2f7ef90e614ec908525255ad190378533501d88489d9677aabcce9e3a880d88947faec0718a2164a96772e7678f9"
+  ]
+}
