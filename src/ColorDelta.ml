@@ -9,7 +9,7 @@ let blendSemiTransparentColor = function
       assert (b >= 0. && b <= 255.);
       assert (a >= 0. && a <= 1.);
       (r, g, b, a)
-  | colors -> colors
+  | r, g, b, alpha -> (r, g, b, alpha /. 255.)
 
 let convertPixelToFloat pixel =
   let pixel = pixel |> Int32.to_int in
