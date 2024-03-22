@@ -4,11 +4,7 @@ let blendSemiTransparentColor = function
   | r, g, b, alpha when alpha < 255. ->
       let normalizedAlpha = alpha /. 255. in
       let (r, g, b, a) = (blend r normalizedAlpha, blend g normalizedAlpha, blend b normalizedAlpha, normalizedAlpha) in
-      assert (r >= 0. && r <= 255.);
-      assert (g >= 0. && g <= 255.);
-      assert (b >= 0. && b <= 255.);
-      assert (a >= 0. && a <= 1.);
-      (r, g, b, a)
+      (r |> min 255. |> max 0., g |> min 255. |> max 0., b |> min 255. |> max 0., a |> min 1. |> max 0.)
   | r, g, b, alpha -> (r, g, b, alpha /. 255.)
 
 let convertPixelToFloat pixel =
@@ -36,7 +32,7 @@ let calculatePixelColorDelta _pixelA _pixelB =
   let q = rgb2q pixelA -. rgb2q pixelB in
   let delta = (0.5053 *. y *. y) +. (0.299 *. i *. i) +. (0.1957 *. q *. q) in
   assert (delta < 35215.);
-  delta
+  delta |> min 35215. |> max 0.
 
 let calculatePixelBrightnessDelta pixelA pixelB =
   let pixelA = pixelA |> convertPixelToFloat |> blendSemiTransparentColor in
