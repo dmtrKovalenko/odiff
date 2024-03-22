@@ -80,3 +80,40 @@ let _ =
               "test/test-images/png/diff-of-diff-green.png");
           (expect.int diffOfDiffPixels).toBe 0;
           (expect.float diffOfDiffPercentage).toBeCloseTo 0.0))
+
+let _ =
+  describe "CORE: blendSemiTransparentColor" (fun { test; _ } ->
+    test "blend 255. alpha" (fun { expect; _ } ->
+      let (r, g, b, a) = Odiff.ColorDelta.blendSemiTransparentColor(0., 128., 255., 255.) in
+      (expect.float r).toBeCloseTo 0.;
+      (expect.float g).toBeCloseTo 128.;
+      (expect.float b).toBeCloseTo 255.;
+      (expect.float a).toBeCloseTo 1.);
+
+    test "blend 0. alpha" (fun { expect; _ } ->
+      let (r, g, b, a) = Odiff.ColorDelta.blendSemiTransparentColor(0., 128., 255., 0.) in
+      (expect.float r).toBeCloseTo 255.;
+      (expect.float g).toBeCloseTo 255.;
+      (expect.float b).toBeCloseTo 255.;
+      (expect.float a).toBeCloseTo 0.);
+
+    test "blend 5. alpha" (fun { expect; _ } ->
+      let (r, g, b, a) = Odiff.ColorDelta.blendSemiTransparentColor(0., 128., 255., 5.) in
+      (expect.float r).toBeCloseTo 250.;
+      (expect.float g).toBeCloseTo 252.51;
+      (expect.float b).toBeCloseTo 255.;
+      (expect.float a).toBeCloseTo 0.02);
+
+    test "blend 51. alpha" (fun { expect; _ } ->
+      let (r, g, b, a) = Odiff.ColorDelta.blendSemiTransparentColor(0., 128., 255., 51.) in
+      (expect.float r).toBeCloseTo 204.;
+      (expect.float g).toBeCloseTo 229.6;
+      (expect.float b).toBeCloseTo 255.;
+      (expect.float a).toBeCloseTo 0.2);
+
+    test "blend 128. alpha" (fun { expect; _ } ->
+      let (r, g, b, a) = Odiff.ColorDelta.blendSemiTransparentColor(0., 128., 255., 128.) in
+      (expect.float r).toBeCloseTo 127.;
+      (expect.float g).toBeCloseTo 191.25;
+      (expect.float b).toBeCloseTo 255.;
+      (expect.float a).toBeCloseTo 0.5))
