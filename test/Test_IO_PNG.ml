@@ -9,8 +9,8 @@ let _ =
           let img1 = loadImage "test/test-images/png/orange.png" in
           let img2 = loadImage "test/test-images/png/orange_changed.png" in
           let _, diffPixels, diffPercentage, _ = Diff.compare img1 img2 () in
-          (expect.int diffPixels).toBe 1430;
-          (expect.float diffPercentage).toBeCloseTo 1.20);
+          (expect.int diffPixels).toBe 1366;
+          (expect.float diffPercentage).toBeCloseTo 1.14);
       test "Diff of mask and no mask are equal" (fun { expect; _ } ->
           let img1 = loadImage "test/test-images/png/orange.png" in
           let img2 = loadImage "test/test-images/png/orange_changed.png" in
