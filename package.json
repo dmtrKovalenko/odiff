@@ -48,7 +48,6 @@
     "typescript": "^4.3.5",
     "@opam/merlin": "*",
     "@opam/ocaml-lsp-server": "*",
-    "@opam/odoc": "*",
     "refmterr": "*"
   },
   "resolutions": {

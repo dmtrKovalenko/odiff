@@ -1,0 +1,40 @@
+opam-version: "2.0"
+synopsis: "Chrome trace event generation library"
+description:
+  "This library offers no backwards compatibility guarantees. Use at your own risk."
+maintainer: ["Jane Street Group, LLC <opensource@janestreet.com>"]
+authors: ["Jane Street Group, LLC <opensource@janestreet.com>"]
+license: "MIT"
+homepage: "https://github.com/ocaml/dune"
+doc: "https://dune.readthedocs.io/"
+bug-reports: "https://github.com/ocaml/dune/issues"
+depends: [
+  "dune" {>= "3.12"}
+  "ocaml" {>= "4.08.0"}
+  "odoc" {with-doc}
+]
+dev-repo: "git+https://github.com/ocaml/dune.git"
+build: [
+  ["dune" "subst"] {dev}
+  ["rm" "-rf" "vendor/csexp"]
+  ["rm" "-rf" "vendor/pp"]
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@doc" {with-doc}
+  ]
+]
+url {
+  src:
+    "https://github.com/ocaml/dune/releases/download/3.15.0/dune-3.15.0.tbz"
+  checksum: [
+    "sha256=b5c3d10f6f6048bfaf56fc4f0942d56381b55af4287caf8251487d4c4e7920d7"
+    "sha512=b3944b47c7ab1b2109aabc73dab7b9227765168bdcaddda875f3ee3c8277825f4a2672fbba903bf54ea507d00c7649c7dfc3c3bb156365d3052e570cf02caa82"
+  ]
+}
+x-commit-hash: "8118ddbd012bd871b75df41c971be904e16b45ca"
