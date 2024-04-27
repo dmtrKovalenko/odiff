@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest, windows-latest]
+        os: [ubuntu-20.04, macos-latest]
     steps:
       - uses: actions/setup-node@v2
         with:
@@ -45,7 +45,7 @@ jobs:
 
       # Here we use a low-level command. In real situation you don't have to
       # but it is useful in CI as it split the log in GitHub UI.
-      # You can see at a glance if it is your projet or your deps that break.
+      # You can see at a glance if it is your project or your deps that break.
       #
       # We also use --release flag to build less.
       # This allow us to spot syntax/type error more quickly.
@@ -65,7 +65,7 @@ jobs:
       - name: Build project
         run: esy build
 
-      - name: Ensure reamde is up-to-date
+      - name: Ensure readme is up-to-date
         run: node scripts/process-readme.js verify
 
       # Here we cleanup if we have a cache fail because we use restore-keys.
@@ -89,6 +89,3 @@ jobs:
         with:
           name: orange_diff_generated
           path: test/test-images
-
-      - name: Build docs
-        run: esy doc

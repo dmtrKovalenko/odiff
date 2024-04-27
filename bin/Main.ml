@@ -11,8 +11,10 @@ let getIOModule filename =
 
 type 'output diffResult = { exitCode : int; diff : 'output option }
 
+(* Arguments must remain positional for the cmd parser lib that we use *)
 let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
-    diffColorHex stdoutParsableString antialiasing ignoreRegions diffLines =
+    diffColorHex toEmitStdoutParsableString antialiasing ignoreRegions diffLines
+    =
   let module IO1 = (val getIOModule img1Path) in
   let module IO2 = (val getIOModule img2Path) in
   let module Diff = MakeDiff (IO1) (IO2) in
@@ -26,7 +28,7 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
          | Some col -> col
          | None -> (255, 0, 0))
       ()
-    |> Print.printDiffResult stdoutParsableString
+    |> Print.printDiffResult toEmitStdoutParsableString
     |> function
     | Layout -> { diff = None; exitCode = 21 }
     | Pixel (diffOutput, diffCount, stdoutParsableString, _) when diffCount = 0

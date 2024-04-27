@@ -8,7 +8,8 @@ steps:
   - template: utils/restore-build-cache.yml
   - script: "esy build --release"
     displayName: "esy build --release"
-  - template: utils/create-docs.yml
+  # odoc on windows in azure fails for unknown reason. Disable until figure out.
+  # - template: utils/create-docs.yml
   - script: "esy test"
     displayName: "Run tests"
   - task: PublishBuildArtifacts@1
