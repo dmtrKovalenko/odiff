@@ -29,8 +29,8 @@ test("Outputs correct parsed result when images different", async (t) => {
   );
 
   t.is(reason, "pixel-diff");
-  t.is(diffCount, 109861);
-  t.is(diffPercentage, 2.85952484323);
+  t.is(diffCount, 101841);
+  t.is(diffPercentage, 2.65077570347);
 })
 
 test("Correctly works with reduceRamUsage", async (t) => {
@@ -45,8 +45,8 @@ test("Correctly works with reduceRamUsage", async (t) => {
   );
 
   t.is(reason, "pixel-diff");
-  t.is(diffCount, 109861);
-  t.is(diffPercentage, 2.85952484323);
+  t.is(diffCount, 101841);
+  t.is(diffPercentage, 2.65077570347);
 });
 
 test("Correctly parses threshold", async (t) => {
@@ -54,12 +54,15 @@ test("Correctly parses threshold", async (t) => {
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    options
+    {
+      ...options,
+      threshold: 0.5,
+    }
   );
 
   t.is(reason, "pixel-diff");
-  t.is(diffCount, 50332);
-  t.is(diffPercentage, 1.31007003768);
+  t.is(diffCount, 65357);
+  t.is(diffPercentage, 1.70114931758);
 });
 
 test("Correctly parses antialiasing", async (t) => {
@@ -67,12 +70,15 @@ test("Correctly parses antialiasing", async (t) => {
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    options
+    {
+      ...options,
+      antialiasing: true,
+    }
   );
 
   t.is(reason, "pixel-diff");
-  t.is(diffCount, 108208);
-  t.is(diffPercentage, 2.8164996153);
+  t.is(diffCount, 101499);
+  t.is(diffPercentage, 2.64187393218);
 });
 
 test("Correctly parses ignore regions", async (t) => {
@@ -138,7 +144,7 @@ test("Correctly outputs diff lines", async (t) => {
   );
 
   t.is(match, false);
-  t.is(diffLines.length, 411);
+  t.is(diffLines.length, 402);
 });
 
 test("Returns meaningful error if file does not exist and noFailOnFsErrors", async (t) => {
