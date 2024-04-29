@@ -14,7 +14,23 @@ type 'output diffResult = { exitCode : int; diff : 'output option }
 (* Arguments must remain positional for the cmd parser lib that we use *)
 let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     diffColorHex toEmitStdoutParsableString antialiasing ignoreRegions diffLines
-    =
+    disableMemoryOptimizations =
+  (*
+      We do not need to actually maintain memory size of the allocated RAM by odiff, so we are
+      increasing the minor memory size to avoid most of the possible deallocations. For sure it is 
+      not possible be sure that it won't be run in OCaml because we allocate the Stack and Queue
+
+      By default set the minor heap size to 256mb on 64bit machine
+  *)
+  if not disableMemoryOptimizations then
+    Gc.set
+      {
+        (Gc.get ()) with
+        Gc.minor_heap_size = 64_000_000;
+        Gc.stack_limit = 2_048_000;
+        Gc.window_size = 25;
+      };
+
   let module IO1 = (val getIOModule img1Path) in
   let module IO2 = (val getIOModule img2Path) in
   let module Diff = MakeDiff (IO1) (IO2) in
@@ -24,9 +40,9 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     Diff.diff img1 img2 ~outputDiffMask ~threshold ~failOnLayoutChange
       ~antialiasing ~ignoreRegions ~diffLines
       ~diffPixel:
-        (Color.ofHexString diffColorHex |> function
-         | Some col -> col
-         | None -> (255, 0, 0))
+        (match Color.ofHexString diffColorHex with
+        | Some c -> c
+        | None -> redPixel)
       ()
     |> Print.printDiffResult toEmitStdoutParsableString
     |> function
@@ -43,4 +59,8 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
   (match diff with
   | Some output when outputDiffMask -> IO1.freeImage output
   | _ -> ());
+
+  Gc.print_stat stdout;
+  flush stdout;
+  Unix.sleep 40;
   exit exitCode

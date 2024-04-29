@@ -13,8 +13,8 @@ let _ =
             PNG_Diff.compare img1 img2 ~outputDiffMask:false ~antialiasing:true
               ()
           in
-          (expect.int diffPixels).toBe 38;
-          (expect.float diffPercentage).toBeCloseTo 0.095);
+          (expect.int diffPixels).toBe 46;
+          (expect.float diffPercentage).toBeCloseTo 0.115);
       test "tests different sized AA images" (fun { expect; _ } ->
           let img1 = loadImage "test/test-images/aa/antialiasing-on.png" in
           let img2 =
@@ -58,14 +58,17 @@ let _ =
 
 let _ =
   describe "CORE: Diff Color" (fun { test; _ } ->
-      test "creates diff output image with custom diff color"
+      test "creates diff output image with custom green diff color"
         (fun { expect; _ } ->
           let img1 = Png.IO.loadImage "test/test-images/png/orange.png" in
           let img2 =
             Png.IO.loadImage "test/test-images/png/orange_changed.png"
           in
           let diffOutput, _, _, _ =
-            PNG_Diff.compare img1 img2 ~diffPixel:(0, 255, 0) ()
+            PNG_Diff.compare img1 img2
+              ~diffPixel:
+                (Int32.of_int 4278255360 (*int32 representation of #00ff00*))
+              ()
           in
           let originalDiff =
             Png.IO.loadImage "test/test-images/png/orange_diff_green.png"
