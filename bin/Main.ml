@@ -14,7 +14,7 @@ type 'output diffResult = { exitCode : int; diff : 'output option }
 (* Arguments must remain positional for the cmd parser lib that we use *)
 let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     diffColorHex toEmitStdoutParsableString antialiasing ignoreRegions diffLines
-    disableMemoryOptimizations =
+    disableGcOptimizations =
   (*
       We do not need to actually maintain memory size of the allocated RAM by odiff, so we are
       increasing the minor memory size to avoid most of the possible deallocations. For sure it is 
@@ -22,11 +22,11 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
 
       By default set the minor heap size to 256mb on 64bit machine
   *)
-  if not disableMemoryOptimizations then
+  if not disableGcOptimizations then
     Gc.set
       {
         (Gc.get ()) with
-        Gc.minor_heap_size = 64_000_000;
+        Gc.minor_heap_size = 32_000_000;
         Gc.stack_limit = 2_048_000;
         Gc.window_size = 25;
       };

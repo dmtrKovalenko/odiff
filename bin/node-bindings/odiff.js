@@ -50,6 +50,10 @@ function optionsToArgs(options) {
         setFlag("output-diff-lines", value);
         break;
 
+      case "reduceRamUsage":
+        setFlag("reduceRamUsage", value);
+        break;
+
       case "ignoreRegions": {
         const regions = value
           .map(

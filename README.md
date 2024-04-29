@@ -111,6 +111,8 @@ export type ODiffOptions = Partial<{
   antialiasing: boolean;
   /** If `true` reason: "pixel-diff" output will contain the set of line indexes containing different pixels */
   captureDiffLines: boolean;
+  /** If `true` odiff will use less memory but will be slower with larger images */
+  reduceRamUsage: boolean;
   /** An array of regions to ignore in the diff. */
   ignoreRegions: Array<{
     x1: number;

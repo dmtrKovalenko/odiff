@@ -56,7 +56,7 @@ let diffLines =
         "With this flag enabled, output result in case of different images \
          will output lines for all the different pixels"
 
-let reduceMemory =
+let disableGcOptimizations =
   value & flag
   & info [ "reduce-ram-usage" ]
       ~doc:
@@ -83,7 +83,7 @@ let cmd =
   in
   ( const Main.main $ base $ comp $ diffPath $ threshold $ diffMask
     $ failOnLayout $ diffColor $ parsableOutput $ antialiasing $ ignoreRegions
-    $ diffLines $ reduceMemory,
+    $ diffLines $ disableGcOptimizations,
     Term.info "odiff" ~version:"3.0.0" ~doc:"Find difference between 2 images."
       ~exits:
         (Term.exit_info 0 ~doc:"on image match"
