@@ -1,4 +1,7 @@
-let redPixel = (255, 0, 0)
+(* Decimal representation of the RGBA in32 pixel red pixel *)
+let redPixel = Int32.of_int 4278190335
+
+(* Decimal representation of the RGBA in32 pixel green pixel *)
 let maxYIQPossibleDelta = 35215.
 
 type 'a diffVariant = Layout | Pixel of ('a * int * float * int Stack.t)
@@ -18,18 +21,21 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
 
   let compare (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img)
       ?(antialiasing = false) ?(outputDiffMask = false) ?(diffLines = false)
-      ?(diffPixel : int * int * int = redPixel) ?(threshold = 0.1)
-      ?(ignoreRegions = []) () =
+      ?diffPixel ?(threshold = 0.1) ?(ignoreRegions = []) () =
     let maxDelta = maxYIQPossibleDelta *. (threshold ** 2.) in
+    let diffPixel = match diffPixel with Some x -> x | None -> redPixel in
     let diffOutput =
       match outputDiffMask with
       | true -> IO1.makeSameAsLayout base
       | false -> base
     in
-    let diffPixelQueue = Queue.create () in
+
+    let diffCount = ref 0 in
     let diffLinesStack = Stack.create () in
     let countDifference x y =
-      diffPixelQueue |> Queue.push (x, y);
+      incr diffCount;
+      IO1.setImgColor ~x ~y diffPixel diffOutput;
+
       if
         diffLines
         && (diffLinesStack |> Stack.is_empty || diffLinesStack |> Stack.top < y)
@@ -74,26 +80,14 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
       else incr x
     done;
 
-    let diffCount = diffPixelQueue |> Queue.length in
-    (if diffCount > 0 then
-       let r, g, b = diffPixel in
-       let a = (255 land 255) lsl 24 in
-       let b = (b land 255) lsl 16 in
-       let g = (g land 255) lsl 8 in
-       let r = (r land 255) lsl 0 in
-       let diffPixel = Int32.of_int (a lor b lor g lor r) in
-       diffPixelQueue
-       |> Queue.iter (fun (x, y) ->
-              diffOutput |> IO1.setImgColor ~x ~y diffPixel));
-
     let diffPercentage =
-      100.0 *. Float.of_int diffCount
+      100.0 *. Float.of_int !diffCount
       /. (Float.of_int base.width *. Float.of_int base.height)
     in
-    (diffOutput, diffCount, diffPercentage, diffLinesStack)
+    (diffOutput, !diffCount, diffPercentage, diffLinesStack)
 
   let diff (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img) ~outputDiffMask
-      ?(threshold = 0.1) ?(diffPixel = redPixel) ?(failOnLayoutChange = true)
+      ?(threshold = 0.1) ~diffPixel ?(failOnLayoutChange = true)
       ?(antialiasing = false) ?(diffLines = false) ?(ignoreRegions = []) () =
     if
       failOnLayoutChange = true

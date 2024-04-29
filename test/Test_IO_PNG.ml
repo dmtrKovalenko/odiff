@@ -42,11 +42,7 @@ let _ =
 
       test "Correctly handles different encodings of transparency"
         (fun { expect; _ } ->
-          let img1 =
-            loadImage "test/test-images/png/extreme-alpha.png"
-          in
-          let img2 =
-            loadImage "test/test-images/png/extreme-alpha-1.png"
-          in
+          let img1 = loadImage "test/test-images/png/extreme-alpha.png" in
+          let img2 = loadImage "test/test-images/png/extreme-alpha-1.png" in
           let _, diffPixels, _, _ = Diff.compare img1 img2 () in
           (expect.int diffPixels).toBe 0))
