@@ -1,16 +1,21 @@
-let blend color alpha = 255. +. ((color -. 255.) *. alpha)
+let blend_channel_white color alpha = 255. +. ((color -. 255.) *. alpha)
+let white_pixel = (255., 255., 255., 0.)
 
 let blendSemiTransparentColor = function
+  | r, g, b, 0. -> white_pixel
+  | r, g, b, 255. -> (r, g, b, 1.)
   | r, g, b, alpha when alpha < 255. ->
       let normalizedAlpha = alpha /. 255. in
       let r, g, b, a =
-        ( blend r normalizedAlpha,
-          blend g normalizedAlpha,
-          blend b normalizedAlpha,
+        ( blend_channel_white r normalizedAlpha,
+          blend_channel_white g normalizedAlpha,
+          blend_channel_white b normalizedAlpha,
           normalizedAlpha )
       in
       (r, g, b, a)
-  | r, g, b, alpha -> (r, g, b, alpha /. 255.)
+  | _ ->
+      failwith
+        "Found pixel with alpha value greater than uint8 max value. Aborting."
 
 let convertPixelToFloat pixel =
   let pixel = pixel |> Int32.to_int in
