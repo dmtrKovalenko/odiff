@@ -7,3 +7,5 @@ _release
 *.native
 *.install
 images/diff.png
+test/test-images/_*.png
+

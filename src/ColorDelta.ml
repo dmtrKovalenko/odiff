@@ -1,9 +1,21 @@
-let blend color alpha = 255. +. ((color -. 255.) *. alpha)
+let blend_channel_white color alpha = 255. +. ((color -. 255.) *. alpha)
+let white_pixel = (255., 255., 255., 0.)
 
 let blendSemiTransparentColor = function
+  | r, g, b, 0. -> white_pixel
+  | r, g, b, 255. -> (r, g, b, 1.)
   | r, g, b, alpha when alpha < 255. ->
-      (blend r alpha, blend g alpha, blend b alpha, alpha /. 255.)
-  | colors -> colors
+      let normalizedAlpha = alpha /. 255. in
+      let r, g, b, a =
+        ( blend_channel_white r normalizedAlpha,
+          blend_channel_white g normalizedAlpha,
+          blend_channel_white b normalizedAlpha,
+          normalizedAlpha )
+      in
+      (r, g, b, a)
+  | _ ->
+      failwith
+        "Found pixel with alpha value greater than uint8 max value. Aborting."
 
 let convertPixelToFloat pixel =
   let pixel = pixel |> Int32.to_int in
@@ -11,6 +23,7 @@ let convertPixelToFloat pixel =
   let b = (pixel lsr 16) land 255 in
   let g = (pixel lsr 8) land 255 in
   let r = pixel land 255 in
+
   (Float.of_int r, Float.of_int g, Float.of_int b, Float.of_int a)
 
 let rgb2y (r, g, b, a) =
@@ -25,10 +38,13 @@ let rgb2q (r, g, b, a) =
 let calculatePixelColorDelta _pixelA _pixelB =
   let pixelA = _pixelA |> convertPixelToFloat |> blendSemiTransparentColor in
   let pixelB = _pixelB |> convertPixelToFloat |> blendSemiTransparentColor in
+
   let y = rgb2y pixelA -. rgb2y pixelB in
   let i = rgb2i pixelA -. rgb2i pixelB in
   let q = rgb2q pixelA -. rgb2q pixelB in
-  (0.5053 *. y *. y) +. (0.299 *. i *. i) +. (0.1957 *. q *. q)
+
+  let delta = (0.5053 *. y *. y) +. (0.299 *. i *. i) +. (0.1957 *. q *. q) in
+  delta
 
 let calculatePixelBrightnessDelta pixelA pixelB =
   let pixelA = pixelA |> convertPixelToFloat |> blendSemiTransparentColor in
