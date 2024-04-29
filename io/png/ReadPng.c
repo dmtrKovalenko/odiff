@@ -63,7 +63,8 @@ CAMLprim value read_png_file(value file) {
     free(out);
   };
 
-  result = spng_decode_image(ctx, out, out_size, SPNG_FMT_RGBA8, 0);
+  result =
+      spng_decode_image(ctx, out, out_size, SPNG_FMT_RGBA8, SPNG_DECODE_TRNS);
   if (result) {
     spng_ctx_free(ctx);
     free(out);
