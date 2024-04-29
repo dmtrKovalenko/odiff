@@ -26,7 +26,7 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     Gc.set
       {
         (Gc.get ()) with
-        Gc.minor_heap_size = 32_000_000;
+        Gc.minor_heap_size = 64_000_000;
         Gc.stack_limit = 2_048_000;
         Gc.window_size = 25;
       };
@@ -60,7 +60,5 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
   | Some output when outputDiffMask -> IO1.freeImage output
   | _ -> ());
 
-  Gc.print_stat stdout;
-  flush stdout;
-  Unix.sleep 40;
+  (*Gc.print_stat stdout;*)
   exit exitCode

@@ -51,7 +51,7 @@ function optionsToArgs(options) {
         break;
 
       case "reduceRamUsage":
-        setFlag("reduceRamUsage", value);
+        setFlag("reduce-ram-usage", value);
         break;
 
       case "ignoreRegions": {

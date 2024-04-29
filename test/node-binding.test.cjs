@@ -16,13 +16,31 @@ const BINARY_PATH = path.resolve(
 
 console.log(`Testing binary ${BINARY_PATH}`);
 
+const options = {
+  __binaryPath: BINARY_PATH,
+}
+
 test("Outputs correct parsed result when images different", async (t) => {
   const { reason, diffCount, diffPercentage } = await compare(
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
+    options
+  );
+
+  t.is(reason, "pixel-diff");
+  t.is(diffCount, 109861);
+  t.is(diffPercentage, 2.85952484323);
+})
+
+test("Correctly works with reduceRamUsage", async (t) => {
+  const { reason, diffCount, diffPercentage } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
     {
-      __binaryPath: BINARY_PATH,
+      ...options,
+      reduceRamUsage: true,
     }
   );
 
@@ -36,10 +54,7 @@ test("Correctly parses threshold", async (t) => {
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    {
-      threshold: 0.6,
-      __binaryPath: BINARY_PATH,
-    }
+    options
   );
 
   t.is(reason, "pixel-diff");
@@ -52,10 +67,7 @@ test("Correctly parses antialiasing", async (t) => {
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    {
-      antialiasing: true,
-      __binaryPath: BINARY_PATH,
-    }
+    options
   );
 
   t.is(reason, "pixel-diff");
@@ -69,6 +81,7 @@ test("Correctly parses ignore regions", async (t) => {
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
     {
+      ...options,
       ignoreRegions: [
         {
           x1: 749,
@@ -83,7 +96,6 @@ test("Correctly parses ignore regions", async (t) => {
           y2: 1334,
         },
       ],
-      __binaryPath: BINARY_PATH,
     }
   );
 
@@ -95,9 +107,7 @@ test("Outputs correct parsed result when images different for cypress image", as
     path.join(IMAGES_PATH, "www.cypress.io.png"),
     path.join(IMAGES_PATH, "www.cypress.io-1.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    {
-      __binaryPath: BINARY_PATH,
-    }
+    options
   );
 
   t.is(reason, "pixel-diff");
@@ -110,9 +120,7 @@ test("Correctly handles same images", async (t) => {
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    {
-      __binaryPath: BINARY_PATH,
-    }
+    options
   );
 
   t.is(match, true);
@@ -125,7 +133,7 @@ test("Correctly outputs diff lines", async (t) => {
     path.join(IMAGES_PATH, "diff.png"),
     {
       captureDiffLines: true,
-      __binaryPath: BINARY_PATH,
+      ...options
     }
   );
 
@@ -139,8 +147,8 @@ test("Returns meaningful error if file does not exist and noFailOnFsErrors", asy
     path.join(IMAGES_PATH, "not-existing.png"),
     path.join(IMAGES_PATH, "diff.png"),
     {
+      ...options,
       noFailOnFsErrors: true,
-      __binaryPath: BINARY_PATH,
     }
   );
 
