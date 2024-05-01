@@ -15,7 +15,6 @@ CAMLprim value read_tiff_file_to_tuple(value file) {
   CAMLlocal2(res, ba);
 
   const char *filename = String_val(file);
-  uint32_t *buffer = NULL;
   int width;
   int height;
 
@@ -29,35 +28,23 @@ CAMLprim value read_tiff_file_to_tuple(value file) {
   TIFFGetField(image, TIFFTAG_IMAGELENGTH, &height);
 
   int buffer_size = width * height;
-  buffer = (uint32_t *)malloc(buffer_size * 4);
 
-  if (!buffer) {
-    TIFFClose(image);
-    caml_failwith("allocating TIFF buffer failed");
-  }
+  intnat dims[1] = {buffer_size};
+  ba = caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT | CAML_BA_MANAGED, 1, NULL, dims);
 
+  uint32_t *buffer = (uint32_t *)Caml_ba_data_val(ba);
   if (!(TIFFReadRGBAImageOriented(image, width, height, buffer,
                                   ORIENTATION_TOPLEFT, 0))) {
     TIFFClose(image);
     caml_failwith("reading input file failed");
   }
 
-  res = caml_alloc(4, 0);
-  ba = caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, buffer,
-                          buffer_size);
+  TIFFClose(image);
 
+  res = caml_alloc_tuple(3);
   Store_field(res, 0, Val_int(width));
   Store_field(res, 1, Val_int(height));
   Store_field(res, 2, ba);
-  Store_field(res, 3, Val_bp(buffer));
-
-  TIFFClose(image);
 
   CAMLreturn(res);
-}
-
-CAMLprim value cleanup_tiff(value buffer) {
-  CAMLparam1(buffer);
-  free(Bp_val(buffer));
-  CAMLreturn(Val_unit);
 }

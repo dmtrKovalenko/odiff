@@ -29,9 +29,11 @@ read_jpeg_file_to_tuple(value file)
       caml_failwith("opening input file failed!");
   }
   if (fseek(fp, 0, SEEK_END) < 0 || ((size = ftell(fp)) < 0) || fseek(fp, 0, SEEK_SET) < 0) {
+      fclose(fp);
       caml_failwith("determining input file size failed");
   }
   if (size == 0) {
+      fclose(fp);
       caml_failwith("Input file contains no data");
   }
 
@@ -46,10 +48,12 @@ read_jpeg_file_to_tuple(value file)
   JDIMENSION stride = width * channels;
   JSAMPARRAY temp_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr) &cinfo, JPOOL_IMAGE, stride, 1);
 
-  int buffer_size = width * height;
-  uint8_t *image_buffer = (uint8_t*)malloc(buffer_size * 4);
+  int buffer_size = width * height * 4;
+  intnat dims[1] = {buffer_size};
+  ba = caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT | CAML_BA_MANAGED, 1, NULL, dims);
+  uint8_t *image_buffer = (uint8_t *)Caml_ba_data_val(ba);
 
-  while (cinfo.output_scanline < cinfo.output_height) {
+  while (cinfo.output_scanline < height) {
     jpeg_read_scanlines(&cinfo, temp_buffer, 1);
 
     unsigned int k = (cinfo.output_scanline - 1) * 4 * width;
@@ -65,25 +69,13 @@ read_jpeg_file_to_tuple(value file)
   }
 
   jpeg_finish_decompress(&cinfo);
-
-  res = caml_alloc(4, 0);
-  ba = caml_ba_alloc_dims(CAML_BA_INT32 | CAML_BA_C_LAYOUT, 1, image_buffer, buffer_size);
-
-  Store_field(res, 0, Val_int(width));
-  Store_field(res, 1, Val_int(height));
-  Store_field(res, 2, ba);
-  Store_field(res, 3, Val_bp(image_buffer));
-
   jpeg_destroy_decompress(&cinfo);
   fclose(fp);
 
-  CAMLreturn(res);
-}
+  res = caml_alloc_tuple(3);
+  Store_field(res, 0, Val_int(width));
+  Store_field(res, 1, Val_int(height));
+  Store_field(res, 2, ba);
 
-CAMLprim value
-cleanup_jpg(value buffer)
-{
-  CAMLparam1(buffer);
-  free(Bp_val(buffer));
-  CAMLreturn(Val_unit);
+  CAMLreturn(res);
 }
