@@ -15,7 +15,7 @@ module IO : Odiff.ImageIO.ImageIO = struct
     Array1.unsafe_set image ((y * img.width) + x) color
 
   let loadImage filename : t Odiff.ImageIO.img =
-    let width, height, data, _buffer = ReadPng.read_png_image filename in
+    let width, height, data = ReadPng.read_png_image filename in
     { width; height; image = data }
 
   let saveImage (img : t Odiff.ImageIO.img) filename =
