@@ -84,7 +84,7 @@ let cmd =
   ( const Main.main $ base $ comp $ diffPath $ threshold $ diffMask
     $ failOnLayout $ diffColor $ parsableOutput $ antialiasing $ ignoreRegions
     $ diffLines $ disableGcOptimizations,
-    Term.info "odiff" ~version:"3.0.0" ~doc:"Find difference between 2 images."
+    Term.info "odiff" ~version:"3.0.1" ~doc:"Find difference between 2 images."
       ~exits:
         (Term.exit_info 0 ~doc:"on image match"
         :: Term.exit_info 21 ~doc:"on layout diff when --fail-on-layout"
