@@ -7,73 +7,61 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        os: [windows-latest]
     steps:
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.3.2
+      - shell: bash
+        run: rm -rf $(which pkg-config)
+
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      - uses: actions/checkout@v2.3.2 
+          node-version: "20"
 
-      - name: Install esy
-        run: npm install -g esy
-
-      - name: Try to restore install cache
-        uses: actions/cache@v2.1.1
+      - uses: lukka/get-cmake@latest
+      - name: Setup anew (or from cache) vcpkg (and does not build any package)
+        uses: lukka/run-vcpkg@v11
+        env:
+          VCPKG_DEFAULT_TRIPLET: x64-windows-static
+          VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
         with:
-          path: ~/.esy/source
-          key: source-${{ hashFiles('**/index.json') }}
+          runVcpkgInstall: true
+          runVcpkgFormatString: '["install", "--clean-after-build"]'
 
-      - name: Install
-        run: esy install
+      - run: vcpkg install
 
-      - name: Print esy cache
-        uses: actions/github-script@v3.0.0
-        id: print_esy_cache
+      - name: Set pkg-config path on Unix
+        if: runner.os != 'Windows'
+        run: |
+          ls "${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig"
+          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig" >> $GITHUB_ENV
+
+      - name: Set pkg-config path on Unix
+        shell: bash
+        if: runner.os  == 'Windows'
+        run: |
+          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\lib\pkgconfig" >> $GITHUB_ENV
+
+      - run: |
+          choco install pkgconfiglite
+
+      - shell: bash
+        run: |
+          echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng)" >> $GITHUB_ENV
+          echo "LIBPNG_LIBS=$(pkg-config --libs libspng)" >> $GITHUB_ENV
+          echo "LIBTIFF_LIBS=$(pkg-config --libs libtiff-4)" >> $GITHUB_ENV
+          echo "LIBTIFF_CFLAGS=$(pkg-config --cflags libtiff-4)" >> $GITHUB_ENV
+          echo "LIBJPEG_CFLAGS=$(pkg-config --cflags libturbojpeg)" >> $GITHUB_ENV
+          echo "LIBJPEG_LIBS=$(pkg-config --libs libturbojpeg)" >> $GITHUB_ENV
+
+      - uses: ocaml/setup-ocaml@v3
         with:
-          script: |
-            const path = require('path')
-            const scriptPath = path.resolve('.github/workflows/print_esy_cache.js')
-            require(scriptPath)(core)
+          ocaml-compiler: 4.14.0
+          dune-cache: true
 
-      - name: Try to restore build cache
-        id: deps-cache
-        uses: actions/cache@v2.1.1
-        with:
-          path: ${{ steps.print_esy_cache.outputs.esy_cache }}
-          key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
-          restore-keys: build-odiff-${{ matrix.os }}
+      - name: Install deps & build
+        run: opam install .  --with-test
 
-      # Here we use a low-level command. In real situation you don't have to
-      # but it is useful in CI as it split the log in GitHub UI.
-      # You can see at a glance if it is your project or your deps that break.
-      #
-      # We also use --release flag to build less.
-      # This allow us to spot syntax/type error more quickly.
-      - name: Build release dependencies
-    
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: esy build-dependencies --release
-
-      - name: Build project in release
-        run: esy build --release
-
-      # Now that our core project build let builds others deps
-      - name: Build  dependencies
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: esy build-dependencies
-
-      - name: Build project
-        run: esy build
-
-      - name: Ensure readme is up-to-date
-        run: node scripts/process-readme.js verify
-
-      # Here we cleanup if we have a cache fail because we use restore-keys.
-      # restore-keys take the old store even on cache fail.
-      # So, we have deps we don't care anymore. We prune them.
-      - name: Clean global store
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: esy cleanup .
+      - run: opam exec -- dune build --verbose
 
       - name: Test
         run: esy test

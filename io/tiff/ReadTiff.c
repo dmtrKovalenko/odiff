@@ -1,5 +1,5 @@
 #define CAML_NAME_SPACE
-
+#include <signal.h>
 #include <stdio.h>
 
 #include <caml/alloc.h>
@@ -30,7 +30,8 @@ CAMLprim value read_tiff_file_to_tuple(value file) {
   int buffer_size = width * height;
 
   intnat dims[1] = {buffer_size};
-  ba = caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT | CAML_BA_MANAGED, 1, NULL, dims);
+  ba = caml_ba_alloc(CAML_BA_INT32 | CAML_BA_C_LAYOUT | CAML_BA_MANAGED, 1,
+                     NULL, dims);
 
   uint32_t *buffer = (uint32_t *)Caml_ba_data_val(ba);
   if (!(TIFFReadRGBAImageOriented(image, width, height, buffer,

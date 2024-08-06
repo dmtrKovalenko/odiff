@@ -1,4 +1,5 @@
 (lang dune 2.8)
+(name odiff)
 
 ; Warning: The flag set for these foreign sources overrides the `:standard` set
 ; of flags. However the flags in this standard set are still added to the
@@ -18,9 +19,11 @@
 
 (package
  (name odiff)
+ (synopsis "CLI for comparing images pixel-by-pixel")
  (depends
   odiff-core
   odiff-io
+  (cmdliner (= 1.3.0))
  )
 )
 
@@ -29,8 +32,7 @@
  (synopsis "Pixel-by-pixel image difference algorithm")
  (depends
   dune
-  (reason (and (>= 3.6.0) (< 4.0.0)))
-  (ocaml (and (>= 4.10.0) (< 5.0.0)))
+  (ocaml (= 4.14.0))
  )
 )
 
@@ -39,9 +41,8 @@
  (synopsis "Ready to use io for odiff-core")
  (depends
   dune
-  conf-libpng
   odiff-core
-  (reason (and (>= 3.6.0) (< 4.0.0)))
-  (ocaml (and (>= 4.10.0) (< 4.11.0)))
+  (ocaml (= 4.14.0))
+  (dune-configurator (>= 2.8))
  )
 )

@@ -8,4 +8,5 @@ _release
 *.install
 images/diff.png
 test/test-images/_*.png
-
+vcpkg_installed/*
+_opam/
