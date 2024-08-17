@@ -44,6 +44,9 @@ jobs:
       - run: |
           choco install pkgconfiglite
 
+      - run: git config --global core.autocrlf input
+      - uses: cygwin/cygwin-install-action@master
+
       - shell: bash
         run: |
           echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng_static)" >> $GITHUB_ENV
@@ -53,12 +56,17 @@ jobs:
           echo "LIBJPEG_CFLAGS=$(pkg-config --cflags libturbojpeg)" >> $GITHUB_ENV
           echo "LIBJPEG_LIBS=$(pkg-config --libs libturbojpeg)" >> $GITHUB_ENV
 
+          curl -L -o opam64.tar.xz https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz
+          tar -xf opam64.tar.xz
+          bash opam64/install.sh
+
       - uses: ocaml/setup-ocaml@v3
         with:
-          opam-repositories: "default:https://github.com/fdopen/opam-repository-mingw.git#opam2"
-          ocaml-compiler: "ocaml-variants.4.07.1+mingw64"
+          ocaml-compiler: "ocaml-variants.4.11.0+flambda+mingw64c"
           opam-disable-sandboxing: true
           dune-cache: true
+          opam-repositories: |
+            default: git+https://github.com/fdopen/opam-repository-mingw.git#opam2
 
       - name: Install deps & build
         run: opam install .  --with-test
