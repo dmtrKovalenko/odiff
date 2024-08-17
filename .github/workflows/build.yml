@@ -41,13 +41,16 @@ jobs:
         run: |
           echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\lib\pkgconfig" >> $GITHUB_ENV
 
+      - shell: cmd
+        run: tree /f /a D:\a\odiff\odiff\vcpkg_installed
+
       - run: |
           choco install pkgconfiglite
 
       - shell: bash
         run: |
-          echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng)" >> $GITHUB_ENV
-          echo "LIBPNG_LIBS=$(pkg-config --libs libspng)" >> $GITHUB_ENV
+          echo "LIBPNG_CFLAGS=-ID:/a/odiff/odiff/vcpkg_installed/x64-windows-static/include " >> $GITHUB_ENV
+          echo "LIBPNG_LIBS='-LD:/a/odiff/odiff/vcpkg_installed/x64-windows-static/lib -lspng_static -lzlib'" >> $GITHUB_ENV
           echo "LIBTIFF_LIBS=$(pkg-config --libs libtiff-4)" >> $GITHUB_ENV
           echo "LIBTIFF_CFLAGS=$(pkg-config --cflags libtiff-4)" >> $GITHUB_ENV
           echo "LIBJPEG_CFLAGS=$(pkg-config --cflags libturbojpeg)" >> $GITHUB_ENV
