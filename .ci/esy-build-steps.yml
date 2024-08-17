@@ -6,7 +6,7 @@ steps:
   - script: "esy install"
     displayName: "esy install"
   - template: utils/restore-build-cache.yml
-  - script: "esy build --release"
+  - script: "esy build --release --verbose"
     displayName: "esy build --release"
   # odoc on windows in azure fails for unknown reason. Disable until figure out.
   # - template: utils/create-docs.yml
