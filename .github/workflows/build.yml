@@ -64,15 +64,18 @@ jobs:
         with:
           ocaml-compiler: "4.14.2"
           opam-disable-sandboxing: true
-          dune-cache: true
+          dune-cache: false
           # opam-repositories: |
           #   default: git+https://github.com/fdopen/opam-repository-mingw.git#opam2
 
-      # - run: |
-      #     opam switch create 4.14.2-mingw32 arch-x86_32 system-mingw ocaml.4.14.2
+      - run: |
+          opam switch create 4.14.2-mingw64 arch-x86_64 system-mingw ocaml.4.14.2
 
       - name: Install deps & build
-        run: opam install .  --with-test
+        run: |
+          opam switch 4.14.2-mingw64
+          opam install .  --with-test
+          opam exec -- dune build --verbose
 
       - run: opam exec -- dune build --verbose
 

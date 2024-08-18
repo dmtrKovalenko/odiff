@@ -9,7 +9,7 @@ bug-reports: "https://github.com/dmtrKovalenko/odiff/issues"
 depends: [
   "dune" {>= "2.8"}
   "odiff-core"
-  "ocaml" {= "4.14.0"}
+  "ocaml" {= "4.14.2"}
   "dune-configurator" {>= "2.8"}
   "odoc" {with-doc}
 ]

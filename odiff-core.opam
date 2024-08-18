@@ -8,7 +8,7 @@ homepage: "https://github.com/dmtrKovalenko/odiff"
 bug-reports: "https://github.com/dmtrKovalenko/odiff/issues"
 depends: [
   "dune" {>= "2.8"}
-  "ocaml" {= "4.14.0"}
+  "ocaml" {= "4.14.2"}
   "odoc" {with-doc}
 ]
 build: [
@@ -16,6 +16,7 @@ build: [
   [
     "dune"
     "build"
+    "--verbose"
     "-p"
     name
     "-j"
