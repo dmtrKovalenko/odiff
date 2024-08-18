@@ -14,11 +14,11 @@ jobs:
     steps:
       - run: git config --global core.autocrlf input
       - uses: actions/checkout@v2.3.2
-        with:
-          packages: pkg-config
-      - uses: cygwin/cygwin-install-action@master
       - shell: bash
         run: rm -rf $(which pkg-config)
+      - uses: cygwin/cygwin-install-action@master
+        with:
+          packages: pkg-config
 
       - uses: actions/setup-node@v4
         with:
@@ -43,30 +43,33 @@ jobs:
           echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Set pkg-config path on Unix
-        shell: cmd
+        shell: bash
         if: runner.os  == 'Windows'
         run: |
           echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\lib\pkgconfig" >> $GITHUB_ENV
 
-      - shell: cmd
-        run: |
-          choco install pkgconfiglite
+      - run: tree "${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}"
+      - run: which pkg-config
+
+      # - run: |
+      #     choco install pkgconfiglite
+      - run: PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig pkg-config --cflags --libs libspngstatic
 
       # - run: git config --global core.autocrlf input
       # - uses: cygwin/cygwin-install-action@master
 
-      - shell: bash
-        run: |
-          echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng_static)" >> $GITHUB_ENV
-          echo "LIBPNG_LIBS=$(pkg-config --libs libspng_static)" >> $GITHUB_ENV
-          echo "LIBTIFF_LIBS=$(pkg-config --libs libtiff-4)" >> $GITHUB_ENV
-          echo "LIBTIFF_CFLAGS=$(pkg-config --cflags libtiff-4)" >> $GITHUB_ENV
-          echo "LIBJPEG_CFLAGS=$(pkg-config --cflags libturbojpeg)" >> $GITHUB_ENV
-          echo "LIBJPEG_LIBS=$(pkg-config --libs libturbojpeg)" >> $GITHUB_ENV
-
-          # curl -L -o opam64.tar.xz https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz
-          # tar -xf opam64.tar.xz
-          # bash opam64/install.sh
+      # - shell: bash
+      #   run: |
+      #     echo "LIBPNG_CFLAGS=lol" >> $GITHUB_ENV
+      #     echo "LIBPNG_LIBS=lol" >> $GITHUB_ENV
+      #     echo "LIBTIFF_LIBS=lol" >> $GITHUB_ENV
+      #     echo "LIBTIFF_CFLAGS=lol" >> $GITHUB_ENV
+      #     echo "LIBJPEG_CFLAGS=lol" >> $GITHUB_ENV
+      #     echo "LIBJPEG_LIBS=lol" >> $GITHUB_ENV
+      #
+      #     # curl -L -o opam64.tar.xz https://github.com/fdopen/opam-repository-mingw/releases/download/0.0.0.2/opam64.tar.xz
+      #     # tar -xf opam64.tar.xz
+      # bash opam64/install.sh
 
       - uses: ocaml/setup-ocaml@v3
         with:
@@ -76,13 +79,11 @@ jobs:
           # opam-repositories: |
           #   default: git+https://github.com/fdopen/opam-repository-mingw.git#opam2
 
-      - run: |
-          opam switch create 4.14.2-mingw64 arch-x86_64 system-mingw ocaml.4.14.2
+      - run: opam switch create 4.14.2-mingw64 arch-x86_64 system-mingw ocaml.4.14.2
 
       - name: Install deps & build
         run: |
           opam switch 4.14.2-mingw64
-          eval $(opam env --switch=4.14.2-mingw64)
           opam install .  --with-test
           opam exec -- dune build --verbose
 
