@@ -62,11 +62,14 @@ jobs:
 
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: 4.14.0
+          ocaml-compiler: "4.14.2"
           opam-disable-sandboxing: true
           dune-cache: true
-          opam-repositories: |
-            default: git+https://github.com/fdopen/opam-repository-mingw.git#opam2
+          # opam-repositories: |
+          #   default: git+https://github.com/fdopen/opam-repository-mingw.git#opam2
+
+      # - run: |
+      #     opam switch create 4.14.2-mingw32 arch-x86_32 system-mingw ocaml.4.14.2
 
       - name: Install deps & build
         run: opam install .  --with-test
