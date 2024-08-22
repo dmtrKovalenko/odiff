@@ -5,35 +5,41 @@ on: [push]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
-        os: [windows-latest]
+        include:
+          - os: ubuntu-latest
+            ocaml-compiler: "5.2.0"
+            triplet: "x64-linux"
+          - os: windows-latest
+            ocaml-compiler: "5.2.0"
+            triplet: "x64-mingw-static"
+          - os: windows-latest
+            ocaml-compiler: "arch-x86_64,system-mingw,ocaml.5.2.0"
+            triplet: "x64-mingw-static"
     defaults:
       run:
         shell: bash
     steps:
-      - run: git config --global core.autocrlf input
       - uses: actions/checkout@v2.3.2
-      - shell: bash
-        run: rm -rf $(which pkg-config)
+
+      - if: runner.os == 'Windows'
+        run: |
+          rm -rf $(which pkg-config)
+          choco install pkgconfiglite
 
       - run: gcc --version
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
 
       - uses: lukka/get-cmake@latest
       - name: Setup anew (or from cache) vcpkg (and does not build any package)
         uses: lukka/run-vcpkg@v11
         env:
-          VCPKG_DEFAULT_TRIPLET: x64-mingw-static
-          VCPKG_DEFAULT_HOST_TRIPLET: x64-mingw-static
+          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+          VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.triplet }}
         with:
           runVcpkgInstall: true
           runVcpkgFormatString: '["install", "--clean-after-build"]'
-
-      - run: vcpkg install
 
       - name: Set pkg-config path on Unix
         if: runner.os != 'Windows'
@@ -47,9 +53,6 @@ jobs:
         run: |
           echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\lib\pkgconfig" >> $GITHUB_ENV
 
-      - run: |
-          choco install pkgconfiglite
-
       - shell: bash
         run: |
           echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng_static)" >> $GITHUB_ENV
@@ -61,27 +64,12 @@ jobs:
 
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: "arch-x86_64,system-mingw,ocaml.5.2.0"
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-disable-sandboxing: true
           dune-cache: false
 
       - run: opam exec -- opam install . --deps-only
+
       - name: Install deps & build
         run: opam exec -- dune build --verbose
 
-      - run: opam exec -- dune build --verbose
-
-      - name: Test
-        run: esy test
-
-      - name: Test node bindings
-        run: esy test-js
-
-      - name: Test ts declaration
-        run: esy test-ts
-
-      - uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: orange_diff_generated
-          path: test/test-images

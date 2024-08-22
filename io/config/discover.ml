@@ -103,9 +103,9 @@ let get_flags_from_env_or_run_pkg_conifg c ~env ~lib =
 
 let c_flags_to_ocaml_opt_flags flags =
   flags
-  |> List.map (function
-       | opt when String.starts_with opt ~prefix:"-l" -> [ "-cclib"; opt ]
-       | opt -> [ "-ccopt"; opt ])
+  |> List.filter_map (function
+       | opt when String.starts_with opt ~prefix:"-l" -> Some [ "-cclib"; opt ]
+       | _ -> None)
   |> List.flatten
 
 let () =
