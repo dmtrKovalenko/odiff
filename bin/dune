@@ -3,5 +3,5 @@
  (public_name ODiffBin)
  (package odiff)
  (flags
-  (:standard -w -27 -cc gcc))
+  (:standard -w -27))
  (libraries odiff-core odiff-io cmdliner))
