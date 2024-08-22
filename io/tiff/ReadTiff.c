@@ -1,13 +1,12 @@
 #define CAML_NAME_SPACE
-#include <signal.h>
-#include <stdio.h>
-
 #include <caml/alloc.h>
 #include <caml/bigarray.h>
 #include <caml/fail.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
+#include <stdio.h>
 
+#ifndef _WIN32
 #include <tiffio.h>
 
 CAMLprim value read_tiff_file_to_tuple(value file) {
@@ -34,6 +33,7 @@ CAMLprim value read_tiff_file_to_tuple(value file) {
                      NULL, dims);
 
   uint32_t *buffer = (uint32_t *)Caml_ba_data_val(ba);
+
   if (!(TIFFReadRGBAImageOriented(image, width, height, buffer,
                                   ORIENTATION_TOPLEFT, 0))) {
     TIFFClose(image);
@@ -49,3 +49,8 @@ CAMLprim value read_tiff_file_to_tuple(value file) {
 
   CAMLreturn(res);
 }
+#else
+CAMLprim value read_tiff_file_to_tuple(value file) {
+  caml_failwith("Tiff files are not supported on Windows platform");
+}
+#endif
