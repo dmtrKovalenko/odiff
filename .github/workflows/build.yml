@@ -16,8 +16,8 @@ jobs:
             ocaml-compiler: "5.2.0"
             triplet: "x64-mingw-static"
           - os: windows-latest
-            ocaml-compiler: "arch-x86_64,system-mingw,ocaml.5.2.0"
-            triplet: "x64-mingw-static"
+            ocaml-compiler: "arch-x86_32,system-mingw,ocaml.5.2.0"
+            triplet: "x32-mingw-static"
     defaults:
       run:
         shell: bash
