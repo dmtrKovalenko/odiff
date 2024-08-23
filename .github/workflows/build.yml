@@ -17,7 +17,13 @@ jobs:
             triplet: "x64-mingw-static"
           - os: windows-latest
             ocaml-compiler: "arch-x86_32,system-mingw,ocaml.5.2.0"
-            triplet: "x32-mingw-static"
+            triplet: "x86-mingw-static"
+          - os: macos-latest
+            ocaml-compiler: "5.2.0"
+            triplet: "arm64-osx"
+          - os: macos-13
+            ocaml-compiler: "5.2.0"
+            triplet: "x64-osx"
     defaults:
       run:
         shell: bash
@@ -69,7 +75,6 @@ jobs:
           dune-cache: false
 
       - run: opam exec -- opam install . --deps-only
-
-      - name: Install deps & build
-        run: opam exec -- dune build --verbose
+      - run: opam exec -- dune build --verbose
+      - run: opam exec -- dune exec ODiffBin -- --version 
 
