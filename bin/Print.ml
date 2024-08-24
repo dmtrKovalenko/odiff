@@ -1,12 +1,18 @@
 open Odiff.Diff
 
+let esc = "\027["
+let red = esc ^ "31m"
+let green = esc ^ "32m"
+let bold = esc ^ "1m"
+let dim = esc ^ "2m"
+let reset = esc ^ "0m"
+
 let printDiffResult makeParsableOutput result =
-  let reset_ppf = Spectrum.prepare_ppf Format.str_formatter in
   (match (result, makeParsableOutput) with
   | Layout, true -> ()
   | Layout, false ->
-      Spectrum.Simple.printf "@{<red>%s!@} Images have different layout.\n"
-        "Failure!"
+      Format.printf "%s%sFailure!%s Images have different layout.\n" red bold
+        reset
   | Pixel (_output, diffCount, diffPercentage, stack), true
     when not (Stack.is_empty stack) ->
       Int.to_string diffCount ^ ";"
@@ -20,13 +26,13 @@ let printDiffResult makeParsableOutput result =
       |> print_endline
   | Pixel (_output, diffCount, _percentage, _lines), false when diffCount == 0
     ->
-      Spectrum.Simple.printf
-        "@{<green><bold>Success!@} Images are equal.\n\
-         @{<dim>No diff output created.@}"
+      Format.printf
+        "%s%sSuccess!%s Images are equal.\n%sNo diff output created.%s\n" green
+        bold reset dim reset
   | Pixel (_output, diffCount, diffPercentage, _lines), false ->
-      Spectrum.Simple.printf
-        "@{<red,bold>Failure!@} Images are different.\n\
-         Different pixels: @{<red,bold>%i (%f%%)@}" diffCount diffPercentage);
+      Format.printf
+        "%s%sFailure!%s Images are different.\n\
+         Different pixels: %s%s%i (%f%%)%s\n"
+        red bold reset red bold diffCount diffPercentage reset);
 
-  reset_ppf ();
   result

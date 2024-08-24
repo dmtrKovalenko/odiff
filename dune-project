@@ -24,7 +24,6 @@
   odiff-core
   odiff-io
   (cmdliner (= 1.3.0))
-  (spectrum (= 0.6.0))
  )
 )
 
