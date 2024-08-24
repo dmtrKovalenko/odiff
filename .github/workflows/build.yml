@@ -10,19 +10,12 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            ocaml-compiler: "5.2.0"
             triplet: "x64-linux"
           - os: windows-latest
-            ocaml-compiler: "5.2.0"
             triplet: "x64-mingw-static"
-          - os: windows-latest
-            ocaml-compiler: "arch-x86_32,system-mingw,ocaml.5.2.0"
-            triplet: "x86-mingw-static"
           - os: macos-latest
-            ocaml-compiler: "5.2.0"
             triplet: "arm64-osx"
           - os: macos-13
-            ocaml-compiler: "5.2.0"
             triplet: "x64-osx"
     defaults:
       run:
@@ -70,7 +63,7 @@ jobs:
 
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
           opam-disable-sandboxing: true
           dune-cache: false
 
