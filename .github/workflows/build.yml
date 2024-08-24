@@ -10,12 +10,16 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-linux"
           - os: windows-latest
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-mingw-static"
           - os: macos-latest
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "arm64-osx"
           - os: macos-13
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-osx"
     defaults:
       run:
@@ -63,11 +67,11 @@ jobs:
 
       - uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
           opam-disable-sandboxing: true
           dune-cache: false
 
-      - run: opam exec -- opam install . --deps-only
+      - run: opam exec -- opam install . --deps-only --update-invariant
       - run: opam exec -- dune build --verbose
       - run: opam exec -- dune exec ODiffBin -- --version 
 
