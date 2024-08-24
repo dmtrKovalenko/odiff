@@ -110,6 +110,8 @@ function parsePixelDiffStdout(stdout) {
 const CMD_BIN_HELPER_MSG =
   "Usage: odiff [OPTION]... [BASE] [COMPARING] [DIFF]\nTry `odiff --help' for more information.\n";
 
+const NO_FILE_ODIFF_ERROR_REGEX = /no\s+'([^']+)'\s+file\s+or\s+directory/;
+
 async function compare(basePath, comparePath, diffOutput, options = {}) {
   return new Promise((resolve, reject) => {
     let producedStdout, producedStdError;
@@ -148,7 +150,7 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
           ).replace(CMD_BIN_HELPER_MSG, "");
 
           const noFileOrDirectoryMatches = originalErrorMessage.match(
-            /no\n\s*`(.*)'\sfile or\n\s*directory/
+            NO_FILE_ODIFF_ERROR_REGEX
           );
 
           if (options.noFailOnFsErrors && noFileOrDirectoryMatches?.[1]) {

@@ -6,9 +6,7 @@ const IMAGES_PATH = path.resolve(__dirname, "..", "images");
 const BINARY_PATH = path.resolve(
   __dirname,
   "..",
-  "_esy",
-  "default",
-  "build-release",
+  "_build",
   "default",
   "bin",
   "ODiffBin.exe"
