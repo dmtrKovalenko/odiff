@@ -19,7 +19,7 @@
 
 (package
  (name odiff)
- (version 0.3.1)
+ (version 0.3.1-rc.1)
  (synopsis "CLI for comparing images pixel-by-pixel")
  (depends
   odiff-core
