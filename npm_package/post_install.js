@@ -25,7 +25,7 @@ if (!binaryFile) {
 }
 
 const sourcePath = path.join(__dirname, 'raw_binaries', binaryFile);
-const destPath = path.join(__dirname, 'bin', 'odiff');
+const destPath = path.join(__dirname, 'bin', 'odiff.exe');
 
 try {
   fs.copyFileSync(sourcePath, destPath);

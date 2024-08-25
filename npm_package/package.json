@@ -7,6 +7,9 @@
   "scripts": {
     "postinstall": "node ./post_install.js"
   },
+  "bin": {
+    "odiff": "bin/odiff.exe"
+  },
   "types": "odiff.d.ts",
   "main": "odiff.js",
   "keywords": [
