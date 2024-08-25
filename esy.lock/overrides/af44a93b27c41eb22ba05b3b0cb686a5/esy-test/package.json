@@ -1,8 +1,0 @@
-{
-  "esy": {
-    "build": "which cmake"
-  },
-  "dependencies": {
-    "esy-cmake": "3.26.3000"
-  }
-}

@@ -1,7 +1,0 @@
-# steps to use node on agent
-
-steps:
-  - task: NodeTool@0
-    displayName: "Use Node 20.x"
-    inputs:
-      versionSpec: 20.x
