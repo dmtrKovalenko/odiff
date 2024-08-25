@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+
+console.error("odiff: seems like a binary executable for your OS wasn't linked. Please verify that postinstsall script run successfully")
+process.exit(1);

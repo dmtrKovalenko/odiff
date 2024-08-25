@@ -1,4 +1,4 @@
-import { compare } from "../bin/node-bindings/odiff";
+import { compare } from "../npm_package/odiff";
 
 // allow no options
 compare("path1", "path2", "path3")
