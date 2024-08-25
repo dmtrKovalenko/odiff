@@ -71,13 +71,16 @@ jobs:
           opam-disable-sandboxing: true
           dune-cache: false
 
-      - run: opam exec -- opam install . --deps-only --update-invariant
+      - run: opam exec -- opam install . --deps-only --with-test
       - run: opam exec -- dune build --verbose
       - run: opam exec -- dune exec ODiffBin -- --version 
+      - run: opam exec -- dune runtest
 
-      - uses: pnpm/action-setup@v4
+      - if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          version: 9
+          name: test_images
+          path: _build/default/test/test_images
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -90,5 +93,5 @@ jobs:
         run: npm ci
 
       - name: e2e test
-        run: pnpm test
+        run: npm test
 

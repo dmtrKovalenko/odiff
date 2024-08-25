@@ -46,3 +46,11 @@
   (dune-configurator (>= 2.8))
  )
 )
+
+(package
+  (name odiff-tests)
+  (depends
+    (alcotest (= 1.8.0))
+    odiff-core
+  )
+)

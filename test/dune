@@ -1,0 +1,5 @@
+(tests 
+  (names Test_Core Test_IO_BMP Test_IO_JPG Test_IO_PNG Test_IO_TIFF)
+  (libraries alcotest odiff odiff-io) 
+  (deps (glob_files test_images/*))
+ )

@@ -1,132 +1,107 @@
-open TestFramework
-open ODiffIO
+open Alcotest
 module PNG_Diff = Odiff.Diff.MakeDiff (Png.IO) (Png.IO)
 
-let _ =
-  describe "CORE: Antialiasing" (fun { test; _ } ->
-      let open Png.IO in
-      test "does not count anti-aliased pixels as different"
-        (fun { expect; _ } ->
-          let img1 = loadImage "test/test-images/aa/antialiasing-on.png" in
-          let img2 = loadImage "test/test-images/aa/antialiasing-off.png" in
-          let _, diffPixels, diffPercentage, _ =
-            PNG_Diff.compare img1 img2 ~outputDiffMask:false ~antialiasing:true
-              ()
-          in
-          (expect.int diffPixels).toBe 46;
-          (expect.float diffPercentage).toBeCloseTo 0.115);
-      test "tests different sized AA images" (fun { expect; _ } ->
-          let img1 = loadImage "test/test-images/aa/antialiasing-on.png" in
-          let img2 =
-            loadImage "test/test-images/aa/antialiasing-off-small.png"
-          in
-          let _, diffPixels, diffPercentage, _ =
-            PNG_Diff.compare img1 img2 ~outputDiffMask:true ~antialiasing:true
-              ()
-          in
-          (expect.int diffPixels).toBe 417;
-          (expect.float diffPercentage).toBeCloseTo 1.04))
+let test_antialiasing () =
+  Sys.getcwd () |> print_endline;
+  let img1 = Png.IO.loadImage "test-images/aa/antialiasing-on.png" in
+  let img2 = Png.IO.loadImage "test-images/aa/antialiasing-off.png" in
+  let _, diffPixels, diffPercentage, _ =
+    PNG_Diff.compare img1 img2 ~outputDiffMask:false ~antialiasing:true ()
+  in
+  check int "diffPixels" 46 diffPixels;
+  check (float 0.001) "diffPercentage" 0.115 diffPercentage
 
-let _ =
-  describe "CORE: Threshold" (fun { test; _ } ->
-      test "uses provided threshold" (fun { expect; _ } ->
-          let img1 = Png.IO.loadImage "test/test-images/png/orange.png" in
-          let img2 =
-            Png.IO.loadImage "test/test-images/png/orange_changed.png"
-          in
-          let _, diffPixels, diffPercentage, _ =
-            PNG_Diff.compare img1 img2 ~threshold:0.5 ()
-          in
-          (expect.int diffPixels).toBe 25;
-          (expect.float diffPercentage).toBeCloseTo 0.02))
+let test_different_sized_aa_images () =
+  let img1 = Png.IO.loadImage "test-images/aa/antialiasing-on.png" in
+  let img2 =
+    Png.IO.loadImage "test-images/aa/antialiasing-off-small.png"
+  in
+  let _, diffPixels, diffPercentage, _ =
+    PNG_Diff.compare img1 img2 ~outputDiffMask:true ~antialiasing:true ()
+  in
+  check int "diffPixels" 417 diffPixels;
+  check (float 0.01) "diffPercentage" 1.04 diffPercentage
 
-let _ =
-  describe "CORE: Ignore Regions" (fun { test; _ } ->
-      test "uses provided irgnore regions" (fun { expect; _ } ->
-          let img1 = Png.IO.loadImage "test/test-images/png/orange.png" in
-          let img2 =
-            Png.IO.loadImage "test/test-images/png/orange_changed.png"
-          in
-          let _diffOutput, diffPixels, diffPercentage, _ =
-            PNG_Diff.compare img1 img2
-              ~ignoreRegions:
-                [ ((150, 30), (310, 105)); ((20, 175), (105, 200)) ]
-              ()
-          in
-          (expect.int diffPixels).toBe 0;
-          (expect.float diffPercentage).toBeCloseTo 0.0))
+let test_threshold () =
+  let img1 = Png.IO.loadImage "test-images/png/orange.png" in
+  let img2 = Png.IO.loadImage "test-images/png/orange_changed.png" in
+  let _, diffPixels, diffPercentage, _ =
+    PNG_Diff.compare img1 img2 ~threshold:0.5 ()
+  in
+  check int "diffPixels" 25 diffPixels;
+  check (float 0.001) "diffPercentage" 0.02 diffPercentage
 
-let _ =
-  describe "CORE: Diff Color" (fun { test; _ } ->
-      test "creates diff output image with custom green diff color"
-        (fun { expect; _ } ->
-          let img1 = Png.IO.loadImage "test/test-images/png/orange.png" in
-          let img2 =
-            Png.IO.loadImage "test/test-images/png/orange_changed.png"
-          in
-          let diffOutput, _, _, _ =
-            PNG_Diff.compare img1 img2
-              ~diffPixel:
-                (Int32.of_int 4278255360 (*int32 representation of #00ff00*))
-              ()
-          in
-          let originalDiff =
-            Png.IO.loadImage "test/test-images/png/orange_diff_green.png"
-          in
-          let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
-            PNG_Diff.compare originalDiff diffOutput ()
-          in
-          if diffOfDiffPixels > 0 then (
-            Png.IO.saveImage diffOutput
-              "test/test-images/png/diff-output-green.png";
-            Png.IO.saveImage diffMaskOfDiff
-              "test/test-images/png/diff-of-diff-green.png");
-          (expect.int diffOfDiffPixels).toBe 0;
-          (expect.float diffOfDiffPercentage).toBeCloseTo 0.0))
+let test_ignore_regions () =
+  let img1 = Png.IO.loadImage "test-images/png/orange.png" in
+  let img2 = Png.IO.loadImage "test-images/png/orange_changed.png" in
+  let _diffOutput, diffPixels, diffPercentage, _ =
+    PNG_Diff.compare img1 img2
+      ~ignoreRegions:[ ((150, 30), (310, 105)); ((20, 175), (105, 200)) ]
+      ()
+  in
+  check int "diffPixels" 0 diffPixels;
+  check (float 0.001) "diffPercentage" 0.0 diffPercentage
 
-let _ =
-  describe "CORE: blendSemiTransparentColor" (fun { test; _ } ->
-      test "blend 255. alpha" (fun { expect; _ } ->
-          let r, g, b, a =
-            Odiff.ColorDelta.blendSemiTransparentColor (0., 128., 255., 255.)
-          in
-          (expect.float r).toBeCloseTo 0.;
-          (expect.float g).toBeCloseTo 128.;
-          (expect.float b).toBeCloseTo 255.;
-          (expect.float a).toBeCloseTo 1.);
+let test_diff_color () =
+  let img1 = Png.IO.loadImage "test-images/png/orange.png" in
+  let img2 = Png.IO.loadImage "test-images/png/orange_changed.png" in
+  let diffOutput, _, _, _ =
+    PNG_Diff.compare img1 img2
+      ~diffPixel:(Int32.of_int 4278255360 (*int32 representation of #00ff00*))
+      ()
+  in
+  let originalDiff =
+    Png.IO.loadImage "test-images/png/orange_diff_green.png"
+  in
+  let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
+    PNG_Diff.compare originalDiff diffOutput ()
+  in
+  if diffOfDiffPixels > 0 then (
+    Png.IO.saveImage diffOutput "test-images/png/diff-output-green.png";
+    Png.IO.saveImage diffMaskOfDiff
+      "test-images/png/diff-of-diff-green.png");
+  check int "diffOfDiffPixels" 0 diffOfDiffPixels;
+  check (float 0.001) "diffOfDiffPercentage" 0.0 diffOfDiffPercentage
 
-      test "blend 0. alpha" (fun { expect; _ } ->
-          let r, g, b, a =
-            Odiff.ColorDelta.blendSemiTransparentColor (0., 128., 255., 0.)
-          in
-          (expect.float r).toBeCloseTo 255.;
-          (expect.float g).toBeCloseTo 255.;
-          (expect.float b).toBeCloseTo 255.;
-          (expect.float a).toBeCloseTo 0.);
+let test_blend_semi_transparent_color () =
+  let test_blend r g b a expected_r expected_g expected_b expected_a =
+    let r', g', b', a' =
+      Odiff.ColorDelta.blendSemiTransparentColor (r, g, b, a)
+    in
+    check (float 0.01) "r" expected_r r';
+    check (float 0.01) "g" expected_g g';
+    check (float 0.01) "b" expected_b b';
+    check (float 0.01) "a" expected_a a'
+  in
+  test_blend 0. 128. 255. 255. 0. 128. 255. 1.;
+  test_blend 0. 128. 255. 0. 255. 255. 255. 0.;
+  test_blend 0. 128. 255. 5. 250. 252.51 255. 0.02;
+  test_blend 0. 128. 255. 51. 204. 229.6 255. 0.2;
+  test_blend 0. 128. 255. 128. 127. 191.25 255. 0.5
 
-      test "blend 5. alpha" (fun { expect; _ } ->
-          let r, g, b, a =
-            Odiff.ColorDelta.blendSemiTransparentColor (0., 128., 255., 5.)
-          in
-          (expect.float r).toBeCloseTo 250.;
-          (expect.float g).toBeCloseTo 252.51;
-          (expect.float b).toBeCloseTo 255.;
-          (expect.float a).toBeCloseTo 0.02);
-
-      test "blend 51. alpha" (fun { expect; _ } ->
-          let r, g, b, a =
-            Odiff.ColorDelta.blendSemiTransparentColor (0., 128., 255., 51.)
-          in
-          (expect.float r).toBeCloseTo 204.;
-          (expect.float g).toBeCloseTo 229.6;
-          (expect.float b).toBeCloseTo 255.;
-          (expect.float a).toBeCloseTo 0.2);
-
-      test "blend 128. alpha" (fun { expect; _ } ->
-          let r, g, b, a =
-            Odiff.ColorDelta.blendSemiTransparentColor (0., 128., 255., 128.)
-          in
-          (expect.float r).toBeCloseTo 127.;
-          (expect.float g).toBeCloseTo 191.25;
-          (expect.float b).toBeCloseTo 255.;
-          (expect.float a).toBeCloseTo 0.5))
+let () =
+  run "CORE"
+    [
+      ( "Antialiasing",
+        [
+          test_case "does not count anti-aliased pixels as different" `Quick
+            test_antialiasing;
+          test_case "tests different sized AA images" `Quick
+            test_different_sized_aa_images;
+        ] );
+      ( "Threshold",
+        [ test_case "uses provided threshold" `Quick test_threshold ] );
+      ( "Ignore Regions",
+        [ test_case "uses provided ignore regions" `Quick test_ignore_regions ]
+      );
+      ( "Diff Color",
+        [
+          test_case "creates diff output image with custom green diff color"
+            `Quick test_diff_color;
+        ] );
+      ( "blendSemiTransparentColor",
+        [
+          test_case "blend semi-transparent colors" `Quick
+            test_blend_semi_transparent_color;
+        ] );
+    ]

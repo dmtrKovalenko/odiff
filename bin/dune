@@ -11,5 +11,5 @@
   (flags (:standard -w +42))
   (ocamlopt_flags (:standard -S)))
  (release
-  (ocamlopt_flags (:standard -O3 -rounds 5 -unbox-closures -inline 200 -inline-max-depth 7 -unbox-closures-factor 50))))
+  (ocamlopt_flags (:standard -no-g -O3 -rounds 5 -unbox-closures -inline 200 -inline-max-depth 7 -unbox-closures-factor 50))))
 

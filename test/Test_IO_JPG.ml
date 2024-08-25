@@ -1,42 +1,68 @@
-open TestFramework
-open ODiffIO
+open Alcotest
 module Diff = Odiff.Diff.MakeDiff (Jpg.IO) (Jpg.IO)
 module Output_Diff = Odiff.Diff.MakeDiff (Png.IO) (Jpg.IO)
 
-let _ =
-  describe "IO: JPG / JPEG" (fun { test; _ } ->
-      test "finds difference between 2 images" (fun { expect; _ } ->
-          let img1 = Jpg.IO.loadImage "test/test-images/jpg/tiger.jpg" in
-          let img2 = Jpg.IO.loadImage "test/test-images/jpg/tiger-2.jpg" in
-          let _, diffPixels, diffPercentage, _ = Diff.compare img1 img2 () in
-          (expect.int diffPixels).toBe 7586;
-          (expect.float diffPercentage).toBeCloseTo 1.14);
-      test "Diff of mask and no mask are equal" (fun { expect; _ } ->
-          let img1 = Jpg.IO.loadImage "test/test-images/jpg/tiger.jpg" in
-          let img2 = Jpg.IO.loadImage "test/test-images/jpg/tiger-2.jpg" in
-          let _, diffPixels, diffPercentage, _ =
-            Diff.compare img1 img2 ~outputDiffMask:false ()
-          in
-          let img1 = Jpg.IO.loadImage "test/test-images/jpg/tiger.jpg" in
-          let img2 = Jpg.IO.loadImage "test/test-images/jpg/tiger-2.jpg" in
-          let _, diffPixelsMask, diffPercentageMask, _ =
-            Diff.compare img1 img2 ~outputDiffMask:true ()
-          in
-          (expect.int diffPixels).toBe diffPixelsMask;
-          (expect.float diffPercentage).toBeCloseTo diffPercentageMask);
-      test "Creates correct diff output image" (fun { expect; _ } ->
-          let img1 = Jpg.IO.loadImage "test/test-images/jpg/tiger.jpg" in
-          let img2 = Jpg.IO.loadImage "test/test-images/jpg/tiger-2.jpg" in
-          let diffOutput, _, _, _ = Diff.compare img1 img2 () in
-          let originalDiff =
-            Png.IO.loadImage "test/test-images/jpg/tiger-diff.png"
-          in
-          let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
-            Output_Diff.compare originalDiff diffOutput ()
-          in
-          if diffOfDiffPixels > 0 then (
-            Jpg.IO.saveImage diffOutput "test/test-images/jpg/_diff-output.png";
-            Png.IO.saveImage diffMaskOfDiff
-              "test/test-images/jpg/_diff-of-diff.png");
-          (expect.int diffOfDiffPixels).toBe 0;
-          (expect.float diffOfDiffPercentage).toBeCloseTo 0.0))
+let load_image path =
+  match Jpg.IO.loadImage path with
+  | exception ex ->
+      fail
+        (Printf.sprintf "Failed to load image: %s\nError: %s" path
+           (Printexc.to_string ex))
+  | img -> img
+
+let load_png_image path =
+  match Png.IO.loadImage path with
+  | exception ex ->
+      fail
+        (Printf.sprintf "Failed to load image: %s\nError: %s" path
+           (Printexc.to_string ex))
+  | img -> img
+
+let test_finds_difference_between_images () =
+  let img1 = load_image "test-images/jpg/tiger.jpg" in
+  let img2 = load_image "test-images/jpg/tiger-2.jpg" in
+  let _, diffPixels, diffPercentage, _ = Diff.compare img1 img2 () in
+  check int "diffPixels" 7789 diffPixels;
+  check (float 0.001) "diffPercentage" 1.1677 diffPercentage
+
+let test_diff_mask_no_mask_equal () =
+  let img1 = load_image "test-images/jpg/tiger.jpg" in
+  let img2 = load_image "test-images/jpg/tiger-2.jpg" in
+  let _, diffPixels, diffPercentage, _ =
+    Diff.compare img1 img2 ~outputDiffMask:false ()
+  in
+  let img1 = load_image "test-images/jpg/tiger.jpg" in
+  let img2 = load_image "test-images/jpg/tiger-2.jpg" in
+  let _, diffPixelsMask, diffPercentageMask, _ =
+    Diff.compare img1 img2 ~outputDiffMask:true ()
+  in
+  check int "diffPixels" diffPixels diffPixelsMask;
+  check (float 0.001) "diffPercentage" diffPercentage diffPercentageMask
+
+let test_creates_correct_diff_output_image () =
+  let img1 = load_image "test-images/jpg/tiger.jpg" in
+  let img2 = load_image "test-images/jpg/tiger-2.jpg" in
+  let diffOutput, _, _, _ = Diff.compare img1 img2 () in
+  let originalDiff = load_png_image "test-images/jpg/tiger-diff.png" in
+  let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
+    Output_Diff.compare originalDiff diffOutput ()
+  in
+  if diffOfDiffPixels > 0 then (
+    Jpg.IO.saveImage diffOutput "test-images/jpg/_diff-output.png";
+    Png.IO.saveImage diffMaskOfDiff "test-images/jpg/_diff-of-diff.png");
+  check int "diffOfDiffPixels" 0 diffOfDiffPixels;
+  check (float 0.001) "diffOfDiffPercentage" 0.0 diffOfDiffPercentage
+
+let () =
+  run "IO"
+    [
+      ( "JPG / JPEG",
+        [
+          test_case "finds difference between 2 images" `Quick
+            test_finds_difference_between_images;
+          test_case "Diff of mask and no mask are equal" `Quick
+            test_diff_mask_no_mask_equal;
+          test_case "Creates correct diff output image" `Quick
+            test_creates_correct_diff_output_image;
+        ] );
+    ]
