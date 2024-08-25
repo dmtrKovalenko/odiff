@@ -78,6 +78,11 @@ let cmd =
   $ diffColor $ parsableOutput $ antialiasing $ ignoreRegions $ diffLines
   $ disableGcOptimizations
 
+let version =
+  match Build_info.V1.version () with
+  | None -> "dev"
+  | Some v -> Build_info.V1.Version.to_string v
+
 let info =
   let man =
     [
@@ -86,7 +91,7 @@ let info =
       `P "Supported image types: .png, .jpg, .jpeg, .tiff";
     ]
   in
-  Cmd.info "odiff" ~version:"3.0.1" ~doc:"Find difference between 2 images."
+  Cmd.info "odiff" ~version ~doc:"Find difference between 2 images."
     ~exits:
       [
         Cmd.Exit.info 0 ~doc:"on image match";

@@ -1,6 +1,6 @@
 {
   "name": "odiff-bin",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "author": "Dmitriy Kovalenko <dmtr.kovalenko@outlook.com>",
   "license": "MIT",
   "description": "The fastest image difference tool in the world",

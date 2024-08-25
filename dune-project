@@ -19,10 +19,12 @@
 
 (package
  (name odiff)
+ (version 3.1.0)
  (synopsis "CLI for comparing images pixel-by-pixel")
  (depends
   odiff-core
   odiff-io
+  (dune-build-info (>= 3.16.0))
   (cmdliner (= 1.3.0))
  )
 )
@@ -43,7 +45,7 @@
   dune
   odiff-core
   (ocaml (= 5.2.0))
-  (dune-configurator (>= 2.8))
+  (dune-configurator (>= 3.16.0))
  )
 )
 
