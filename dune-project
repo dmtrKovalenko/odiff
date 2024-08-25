@@ -51,6 +51,7 @@
 
 (package
   (name odiff-tests)
+  (synopsis "Internal package for integration tests of odiff")
   (depends
     (alcotest (= 1.8.0))
     odiff-core
