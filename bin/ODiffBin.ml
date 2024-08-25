@@ -74,22 +74,31 @@ let ignoreRegions =
          \"x1:y1-x2:y2\". Multiple regions are separated with a ','."
 
 let cmd =
+  const Main.main $ base $ comp $ diffPath $ threshold $ diffMask $ failOnLayout
+  $ diffColor $ parsableOutput $ antialiasing $ ignoreRegions $ diffLines
+  $ disableGcOptimizations
+
+let version =
+  match Build_info.V1.version () with
+  | None -> "dev"
+  | Some v -> Build_info.V1.Version.to_string v
+
+let info =
   let man =
     [
       `S Manpage.s_description;
       `P "$(tname) is the fastest pixel-by-pixel image comparison tool.";
-      `P "Supported image types: .png, .jpg, .jpeg, .bitmap";
+      `P "Supported image types: .png, .jpg, .jpeg, .tiff";
     ]
   in
-  ( const Main.main $ base $ comp $ diffPath $ threshold $ diffMask
-    $ failOnLayout $ diffColor $ parsableOutput $ antialiasing $ ignoreRegions
-    $ diffLines $ disableGcOptimizations,
-    Term.info "odiff" ~version:"3.0.1" ~doc:"Find difference between 2 images."
-      ~exits:
-        (Term.exit_info 0 ~doc:"on image match"
-        :: Term.exit_info 21 ~doc:"on layout diff when --fail-on-layout"
-        :: Term.exit_info 22 ~doc:"on image pixel difference"
-        :: Term.default_error_exits)
-      ~man )
+  Cmd.info "odiff" ~version ~doc:"Find difference between 2 images."
+    ~exits:
+      [
+        Cmd.Exit.info 0 ~doc:"on image match";
+        Cmd.Exit.info 21 ~doc:"on layout diff when --fail-on-layout";
+        Cmd.Exit.info 22 ~doc:"on image pixel difference";
+      ]
+    ~man
 
-let () = Term.eval cmd |> Term.exit
+let cmd = Cmd.v info cmd
+let () = Cmd.eval cmd |> Stdlib.exit

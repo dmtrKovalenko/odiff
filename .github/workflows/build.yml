@@ -1,91 +1,155 @@
 name: Build
-
-on: [push]
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact: "linux-x64"
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
+            triplet: "x64-linux"
+          - os: windows-latest
+            artifact: "windows-x64"
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
+            triplet: "x64-mingw-static"
+          - os: macos-latest
+            artifact: "macos-arm64"
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
+            triplet: "arm64-osx"
+          - os: macos-13
+            artifact: "macos-x64"
+            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
+            triplet: "x64-osx"
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v2.3.2
+
+      - if: runner.os == 'Windows'
+        run: |
+          rm -rf $(which pkg-config)
+          choco install pkgconfiglite
+
+      - run: gcc --version
+
+      - uses: lukka/get-cmake@latest
+      - name: Setup anew (or from cache) vcpkg (and does not build any package)
+        uses: lukka/run-vcpkg@v11
+        env:
+          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
+          VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.triplet }}
         with:
-          node-version: '18'
-      - uses: actions/checkout@v2.3.2 
+          runVcpkgInstall: true
+          runVcpkgFormatString: '["install", "--clean-after-build"]'
 
-      - name: Install esy
-        run: npm install -g esy
+      - name: Set pkg-config path on Unix
+        if: runner.os != 'Windows'
+        run: |
+          ls "${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig"
+          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig" >> $GITHUB_ENV
 
-      - name: Try to restore install cache
-        uses: actions/cache@v2.1.1
+      - name: Set pkg-config path on Unix
+        shell: bash
+        if: runner.os  == 'Windows'
+        run: |
+          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\lib\pkgconfig" >> $GITHUB_ENV
+
+      - shell: bash
+        run: |
+          echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng_static)" >> $GITHUB_ENV
+          echo "LIBPNG_LIBS=$(pkg-config --libs libspng_static)" >> $GITHUB_ENV
+          echo "LIBTIFF_LIBS=$(pkg-config --libs libtiff-4)" >> $GITHUB_ENV
+          echo "LIBTIFF_CFLAGS=$(pkg-config --cflags libtiff-4)" >> $GITHUB_ENV
+          echo "LIBJPEG_CFLAGS=$(pkg-config --cflags libturbojpeg)" >> $GITHUB_ENV
+          echo "LIBJPEG_LIBS=$(pkg-config --libs libturbojpeg)" >> $GITHUB_ENV
+
+      - uses: ocaml/setup-ocaml@v3
         with:
-          path: ~/.esy/source
-          key: source-${{ hashFiles('**/index.json') }}
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          opam-disable-sandboxing: true
+          dune-cache: false
 
-      - name: Install
-        run: esy install
+      - run: opam exec -- opam install . --deps-only --with-test
+      - run: opam exec -- dune build --verbose
 
-      - name: Print esy cache
-        uses: actions/github-script@v3.0.0
-        id: print_esy_cache
+      - name: Give binary system-specific name
+        run: cp "_build/default/bin/ODiffBin.exe" "odiff-${{ matrix.artifact }}.exe"
+
+      - run: opam exec -- dune exec ODiffBin -- --version 
+      - run: opam exec -- dune runtest
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const path = require('path')
-            const scriptPath = path.resolve('.github/workflows/print_esy_cache.js')
-            require(scriptPath)(core)
+          name: test_images
+          path: _build/default/test/test_images
 
-      - name: Try to restore build cache
-        id: deps-cache
-        uses: actions/cache@v2.1.1
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          path: ${{ steps.print_esy_cache.outputs.esy_cache }}
-          key: build-odiff-${{ matrix.os }}-${{ hashFiles('**/index.json') }}
-          restore-keys: build-odiff-${{ matrix.os }}
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
-      # Here we use a low-level command. In real situation you don't have to
-      # but it is useful in CI as it split the log in GitHub UI.
-      # You can see at a glance if it is your project or your deps that break.
-      #
-      # We also use --release flag to build less.
-      # This allow us to spot syntax/type error more quickly.
-      - name: Build release dependencies
-    
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: esy build-dependencies --release
+      - name: Install node deps
+        run: npm ci
+      - name: e2e test
+        run: npm test
 
-      - name: Build project in release
-        run: esy build --release
-
-      # Now that our core project build let builds others deps
-      - name: Build  dependencies
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: esy build-dependencies
-
-      - name: Build project
-        run: esy build
-
-      - name: Ensure readme is up-to-date
-        run: node scripts/process-readme.js verify
-
-      # Here we cleanup if we have a cache fail because we use restore-keys.
-      # restore-keys take the old store even on cache fail.
-      # So, we have deps we don't care anymore. We prune them.
-      - name: Clean global store
-        if: steps.deps-cache.outputs.cache-hit != 'true'
-        run: esy cleanup .
-
-      - name: Test
-        run: esy test
-
-      - name: Test node bindings
-        run: esy test-js
-
-      - name: Test ts declaration
-        run: esy test-ts
-
-      - uses: actions/upload-artifact@v2
-        if: failure()
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: orange_diff_generated
-          path: test/test-images
+          if-no-files-found: ignore
+          name: odiff-${{ matrix.artifact }}.exe
+          path: odiff-${{ matrix.artifact }}.exe
+          retention-days: 14
+
+  publish:
+    name: Publish release
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Download built binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: odiff-*.exe
+          merge-multiple: true
+          path: npm_package/raw_binaries
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          always-auth: true
+          registry-url: 'https://registry.npmjs.org'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Publish npm package
+        working-directory: npm_package
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+      - name: Create github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "npm_package/raw_binaries/*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

@@ -5,16 +5,18 @@
   "license": "MIT",
   "description": "The fastest image difference tool in the world",
   "scripts": {
-    "test": "ava"
+    "postinstall": "node ./post_install.js"
   },
+  "bin": {
+    "odiff": "bin/odiff.exe"
+  },
+  "types": "odiff.d.ts",
+  "main": "odiff.js",
   "keywords": [
     "visual-regression",
     "pixelmatch",
     "image",
     "comparison",
     "diff"
-  ],
-  "devDependencies": {
-    "ava": "^6.1.3"
-  }
+  ]
 }

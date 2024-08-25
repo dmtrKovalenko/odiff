@@ -1,8 +1,0 @@
-*~
-node_modules
-_esy
-_esy-package
-.log
-package.tar.gz
-package.tgz
-verdaccio-storage

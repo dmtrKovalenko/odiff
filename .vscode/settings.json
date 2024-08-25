@@ -2,10 +2,6 @@
   "cSpell.words": [
     "Odiff"
   ],
-  "ocaml.sandbox": {
-    "kind": "esy",
-    "root": "${workspaceFolder:odiff}"
-  },
   "files.associations": {
     "*.prisma": "graphql",
     "__bit_reference": "c",

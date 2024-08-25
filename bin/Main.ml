@@ -7,6 +7,10 @@ let getIOModule filename =
   | ".jpg" | ".jpeg" -> (module ODiffIO.Jpg.IO : ImageIO)
   | ".bmp" -> (module ODiffIO.Bmp.IO : ImageIO)
   | ".tiff" -> (module ODiffIO.Tiff.IO : ImageIO)
+  | "" ->
+      failwith
+        ("Usage: " ^ Sys.argv.(0)
+       ^ " <base_image_path> <image_to_compare_path> <output_png_path>")
   | f -> failwith ("This format is not supported: " ^ f)
 
 type 'output diffResult = { exitCode : int; diff : 'output option }

@@ -1,14 +1,12 @@
 const path = require("path");
 const test = require("ava");
-const { compare } = require("../bin/node-bindings/odiff");
+const { compare } = require("../npm_package/odiff");
 
 const IMAGES_PATH = path.resolve(__dirname, "..", "images");
 const BINARY_PATH = path.resolve(
   __dirname,
   "..",
-  "_esy",
-  "default",
-  "build-release",
+  "_build",
   "default",
   "bin",
   "ODiffBin.exe"
