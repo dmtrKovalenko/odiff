@@ -10,15 +10,19 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            artifact: "linux-x64"
             ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-linux"
           - os: windows-latest
+            artifact: "windows-x64"
             ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-mingw-static"
           - os: macos-latest
+            artifact: "macos-arm64"
             ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "arm64-osx"
           - os: macos-13
+            artifact: "macos-x64"
             ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-osx"
     defaults:
@@ -73,6 +77,13 @@ jobs:
 
       - run: opam exec -- opam install . --deps-only --with-test
       - run: opam exec -- dune build --verbose
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odiff-${{ matrix.artifact }}.exe
+          path: _build/default/bin/ODiffBin.exe
+          retention-days: 14
+
       - run: opam exec -- dune exec ODiffBin -- --version 
       - run: opam exec -- dune runtest
 
@@ -94,4 +105,3 @@ jobs:
 
       - name: e2e test
         run: npm test
-
