@@ -12,7 +12,7 @@
 
 (generate_opam_files true)
 
-(version 0.3.1-rc.3)
+(version 0.3.1)
 (source (github dmtrKovalenko/odiff))
 (license MIT)
 (authors "Dmitriy Kovalenko")
