@@ -8,7 +8,7 @@
   (language c)
   (names WritePng)
   (flags
-   (:include png_write_c_flags.sexp)))
+   (:include png_write_c_flags.sexp) -O3))
  (c_library_flags
   (:include png_write_c_library_flags.sexp)))
 

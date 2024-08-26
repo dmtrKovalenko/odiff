@@ -49,6 +49,7 @@ jobs:
         env:
           VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
           VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.triplet }}
+          VCPKG_BUILD_TYPE: release
         with:
           runVcpkgInstall: true
           runVcpkgFormatString: '["install", "--clean-after-build"]'
@@ -83,9 +84,6 @@ jobs:
       - run: opam exec -- opam install . --deps-only --with-test
       - run: opam exec -- dune build --verbose
 
-      - name: Give binary system-specific name
-        run: cp "_build/default/bin/ODiffBin.exe" "odiff-${{ matrix.artifact }}.exe"
-
       - run: opam exec -- dune exec ODiffBin -- --version 
       - run: opam exec -- dune runtest
 
@@ -106,11 +104,21 @@ jobs:
         run: npm ci
       - name: e2e test
         run: npm test
+        
+      - name: Build release binary
+        # this is needed because now ocaml's internal cygwin will be used on windows
+        # which breaks normal line endings
+        env:
+          SHELLOPTS: igncr
+        run: |
+          opam exec -- dune clean && \
+          opam exec -- dune build --release && \
+          cp "_build/default/bin/ODiffBin.exe" "odiff-${{ matrix.artifact }}.exe"
 
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          if-no-files-found: ignore
+          if-no-files-found: error
           name: odiff-${{ matrix.artifact }}.exe
           path: odiff-${{ matrix.artifact }}.exe
           retention-days: 14
