@@ -9,4 +9,5 @@ _release
 images/diff.png
 test/test-images/_*.png
 vcpkg_installed/*
+out.png
 _opam/

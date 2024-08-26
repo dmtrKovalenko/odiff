@@ -1,8 +1,11 @@
 <p align="center">
-  <img src="./logo.png"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./odiff-logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./odiff-logo-light.png">
+    <img alt="pixeletad caml and odiff text with highlighted red pixels difference" src="./odiff-logo-dark.png">
+  </picture>
 </p>
 
-<h1 align="center"> ODIFF </h1>
 <h3 align="center"> The fastest* (one-thread) pixel-by-pixel image difference tool in the world. </h3>
 
 <div align="center">
