@@ -20,19 +20,22 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     diffColorHex toEmitStdoutParsableString antialiasing ignoreRegions diffLines
     disableGcOptimizations =
   (*
-      We do not need to actually maintain memory size of the allocated RAM by odiff, so we are
-      increasing the minor memory size to avoid most of the possible deallocations. For sure it is 
-      not possible be sure that it won't be run in OCaml because we allocate the Stack and Queue
+    Increase amount of allowed overhead to reduce amount of GC work and cycles.
+    we target 1-2 minor collections per run which is the best tradeoff between
+    amount of memory allocated and time spend on GC.
 
-      By default set the minor heap size to 256mb on 64bit machine
+    For sure it depends on the image size and architecture. Primary target x86_64
   *)
   if not disableGcOptimizations then
     Gc.set
       {
         (Gc.get ()) with
-        Gc.minor_heap_size = 64_000_000;
-        Gc.stack_limit = 2_048_000;
-        Gc.window_size = 25;
+        (* 128 MB *)
+        major_heap_increment = 128 * 1024 * 1024;
+        (* Reasonable high value to reduce major GC frequency *)
+        space_overhead = 500;
+        (* Disable compaction *)
+        max_overhead = 1_000_000;
       };
 
   let module IO1 = (val getIOModule img1Path) in
@@ -64,5 +67,5 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
   | Some output when outputDiffMask -> IO1.freeImage output
   | _ -> ());
 
-  (*Gc.print_stat stdout;*)
+  (* Gc.print_stat stdout; *)
   exit exitCode

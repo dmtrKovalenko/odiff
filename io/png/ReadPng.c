@@ -24,7 +24,7 @@ CAMLprim value read_png_file(value file) {
 
   ctx = spng_ctx_new(0);
   if (ctx == NULL) {
-    fclose(png);    
+    fclose(png);
     caml_failwith("spng_ctx_new() failed");
   }
 
@@ -56,7 +56,8 @@ CAMLprim value read_png_file(value file) {
     caml_failwith(spng_strerror(result));
   };
 
-  ba = caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT | CAML_BA_MANAGED, 1, NULL, &out_size);
+  ba = caml_ba_alloc(CAML_BA_UINT8 | CAML_BA_C_LAYOUT | CAML_BA_MANAGED, 1,
+                     NULL, &out_size);
   unsigned char *out = (unsigned char *)Caml_ba_data_val(ba);
 
   result =

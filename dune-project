@@ -12,6 +12,7 @@
 
 (generate_opam_files true)
 
+(version 0.3.1-rc.3)
 (source (github dmtrKovalenko/odiff))
 (license MIT)
 (authors "Dmitriy Kovalenko")
@@ -19,7 +20,6 @@
 
 (package
  (name odiff)
- (version 0.3.1-rc.3)
  (synopsis "CLI for comparing images pixel-by-pixel")
  (depends
   odiff-core
