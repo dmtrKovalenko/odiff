@@ -119,7 +119,7 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
     const binaryPath =
       options && options.__binaryPath
         ? options.__binaryPath
-        : path.join(__dirname, "bin", "odiff");
+        : path.join(__dirname, "bin", "odiff.exe");
 
     execFile(
       binaryPath,
