@@ -30,8 +30,10 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     Gc.set
       {
         (Gc.get ()) with
-        (* 128 MB *)
-        major_heap_increment = 128 * 1024 * 1024;
+        (* 16MB is a reasonable value for minor heap size *)
+        minor_heap_size = 2 * 1024 * 1024;
+        (* Double the minor heap *)
+        major_heap_increment = 2 * 1024 * 1024;
         (* Reasonable high value to reduce major GC frequency *)
         space_overhead = 500;
         (* Disable compaction *)

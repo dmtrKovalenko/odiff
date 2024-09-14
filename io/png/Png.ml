@@ -6,9 +6,14 @@ type data = (int32, int32_elt, c_layout) Array1.t
 module IO : Odiff.ImageIO.ImageIO = struct
   type t = data
 
-  let readDirectPixel ~(x : int) ~(y : int) (img : t Odiff.ImageIO.img) =
+  let readRawPixelAtOffset offset (img : t Odiff.ImageIO.img) =
+    Array1.unsafe_get img.image offset
+  [@@inline always]
+
+  let readRawPixel ~(x : int) ~(y : int) (img : t Odiff.ImageIO.img) =
     let image : data = img.image in
     Array1.unsafe_get image ((y * img.width) + x)
+  [@@inline always]
 
   let setImgColor ~x ~y color (img : t Odiff.ImageIO.img) =
     let image : data = img.image in

@@ -1,8 +1,9 @@
 open Bigarray
+open Odiff.ImageIO
 
 type data = (int32, int32_elt, c_layout) Array1.t
 
-module IO : Odiff.ImageIO.ImageIO = struct
+module IO : ImageIO = struct
   type buffer
   type t = { data : data }
 
@@ -10,8 +11,11 @@ module IO : Odiff.ImageIO.ImageIO = struct
     let width, height, data = ReadTiff.load filename in
     { width; height; image = { data } }
 
-  let readDirectPixel ~(x : int) ~(y : int) (img : t Odiff.ImageIO.img) =
-    Array1.unsafe_get img.image.data ((y * img.width) + x)
+  let readRawPixel ~x ~y img =
+    (Array1.unsafe_get img.image.data ((y * img.width) + x) [@inline.always])
+
+  let readRawPixelAtOffset offset img = Array1.unsafe_get img.image.data offset
+  [@@inline.always]
 
   let setImgColor ~x ~y color (img : t Odiff.ImageIO.img) =
     Array1.unsafe_set img.image.data ((y * img.width) + x) color

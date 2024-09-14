@@ -1,4 +1,5 @@
 .merlin
+.Ds_Store
 node_modules/
 _build
 _esy

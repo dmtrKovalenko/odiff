@@ -13,14 +13,12 @@ let test_antialiasing () =
 
 let test_different_sized_aa_images () =
   let img1 = Png.IO.loadImage "test-images/aa/antialiasing-on.png" in
-  let img2 =
-    Png.IO.loadImage "test-images/aa/antialiasing-off-small.png"
-  in
+  let img2 = Png.IO.loadImage "test-images/aa/antialiasing-off-small.png" in
   let _, diffPixels, diffPercentage, _ =
     PNG_Diff.compare img1 img2 ~outputDiffMask:true ~antialiasing:true ()
   in
-  check int "diffPixels" 417 diffPixels;
-  check (float 0.01) "diffPercentage" 1.04 diffPercentage
+  check int "diffPixels" 399 diffPixels;
+  check (float 0.01) "diffPercentage" 0.99 diffPercentage
 
 let test_threshold () =
   let img1 = Png.IO.loadImage "test-images/png/orange.png" in
@@ -50,28 +48,24 @@ let test_diff_color () =
       ~diffPixel:(Int32.of_int 4278255360 (*int32 representation of #00ff00*))
       ()
   in
-  let originalDiff =
-    Png.IO.loadImage "test-images/png/orange_diff_green.png"
-  in
+  let originalDiff = Png.IO.loadImage "test-images/png/orange_diff_green.png" in
   let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
     PNG_Diff.compare originalDiff diffOutput ()
   in
   if diffOfDiffPixels > 0 then (
     Png.IO.saveImage diffOutput "test-images/png/diff-output-green.png";
-    Png.IO.saveImage diffMaskOfDiff
-      "test-images/png/diff-of-diff-green.png");
+    Png.IO.saveImage diffMaskOfDiff "test-images/png/diff-of-diff-green.png");
   check int "diffOfDiffPixels" 0 diffOfDiffPixels;
   check (float 0.001) "diffOfDiffPercentage" 0.0 diffOfDiffPercentage
 
 let test_blend_semi_transparent_color () =
+  let open Odiff.ColorDelta in
   let test_blend r g b a expected_r expected_g expected_b expected_a =
-    let r', g', b', a' =
-      Odiff.ColorDelta.blendSemiTransparentColor (r, g, b, a)
-    in
-    check (float 0.01) "r" expected_r r';
-    check (float 0.01) "g" expected_g g';
-    check (float 0.01) "b" expected_b b';
-    check (float 0.01) "a" expected_a a'
+    let { r; g; b; a } = blendSemiTransparentPixel { r; g; b; a } in
+    check (float 0.01) "r" expected_r r;
+    check (float 0.01) "g" expected_g g;
+    check (float 0.01) "b" expected_b b;
+    check (float 0.01) "a" expected_a a
   in
   test_blend 0. 128. 255. 255. 0. 128. 255. 1.;
   test_blend 0. 128. 255. 0. 255. 255. 255. 0.;

@@ -9,9 +9,13 @@ module IO : Odiff.ImageIO.ImageIO = struct
     let width, height, data = ReadBmp.load filename in
     { width; height; image = data }
 
-  let readDirectPixel ~(x : int) ~(y : int) (img : t Odiff.ImageIO.img) =
+  let readRawPixel ~(x : int) ~(y : int) (img : t Odiff.ImageIO.img) =
     let image : data = img.image in
     Array1.unsafe_get image ((y * img.width) + x)
+  [@@inline]
+
+  let readRawPixelAtOffset offset (img : t Odiff.ImageIO.img) =
+    Array1.unsafe_get img.image offset
   [@@inline]
 
   let setImgColor ~x ~y color (img : t Odiff.ImageIO.img) =
