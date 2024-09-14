@@ -9,8 +9,13 @@ module IO = struct
     let width, height, data = ReadJpg.read_jpeg_image filename in
     { width; height; image = { data } }
 
-  let readDirectPixel ~x ~y (img : t Odiff.ImageIO.img) =
-    Array1.unsafe_get img.image.data ((y * img.width) + x)
+  let readRawPixel ~x ~y (img : t Odiff.ImageIO.img) =
+    (Array1.unsafe_get img.image.data ((y * img.width) + x) [@inline.always])
+  [@@inline]
+
+  let readRawPixelAtOffset offset (img : t Odiff.ImageIO.img) =
+    Array1.unsafe_get img.image.data offset
+  [@@inline]
 
   let setImgColor ~x ~y color (img : t Odiff.ImageIO.img) =
     Array1.unsafe_set img.image.data ((y * img.width) + x) color

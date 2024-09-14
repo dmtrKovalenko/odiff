@@ -39,13 +39,11 @@ module MakeAntialiasing (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
         | false -> 0)
     in
 
-    let baseColor = baseImg |> IO1.readDirectPixel ~x ~y in
+    let baseColor = baseImg |> IO1.readRawPixel ~x ~y in
     for adj_y = y0 to y1 do
       for adj_x = x0 to x1 do
         if !zeroes < 3 && (x <> adj_x || y <> adj_y) then
-          let adjacentColor =
-            baseImg |> IO1.readDirectPixel ~x:adj_x ~y:adj_y
-          in
+          let adjacentColor = baseImg |> IO1.readRawPixel ~x:adj_x ~y:adj_y in
           if baseColor = adjacentColor then incr zeroes
           else
             let delta =
@@ -75,15 +73,11 @@ module MakeAntialiasing (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
       let minX, minY = !minSiblingDeltaCoord in
       let maxX, maxY = !maxSiblingDeltaCoord in
       (hasManySiblingsWithSameColor ~x:minX ~y:minY ~width:baseImg.width
-         ~height:baseImg.height
-         ~readColor:(IO1.readDirectPixel baseImg)
+         ~height:baseImg.height ~readColor:(IO1.readRawPixel baseImg)
       || hasManySiblingsWithSameColor ~x:maxX ~y:maxY ~width:baseImg.width
-           ~height:baseImg.height
-           ~readColor:(IO1.readDirectPixel baseImg))
+           ~height:baseImg.height ~readColor:(IO1.readRawPixel baseImg))
       && (hasManySiblingsWithSameColor ~x:minX ~y:minY ~width:compImg.width
-            ~height:compImg.height
-            ~readColor:(IO2.readDirectPixel compImg)
+            ~height:compImg.height ~readColor:(IO2.readRawPixel compImg)
          || hasManySiblingsWithSameColor ~x:maxX ~y:maxY ~width:compImg.width
-              ~height:compImg.height
-              ~readColor:(IO2.readDirectPixel compImg))
+              ~height:compImg.height ~readColor:(IO2.readRawPixel compImg))
 end

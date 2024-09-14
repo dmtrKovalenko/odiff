@@ -1,43 +1,53 @@
-let blend_channel_white color alpha = 255. +. ((color -. 255.) *. alpha)
-let white_pixel = (255., 255., 255., 0.)
+open Int32
 
-let blendSemiTransparentColor = function
-  | r, g, b, 0. -> white_pixel
-  | r, g, b, 255. -> (r, g, b, 1.)
-  | r, g, b, alpha when alpha < 255. ->
-      let normalizedAlpha = alpha /. 255. in
+type pixel = { r : float; g : float; b : float; a : float }
+
+let white_pixel : pixel = { r = 255.; g = 255.; b = 255.; a = 0. }
+let blend_channel_white color alpha = 255. +. ((color -. 255.) *. alpha)
+
+let blendSemiTransparentPixel = function
+  | { r; g; b; a } when a = 0. -> white_pixel
+  | { r; g; b; a } when a = 255. -> { r; g; b; a = 1. }
+  | { r; g; b; a } when a < 255. ->
+      let normalizedAlpha = a /. 255. in
       let r, g, b, a =
         ( blend_channel_white r normalizedAlpha,
           blend_channel_white g normalizedAlpha,
           blend_channel_white b normalizedAlpha,
           normalizedAlpha )
       in
-      (r, g, b, a)
+
+      { r; g; b; a }
   | _ ->
       failwith
         "Found pixel with alpha value greater than uint8 max value. Aborting."
 
-let convertPixelToFloat pixel =
-  let pixel = pixel |> Int32.to_int in
-  let a = (pixel lsr 24) land 255 in
-  let b = (pixel lsr 16) land 255 in
-  let g = (pixel lsr 8) land 255 in
-  let r = pixel land 255 in
+let decodeRawPixel pixel =
+  let a = logand (shift_right_logical pixel 24) 255l in
+  let b = logand (shift_right_logical pixel 16) 255l in
+  let g = logand (shift_right_logical pixel 8) 255l in
+  let r = logand pixel 255l in
 
-  (Float.of_int r, Float.of_int g, Float.of_int b, Float.of_int a)
+  {
+    r = Int32.to_float r;
+    g = Int32.to_float g;
+    b = Int32.to_float b;
+    a = Int32.to_float a;
+  }
+[@@inline]
 
-let rgb2y (r, g, b, a) =
+let rgb2y { r; g; b; a } =
   (r *. 0.29889531) +. (g *. 0.58662247) +. (b *. 0.11448223)
 
-let rgb2i (r, g, b, a) =
+let rgb2i { r; g; b; a } =
   (r *. 0.59597799) -. (g *. 0.27417610) -. (b *. 0.32180189)
 
-let rgb2q (r, g, b, a) =
+let rgb2q { r; g; b; a } =
   (r *. 0.21147017) -. (g *. 0.52261711) +. (b *. 0.31114694)
 
-let calculatePixelColorDelta _pixelA _pixelB =
-  let pixelA = _pixelA |> convertPixelToFloat |> blendSemiTransparentColor in
-  let pixelB = _pixelB |> convertPixelToFloat |> blendSemiTransparentColor in
+let calculatePixelColorDelta pixelA pixelB =
+  let pixelA = pixelA |> decodeRawPixel |> blendSemiTransparentPixel in
+  let pixelB = pixelB |> decodeRawPixel |> blendSemiTransparentPixel in
 
   let y = rgb2y pixelA -. rgb2y pixelB in
   let i = rgb2i pixelA -. rgb2i pixelB in
@@ -47,6 +57,6 @@ let calculatePixelColorDelta _pixelA _pixelB =
   delta
 
 let calculatePixelBrightnessDelta pixelA pixelB =
-  let pixelA = pixelA |> convertPixelToFloat |> blendSemiTransparentColor in
-  let pixelB = pixelB |> convertPixelToFloat |> blendSemiTransparentColor in
+  let pixelA = pixelA |> decodeRawPixel |> blendSemiTransparentPixel in
+  let pixelB = pixelB |> decodeRawPixel |> blendSemiTransparentPixel in
   rgb2y pixelA -. rgb2y pixelB
