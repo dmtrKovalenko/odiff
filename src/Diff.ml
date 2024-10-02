@@ -73,7 +73,7 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
          if alpha <> Int32.zero then countDifference !x !y)
        else
          let compColor =
-           if layoutDifference then IO1.readRawPixel ~x:!x ~y:!y base
+           if layoutDifference then IO2.readRawPixel ~x:!x ~y:!y comp
            else IO2.readRawPixelAtOffset offset comp
          in
 
