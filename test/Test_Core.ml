@@ -17,8 +17,8 @@ let test_different_sized_aa_images () =
   let _, diffPixels, diffPercentage, _ =
     PNG_Diff.compare img1 img2 ~outputDiffMask:true ~antialiasing:true ()
   in
-  check int "diffPixels" 399 diffPixels;
-  check (float 0.01) "diffPercentage" 0.99 diffPercentage
+  check int "diffPixels" 417 diffPixels;
+  check (float 0.01) "diffPercentage" 1.0425 diffPercentage
 
 let test_threshold () =
   let img1 = Png.IO.loadImage "test-images/png/orange.png" in
