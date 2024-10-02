@@ -17,8 +17,8 @@ let test_different_sized_aa_images () =
   let _, diffPixels, diffPercentage, _ =
     PNG_Diff.compare img1 img2 ~outputDiffMask:true ~antialiasing:true ()
   in
-  check int "diffPixels" 399 diffPixels;
-  check (float 0.01) "diffPercentage" 0.99 diffPercentage
+  check int "diffPixels" 417 diffPixels;
+  check (float 0.01) "diffPercentage" 1.0425 diffPercentage
 
 let test_threshold () =
   let img1 = Png.IO.loadImage "test-images/png/orange.png" in
@@ -73,6 +73,16 @@ let test_blend_semi_transparent_color () =
   test_blend 0. 128. 255. 51. 204. 229.6 255. 0.2;
   test_blend 0. 128. 255. 128. 127. 191.25 255. 0.5
 
+let test_different_layouts () =
+  Sys.getcwd () |> print_endline;
+  let img1 = Png.IO.loadImage "test-images/png/white4x4.png" in
+  let img2 = Png.IO.loadImage "test-images/png/purple8x8.png" in
+  let _, diffPixels, diffPercentage, _ =
+    PNG_Diff.compare img1 img2 ~outputDiffMask:false ~antialiasing:false ()
+  in
+  check int "diffPixels" 16 diffPixels;
+  check (float 0.001) "diffPercentage" 100.0 diffPercentage
+
 let () =
   run "CORE"
     [
@@ -97,5 +107,10 @@ let () =
         [
           test_case "blend semi-transparent colors" `Quick
             test_blend_semi_transparent_color;
+        ] );
+      ( "layoutDifference",
+        [
+          test_case "diff images with different layouts" `Quick
+            test_different_layouts;
         ] );
     ]
