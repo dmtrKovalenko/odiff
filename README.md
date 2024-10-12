@@ -48,10 +48,10 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 
 ### Basic comparison
 
-Run the simple comparison. Image paths can be one of supported formats, diff output can only be `.png`.
+Run the simple comparison. Image paths can be one of supported formats, diff output is optional and can only be `.png`.
 
 ```
-odiff <IMG1 path> <IMG2 path> <DIFF output path>
+odiff <IMG1 path> <IMG2 path> [DIFF output path]
 ```
 
 ### Node.js
