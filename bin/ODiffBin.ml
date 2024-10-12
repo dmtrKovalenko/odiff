@@ -3,8 +3,8 @@ open Term
 open Arg
 
 let diffPath =
-  value & pos 2 string ""
-  & info [] ~docv:"DIFF" ~doc:"Diff output path (.png only)"
+  value & pos 2 (some string) None
+  & info [] ~docv:"DIFF" ~doc:"Optional Diff output path (.png only)"
 
 let base =
   value & pos 0 file "" & info [] ~docv:"BASE" ~doc:"Path to base image"
