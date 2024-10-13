@@ -66,5 +66,5 @@ let run_tiff_tests () =
     ]
 
 let () =
-  if Sys.os_type == "Unix" then run_tiff_tests ()
+  if Sys.os_type = "Unix" then run_tiff_tests ()
   else print_endline "Skipping TIFF tests on Windows systems"
