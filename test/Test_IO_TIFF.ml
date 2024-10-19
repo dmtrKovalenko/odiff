@@ -49,12 +49,16 @@ let run_tiff_tests () =
               let img1 = load_tiff_image "test-images/tiff/laptops.tiff" in
               let img2 = load_tiff_image "test-images/tiff/laptops-2.tiff" in
               let diffOutput, _, _, _ = Diff.compare img1 img2 () in
+              check bool "diffOutput" (Option.is_some diffOutput) true;
+              let diffOutput = Option.get diffOutput in
               let originalDiff =
                 load_png_image "test-images/tiff/laptops-diff.png"
               in
               let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
                 Output_Diff.compare originalDiff diffOutput ()
               in
+              check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;
+              let diffMaskOfDiff = Option.get diffMaskOfDiff in
               if diffOfDiffPixels > 0 then (
                 Tiff.IO.saveImage diffOutput "test-images/tiff/_diff-output.png";
                 Png.IO.saveImage diffMaskOfDiff
