@@ -40,10 +40,14 @@ let () =
               let img1 = load_image "test-images/png/orange.png" in
               let img2 = load_image "test-images/png/orange_changed.png" in
               let diffOutput, _, _, _ = Diff.compare img1 img2 () in
+              check bool "diffOutput" (Option.is_some diffOutput) true;
+              let diffOutput = Option.get diffOutput in
               let originalDiff = load_image "test-images/png/orange_diff.png" in
               let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
                 Diff.compare originalDiff diffOutput ()
               in
+              check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;
+              let diffMaskOfDiff = Option.get diffMaskOfDiff in
               if diffOfDiffPixels > 0 then (
                 Png.IO.saveImage diffOutput "test-images/png/diff-output.png";
                 Png.IO.saveImage diffMaskOfDiff

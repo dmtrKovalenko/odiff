@@ -29,20 +29,24 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
 
   let compare (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img)
       ?(antialiasing = false) ?(outputDiffMask = false) ?(diffLines = false)
-      ?diffPixel ?(threshold = 0.1) ?ignoreRegions () =
+      ?diffPixel ?(threshold = 0.1) ?ignoreRegions ?(captureDiff = true) () =
     let maxDelta = maxYIQPossibleDelta *. (threshold ** 2.) in
     let diffPixel = match diffPixel with Some x -> x | None -> redPixel in
     let diffOutput =
-      match outputDiffMask with
-      | true -> IO1.makeSameAsLayout base
-      | false -> base
+      match captureDiff with
+      | true ->
+          Some
+            (match outputDiffMask with
+            | true -> IO1.makeSameAsLayout base
+            | false -> base)
+      | false -> None
     in
 
     let diffCount = ref 0 in
     let diffLinesStack = Stack.create () in
     let countDifference x y =
       incr diffCount;
-      IO1.setImgColor ~x ~y diffPixel diffOutput;
+      diffOutput |> Option.iter (IO1.setImgColor ~x ~y diffPixel);
 
       if
         diffLines
@@ -115,10 +119,23 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
       && (base.width <> comp.width || base.height <> comp.height)
     then Layout
     else
-      let diffResult =
+      let diffOutput, diffCount, diffPercentage, diffLinesStack =
         compare base comp ~threshold ~diffPixel ~outputDiffMask ~antialiasing
-          ~diffLines ?ignoreRegions ()
+          ~diffLines ?ignoreRegions ~captureDiff:true ()
       in
+      Pixel (Option.get diffOutput, diffCount, diffPercentage, diffLinesStack)
 
+  let diffWithoutOutput (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img)
+      ?(threshold = 0.1) ?(failOnLayoutChange = true) ?(antialiasing = false)
+      ?(diffLines = false) ?ignoreRegions () =
+    if
+      failOnLayoutChange = true
+      && (base.width <> comp.width || base.height <> comp.height)
+    then Layout
+    else
+      let diffResult =
+        compare base comp ~threshold ~outputDiffMask:false ~antialiasing
+          ~diffLines ?ignoreRegions ~captureDiff:false ()
+      in
       Pixel diffResult
 end

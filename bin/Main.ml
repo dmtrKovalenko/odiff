@@ -60,7 +60,7 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
       ->
         { exitCode = 0; diff = Some diffOutput }
     | Pixel (diffOutput, diffCount, diffPercentage, _) ->
-        IO1.saveImage diffOutput diffPath;
+        diffPath |> Option.iter (IO1.saveImage diffOutput);
         { exitCode = 22; diff = Some diffOutput }
   in
   IO1.freeImage img1;

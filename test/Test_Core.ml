@@ -48,10 +48,14 @@ let test_diff_color () =
       ~diffPixel:(Int32.of_int 4278255360 (*int32 representation of #00ff00*))
       ()
   in
+  check bool "diffOutput" (Option.is_some diffOutput) true;
+  let diffOutput = Option.get diffOutput in
   let originalDiff = Png.IO.loadImage "test-images/png/orange_diff_green.png" in
   let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
     PNG_Diff.compare originalDiff diffOutput ()
   in
+  check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;
+  let diffMaskOfDiff = Option.get diffMaskOfDiff in
   if diffOfDiffPixels > 0 then (
     Png.IO.saveImage diffOutput "test-images/png/diff-output-green.png";
     Png.IO.saveImage diffMaskOfDiff "test-images/png/diff-of-diff-green.png");

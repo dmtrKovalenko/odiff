@@ -43,10 +43,14 @@ let test_creates_correct_diff_output_image () =
   let img1 = load_image "test-images/jpg/tiger.jpg" in
   let img2 = load_image "test-images/jpg/tiger-2.jpg" in
   let diffOutput, _, _, _ = Diff.compare img1 img2 () in
+  check bool "diffOutput" (Option.is_some diffOutput) true;
+  let diffOutput = Option.get diffOutput in
   let originalDiff = load_png_image "test-images/jpg/tiger-diff.png" in
   let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
     Output_Diff.compare originalDiff diffOutput ()
   in
+  check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;
+  let diffMaskOfDiff = Option.get diffMaskOfDiff in
   if diffOfDiffPixels > 0 then (
     Jpg.IO.saveImage diffOutput "test-images/jpg/_diff-output.png";
     Png.IO.saveImage diffMaskOfDiff "test-images/jpg/_diff-of-diff.png");
