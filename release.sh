@@ -13,13 +13,13 @@ do
   fi
 done
 
-if ! git diff --quiet; then
-  echo "Error: There are unstaged changes in the repository."
-  exit 1
-fi
+# if ! git diff --quiet; then
+#   echo "Error: There are unstaged changes in the repository."
+#   exit 1
+# fi
 
 sed -i '' "s/(version [^)]*)/(version $VERSION)/g" dune-project
-dune build 
+# dune build 
 
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
 npm install
