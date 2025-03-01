@@ -34,7 +34,7 @@
  (synopsis "Pixel-by-pixel image difference algorithm")
  (depends
   dune
-  (ocaml (= 5.2.0))
+  ocaml
  )
 )
 
@@ -44,7 +44,7 @@
  (depends
   dune
   odiff-core
-  (ocaml (= 5.2.0))
+  ocaml
   (dune-configurator (>= 3.16.0))
  )
 )
