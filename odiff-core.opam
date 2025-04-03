@@ -9,7 +9,7 @@ homepage: "https://github.com/dmtrKovalenko/odiff"
 bug-reports: "https://github.com/dmtrKovalenko/odiff/issues"
 depends: [
   "dune" {>= "2.8"}
-  "ocaml" {= "5.2.0"}
+  "ocaml"
   "odoc" {with-doc}
 ]
 build: [
