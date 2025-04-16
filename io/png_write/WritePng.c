@@ -117,6 +117,7 @@ value write_png_bigarray(value filename_val, value bigarray, value width_val, va
     caml_failwith(spng_strerror(result));
   }
 
+  spng_encode_chunks(ctx);
   spng_ctx_free(ctx);
   fclose(fp);
 
