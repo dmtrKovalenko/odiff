@@ -26,7 +26,7 @@ let run_tiff_tests () =
           test_case "finds difference between 2 images" `Quick (fun () ->
               let img1 = load_tiff_image "test-images/tiff/laptops.tiff" in
               let img2 = load_tiff_image "test-images/tiff/laptops-2.tiff" in
-              let _, diffPixels, diffPercentage, _ =
+              let _, diffPixels, diffPercentage, _, _ =
                 Diff.compare img1 img2 ()
               in
               check int "diffPixels" 8569 diffPixels;
@@ -34,12 +34,12 @@ let run_tiff_tests () =
           test_case "Diff of mask and no mask are equal" `Quick (fun () ->
               let img1 = load_tiff_image "test-images/tiff/laptops.tiff" in
               let img2 = load_tiff_image "test-images/tiff/laptops-2.tiff" in
-              let _, diffPixels, diffPercentage, _ =
+              let _, diffPixels, diffPercentage, _, _ =
                 Diff.compare img1 img2 ~outputDiffMask:false ()
               in
               let img1 = load_tiff_image "test-images/tiff/laptops.tiff" in
               let img2 = load_tiff_image "test-images/tiff/laptops-2.tiff" in
-              let _, diffPixelsMask, diffPercentageMask, _ =
+              let _, diffPixelsMask, diffPercentageMask, _, _ =
                 Diff.compare img1 img2 ~outputDiffMask:true ()
               in
               check int "diffPixels" diffPixels diffPixelsMask;
@@ -48,13 +48,13 @@ let run_tiff_tests () =
           test_case "Creates correct diff output image" `Quick (fun () ->
               let img1 = load_tiff_image "test-images/tiff/laptops.tiff" in
               let img2 = load_tiff_image "test-images/tiff/laptops-2.tiff" in
-              let diffOutput, _, _, _ = Diff.compare img1 img2 () in
+              let diffOutput, _, _, _, _ = Diff.compare img1 img2 () in
               check bool "diffOutput" (Option.is_some diffOutput) true;
               let diffOutput = Option.get diffOutput in
               let originalDiff =
                 load_png_image "test-images/tiff/laptops-diff.png"
               in
-              let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
+              let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _, _ =
                 Output_Diff.compare originalDiff diffOutput ()
               in
               check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;

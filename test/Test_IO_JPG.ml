@@ -21,19 +21,19 @@ let load_png_image path =
 let test_finds_difference_between_images () =
   let img1 = load_image "test-images/jpg/tiger.jpg" in
   let img2 = load_image "test-images/jpg/tiger-2.jpg" in
-  let _, diffPixels, diffPercentage, _ = Diff.compare img1 img2 () in
+  let _, diffPixels, diffPercentage, _, _ = Diff.compare img1 img2 () in
   check int "diffPixels" 7789 diffPixels;
   check (float 0.001) "diffPercentage" 1.1677 diffPercentage
 
 let test_diff_mask_no_mask_equal () =
   let img1 = load_image "test-images/jpg/tiger.jpg" in
   let img2 = load_image "test-images/jpg/tiger-2.jpg" in
-  let _, diffPixels, diffPercentage, _ =
+  let _, diffPixels, diffPercentage, _, _ =
     Diff.compare img1 img2 ~outputDiffMask:false ()
   in
   let img1 = load_image "test-images/jpg/tiger.jpg" in
   let img2 = load_image "test-images/jpg/tiger-2.jpg" in
-  let _, diffPixelsMask, diffPercentageMask, _ =
+  let _, diffPixelsMask, diffPercentageMask, _, _ =
     Diff.compare img1 img2 ~outputDiffMask:true ()
   in
   check int "diffPixels" diffPixels diffPixelsMask;
@@ -42,11 +42,11 @@ let test_diff_mask_no_mask_equal () =
 let test_creates_correct_diff_output_image () =
   let img1 = load_image "test-images/jpg/tiger.jpg" in
   let img2 = load_image "test-images/jpg/tiger-2.jpg" in
-  let diffOutput, _, _, _ = Diff.compare img1 img2 () in
+  let diffOutput, _, _, _, _ = Diff.compare img1 img2 () in
   check bool "diffOutput" (Option.is_some diffOutput) true;
   let diffOutput = Option.get diffOutput in
   let originalDiff = load_png_image "test-images/jpg/tiger-diff.png" in
-  let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
+  let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _, _ =
     Output_Diff.compare originalDiff diffOutput ()
   in
   check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;
