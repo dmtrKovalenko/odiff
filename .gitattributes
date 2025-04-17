@@ -1,2 +1,3 @@
 *.yaml linguist-detectable=false
 .ci/* linguist-vendored
+test/coords-fixture.json linguist-generated

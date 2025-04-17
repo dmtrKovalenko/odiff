@@ -54,6 +54,10 @@ function optionsToArgs(options) {
         setFlag("reduce-ram-usage", value);
         break;
 
+      case "captureDiffCoords":
+        setFlag("capture-diff-coords", value);
+        break;
+
       case "ignoreRegions": {
         const regions = value
           .map(
@@ -70,7 +74,7 @@ function optionsToArgs(options) {
   return argArray;
 }
 
-/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number, diffLines: number[] }>} */
+/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number, diffLines: number[], diffCoords: Array<[number, ...Array<[number, number]>]> }>} */
 function parsePixelDiffStdout(stdout) {
   try {
     const parts = stdout.split(";");
@@ -92,6 +96,26 @@ function parsePixelDiffStdout(stdout) {
           let parsedInt = parseInt(line);
 
           return isNaN(parsedInt) ? [] : parsedInt;
+        }),
+      };
+    } else if (parts.length >= 3) {
+      const [diffCount, diffPercentage, linesPart, coordsPart] = parts;
+
+      return {
+        diffCount: parseInt(diffCount),
+        diffPercentage: parseFloat(diffPercentage),
+        diffLines: linesPart.split(",").flatMap((line) => {
+          let parsedInt = parseInt(line);
+          return isNaN(parsedInt) ? [] : parsedInt;
+        }),
+        diffCoords: coordsPart.split("|").map((coord) => {
+          const [y, ranges] = coord.split(":");
+          /** @type {[number, number][]} */
+          const parsedRanges = ranges.split(",").map((range) => {
+            const [start, end] = range.split("-");
+            return [parseInt(start), parseInt(end)];
+          });
+          return [parseInt(y), ...parsedRanges];
         }),
       };
     } else {

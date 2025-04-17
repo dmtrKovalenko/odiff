@@ -1,5 +1,7 @@
 const path = require("path");
 const test = require("ava");
+const fs = require("fs");
+
 const { compare } = require("../npm_package/odiff");
 
 const IMAGES_PATH = path.resolve(__dirname, "..", "images");
@@ -143,6 +145,21 @@ test("Correctly outputs diff lines", async (t) => {
 
   t.is(match, false);
   t.is(diffLines.length, 402);
+});
+
+test("Correctly outputs diff coords", async (t) => {
+  const { match, diffCoords } = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      captureDiffCoords: true,
+      ...options,
+    }
+  );
+  t.is(match, false);
+  t.is(diffCoords.length, 402);
+  t.deepEqual(diffCoords, JSON.parse(fs.readFileSync(path.join(__dirname, "./coords-fixture.json"))));
 });
 
 test("Returns meaningful error if file does not exist and noFailOnFsErrors", async (t) => {

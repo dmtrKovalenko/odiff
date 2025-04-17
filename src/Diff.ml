@@ -6,7 +6,7 @@ let redPixel = Int32.of_int 4278190335
 (* Decimal representation of the RGBA in32 pixel green pixel *)
 let maxYIQPossibleDelta = 35215.
 
-type 'a diffVariant = Layout | Pixel of ('a * int * float * int Stack.t)
+type 'a diffVariant = Layout | Pixel of ('a * int * float * int Stack.t * (int * (int * int) list) list)
 
 let unrollIgnoreRegions width list =
   list
@@ -29,7 +29,7 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
 
   let compare (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img)
       ?(antialiasing = false) ?(outputDiffMask = false) ?(diffLines = false)
-      ?diffPixel ?(threshold = 0.1) ?ignoreRegions ?(captureDiff = true) () =
+      ?diffPixel ?(threshold = 0.1) ?ignoreRegions ?(captureDiff = true) ?(captureDiffCoords = false) () =
     let maxDelta = maxYIQPossibleDelta *. (threshold ** 2.) in
     let diffPixel = match diffPixel with Some x -> x | None -> redPixel in
     let diffOutput =
@@ -44,9 +44,39 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
 
     let diffCount = ref 0 in
     let diffLinesStack = Stack.create () in
+    let diffCoords = ref [] in
+    let currentRanges = ref [] in
+    let lastY = ref (-1) in
+    let lastX = ref (-1) in
+    let currentRange = ref None in
+
     let countDifference x y =
       incr diffCount;
       diffOutput |> Option.iter (IO1.setImgColor ~x ~y diffPixel);
+
+      if captureDiffCoords then (
+        if !lastY <> y then (
+          !currentRange |> Option.iter (fun (start, _) ->
+            currentRanges := (start, !lastX) :: !currentRanges);
+          if !currentRanges <> [] then (
+            diffCoords := (!lastY, List.rev !currentRanges) :: !diffCoords;
+            currentRanges := []
+          );
+          lastY := y;
+          lastX := -1;
+          currentRange := None
+        );
+
+        if !lastX = -1 || x <> !lastX + 1 then (
+          !currentRange |> Option.iter (fun (start, _) ->
+            currentRanges := (start, !lastX) :: !currentRanges);
+          currentRange := Some (x, x)
+        ) else (
+          !currentRange |> Option.iter (fun (start, _) ->
+            currentRange := Some (start, x))
+        );
+        lastX := x
+      );
 
       if
         diffLines
@@ -109,33 +139,44 @@ module MakeDiff (IO1 : ImageIO.ImageIO) (IO2 : ImageIO.ImageIO) = struct
       100.0 *. Float.of_int !diffCount
       /. (Float.of_int base.width *. Float.of_int base.height)
     in
-    (diffOutput, !diffCount, diffPercentage, diffLinesStack)
+
+    if captureDiffCoords then (
+      if !currentRange <> None then (
+        currentRanges := (Option.get !currentRange) :: !currentRanges;
+        currentRange := None
+      );
+      if !currentRanges <> [] then
+        diffCoords := (!lastY, List.rev !currentRanges) :: !diffCoords
+    );
+
+    let diffCoords = List.rev !diffCoords in
+    (diffOutput, !diffCount, diffPercentage, diffLinesStack, diffCoords)
 
   let diff (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img) ~outputDiffMask
       ?(threshold = 0.1) ~diffPixel ?(failOnLayoutChange = true)
-      ?(antialiasing = false) ?(diffLines = false) ?ignoreRegions () =
+      ?(antialiasing = false) ?(diffLines = false) ?ignoreRegions ?(captureDiffCoords = false) () =
     if
       failOnLayoutChange = true
       && (base.width <> comp.width || base.height <> comp.height)
     then Layout
     else
-      let diffOutput, diffCount, diffPercentage, diffLinesStack =
+      let diffOutput, diffCount, diffPercentage, diffLinesStack, diffCoords =
         compare base comp ~threshold ~diffPixel ~outputDiffMask ~antialiasing
-          ~diffLines ?ignoreRegions ~captureDiff:true ()
+          ~diffLines ?ignoreRegions ~captureDiff:true ~captureDiffCoords ()
       in
-      Pixel (Option.get diffOutput, diffCount, diffPercentage, diffLinesStack)
+      Pixel (Option.get diffOutput, diffCount, diffPercentage, diffLinesStack, diffCoords)
 
   let diffWithoutOutput (base : IO1.t ImageIO.img) (comp : IO2.t ImageIO.img)
       ?(threshold = 0.1) ?(failOnLayoutChange = true) ?(antialiasing = false)
-      ?(diffLines = false) ?ignoreRegions () =
+      ?(diffLines = false) ?ignoreRegions ?(captureDiffCoords = false) () =
     if
       failOnLayoutChange = true
       && (base.width <> comp.width || base.height <> comp.height)
     then Layout
     else
-      let diffResult =
+      let diffOutput, diffCount, diffPercentage, diffLinesStack, diffCoords =
         compare base comp ~threshold ~outputDiffMask:false ~antialiasing
-          ~diffLines ?ignoreRegions ~captureDiff:false ()
+          ~diffLines ?ignoreRegions ~captureDiff:false ~captureDiffCoords ()
       in
-      Pixel diffResult
+      Pixel (diffOutput, diffCount, diffPercentage, diffLinesStack, diffCoords)
 end

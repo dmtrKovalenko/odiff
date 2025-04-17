@@ -18,7 +18,7 @@ type 'output diffResult = { exitCode : int; diff : 'output option }
 (* Arguments must remain positional for the cmd parser lib that we use *)
 let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     diffColorHex toEmitStdoutParsableString antialiasing ignoreRegions diffLines
-    disableGcOptimizations =
+    captureDiffCoords disableGcOptimizations =
   (*
     Increase amount of allowed overhead to reduce amount of GC work and cycles.
     we target 1-2 minor collections per run which is the best tradeoff between
@@ -47,7 +47,7 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
   let img2 = IO2.loadImage img2Path in
   let { diff; exitCode } =
     Diff.diff img1 img2 ~outputDiffMask ~threshold ~failOnLayoutChange
-      ~antialiasing ~ignoreRegions ~diffLines
+      ~antialiasing ~ignoreRegions ~diffLines ~captureDiffCoords
       ~diffPixel:
         (match Color.ofHexString diffColorHex with
         | Some c -> c
@@ -56,10 +56,10 @@ let main img1Path img2Path diffPath threshold outputDiffMask failOnLayoutChange
     |> Print.printDiffResult toEmitStdoutParsableString
     |> function
     | Layout -> { diff = None; exitCode = 21 }
-    | Pixel (diffOutput, diffCount, stdoutParsableString, _) when diffCount = 0
+    | Pixel (diffOutput, diffCount, stdoutParsableString, _, _) when diffCount = 0
       ->
         { exitCode = 0; diff = Some diffOutput }
-    | Pixel (diffOutput, diffCount, diffPercentage, _) ->
+    | Pixel (diffOutput, diffCount, diffPercentage, _, _) ->
         diffPath |> Option.iter (IO1.saveImage diffOutput);
         { exitCode = 22; diff = Some diffOutput }
   in

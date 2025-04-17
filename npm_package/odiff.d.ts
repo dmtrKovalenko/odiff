@@ -13,6 +13,8 @@ export type ODiffOptions = Partial<{
   antialiasing: boolean;
   /** If `true` reason: "pixel-diff" output will contain the set of line indexes containing different pixels */
   captureDiffLines: boolean;
+  /** If `true` the diff result will include coordinates of all different pixels, grouped by x coordinate */
+  captureDiffCoords: boolean;
   /** If `true` odiff will use less memory but will be slower with larger images */
   reduceRamUsage: boolean;
   /** An array of regions to ignore in the diff. */
@@ -41,6 +43,8 @@ declare function compare(
       diffPercentage: number;
       /** Individual line indexes containing different pixels. Guaranteed to be ordered and distinct.  */
       diffLines?: number[];
+      /** Array of [y, ranges[]] pairs where y is the y coordinate and ranges[] is an array of [startX, endX] pairs representing continuous ranges of x coordinates */
+      diffCoords?: [number, ...Array<[number, number]>][];
     }
   | {
       match: false;

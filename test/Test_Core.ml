@@ -5,7 +5,7 @@ let test_antialiasing () =
   Sys.getcwd () |> print_endline;
   let img1 = Png.IO.loadImage "test-images/aa/antialiasing-on.png" in
   let img2 = Png.IO.loadImage "test-images/aa/antialiasing-off.png" in
-  let _, diffPixels, diffPercentage, _ =
+  let _, diffPixels, diffPercentage, _, _ =
     PNG_Diff.compare img1 img2 ~outputDiffMask:false ~antialiasing:true ()
   in
   check int "diffPixels" 46 diffPixels;
@@ -14,7 +14,7 @@ let test_antialiasing () =
 let test_different_sized_aa_images () =
   let img1 = Png.IO.loadImage "test-images/aa/antialiasing-on.png" in
   let img2 = Png.IO.loadImage "test-images/aa/antialiasing-off-small.png" in
-  let _, diffPixels, diffPercentage, _ =
+  let _, diffPixels, diffPercentage, _, _ =
     PNG_Diff.compare img1 img2 ~outputDiffMask:true ~antialiasing:true ()
   in
   check int "diffPixels" 417 diffPixels;
@@ -23,7 +23,7 @@ let test_different_sized_aa_images () =
 let test_threshold () =
   let img1 = Png.IO.loadImage "test-images/png/orange.png" in
   let img2 = Png.IO.loadImage "test-images/png/orange_changed.png" in
-  let _, diffPixels, diffPercentage, _ =
+  let _, diffPixels, diffPercentage, _, _ =
     PNG_Diff.compare img1 img2 ~threshold:0.5 ()
   in
   check int "diffPixels" 25 diffPixels;
@@ -32,7 +32,7 @@ let test_threshold () =
 let test_ignore_regions () =
   let img1 = Png.IO.loadImage "test-images/png/orange.png" in
   let img2 = Png.IO.loadImage "test-images/png/orange_changed.png" in
-  let _diffOutput, diffPixels, diffPercentage, _ =
+  let _diffOutput, diffPixels, diffPercentage, _, _ =
     PNG_Diff.compare img1 img2
       ~ignoreRegions:[ ((150, 30), (310, 105)); ((20, 175), (105, 200)) ]
       ()
@@ -43,7 +43,7 @@ let test_ignore_regions () =
 let test_diff_color () =
   let img1 = Png.IO.loadImage "test-images/png/orange.png" in
   let img2 = Png.IO.loadImage "test-images/png/orange_changed.png" in
-  let diffOutput, _, _, _ =
+  let diffOutput, _, _, _, _ =
     PNG_Diff.compare img1 img2
       ~diffPixel:(Int32.of_int 4278255360 (*int32 representation of #00ff00*))
       ()
@@ -51,7 +51,7 @@ let test_diff_color () =
   check bool "diffOutput" (Option.is_some diffOutput) true;
   let diffOutput = Option.get diffOutput in
   let originalDiff = Png.IO.loadImage "test-images/png/orange_diff_green.png" in
-  let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _ =
+  let diffMaskOfDiff, diffOfDiffPixels, diffOfDiffPercentage, _, _ =
     PNG_Diff.compare originalDiff diffOutput ()
   in
   check bool "diffMaskOfDiff" (Option.is_some diffMaskOfDiff) true;
@@ -81,7 +81,7 @@ let test_different_layouts () =
   Sys.getcwd () |> print_endline;
   let img1 = Png.IO.loadImage "test-images/png/white4x4.png" in
   let img2 = Png.IO.loadImage "test-images/png/purple8x8.png" in
-  let _, diffPixels, diffPercentage, _ =
+  let _, diffPixels, diffPercentage, _, _ =
     PNG_Diff.compare img1 img2 ~outputDiffMask:false ~antialiasing:false ()
   in
   check int "diffPixels" 16 diffPixels;

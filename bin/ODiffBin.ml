@@ -56,6 +56,13 @@ let diffLines =
         "With this flag enabled, output result in case of different images \
          will output lines for all the different pixels"
 
+let captureDiffCoords =
+  value & flag
+  & info [ "capture-diff-coords" ]
+      ~doc:
+        "With this flag enabled, the diff result will include coordinates of \
+         all different pixels, grouped by x coordinate"
+
 let disableGcOptimizations =
   value & flag
   & info [ "reduce-ram-usage" ]
@@ -76,7 +83,7 @@ let ignoreRegions =
 let cmd =
   const Main.main $ base $ comp $ diffPath $ threshold $ diffMask $ failOnLayout
   $ diffColor $ parsableOutput $ antialiasing $ ignoreRegions $ diffLines
-  $ disableGcOptimizations
+  $ captureDiffCoords $ disableGcOptimizations
 
 let version =
   match Build_info.V1.version () with
