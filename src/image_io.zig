@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const c_bindings = @import("c_bindings.zig");
-const CImageData = c_bindings.CImageData;
+const zig_bindings = @import("zig_bindings.zig");
 
 pub const ImageFormat = enum {
     png,
@@ -76,7 +76,7 @@ pub fn loadImage(filename: []const u8, allocator: std.mem.Allocator) !Image {
     const format = try getImageFormat(filename);
 
     const result = switch (format) {
-        .png => try c_bindings.readPngFile(filename, allocator),
+        .png => try zig_bindings.readPNG(allocator, filename),
         .jpg => try c_bindings.readJpgFile(filename, allocator),
         .tiff => try c_bindings.readTiffFile(filename, allocator),
         .bmp => try c_bindings.readBmpFile(filename, allocator),
