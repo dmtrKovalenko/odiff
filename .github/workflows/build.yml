@@ -188,11 +188,19 @@ jobs:
 
       - name: Download built binaries
         uses: actions/download-artifact@v4
-
         with:
           pattern: odiff-*
           merge-multiple: true
           path: npm_package/raw_binaries
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          always-auth: true
+          registry-url: "https://registry.npmjs.org"
+          cache-dependency-path: "package-lock.json"
 
       - name: Publish npm package
         working-directory: npm_package

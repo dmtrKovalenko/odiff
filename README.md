@@ -18,8 +18,6 @@
 
 ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was originally designed to handle the "big" images. Thanks to [OCaml](https://ocaml.org/) and its speedy and predictable compiler we can significantly speed up your CI pipeline.
 
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://vshymanskyy.github.io/StandWithUkraine/)
-
 ## Demo
 
 | base                           | comparison                       | diff                                  |
@@ -37,11 +35,9 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ Ignoring regions
 - ✅ Using [YIQ NTSC
   transmission algorithm](https://progmat.uaem.mx/progmat/index.php/progmat/article/view/2010-2-2-03/2010-2-2-03) to determine visual difference.
-
-### Coming in the nearest future:
-
-- ⏹ Reading image from memory buffer
-- ⏹ Reading images from url
+- ✅ SIMD optimized working for SSE2, AVX2, AVX512, and NEON
+- ✅ Controlled memory footprint
+- ✅ 100% test coverage and backward compatibility
 
 ## Usage
 
@@ -224,12 +220,3 @@ If you have recently updated, please read the [changelog](https://github.com/dmt
 ## License
 
 The project is licensed under the terms of [MIT license](./LICENSE)
-
-## Thanks
-
-This project was highly inspired by [pixelmatch](https://github.com/mapbox/pixelmatch) and [imagemagick](https://github.com/ImageMagick/ImageMagick).
-
-## Support the project
-
-...one day a donation button will appear here. But for now you can follow [author's twitter](https://twitter.com/dmtrKovalenko) :)
-
