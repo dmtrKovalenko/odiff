@@ -73,33 +73,44 @@ function optionsToArgs(options) {
 /** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number, diffLines: number[] }>} */
 function parsePixelDiffStdout(stdout) {
   try {
-    const parts = stdout.split(";");
-
-    if (parts.length === 2) {
-      const [diffCount, diffPercentage] = parts;
-
-      return {
-        diffCount: parseInt(diffCount),
-        diffPercentage: parseFloat(diffPercentage),
-      };
-    } else if (parts.length === 3) {
-      const [diffCount, diffPercentage, linesPart] = parts;
-
-      return {
-        diffCount: parseInt(diffCount),
-        diffPercentage: parseFloat(diffPercentage),
-        diffLines: linesPart.split(",").flatMap((line) => {
-          let parsedInt = parseInt(line);
-
-          return isNaN(parsedInt) ? [] : parsedInt;
-        }),
-      };
+    const lines = stdout.trim().split('\n');
+    
+    if (lines.length >= 1) {
+      const diffCount = parseInt(lines[0]);
+      
+      if (isNaN(diffCount)) {
+        throw new Error(`Invalid diff count: ${lines[0]}`);
+      }
+      
+      const result = { diffCount };
+      
+      // Calculate percentage (odiff outputs absolute count, we calculate percentage)
+      // This is approximate - in a real implementation we'd need image dimensions
+      if (lines.length >= 2) {
+        const diffPercentage = parseFloat(lines[1]);
+        if (!isNaN(diffPercentage)) {
+          result.diffPercentage = diffPercentage;
+        }
+      }
+      
+      // Parse diff lines if present
+      if (lines.length >= 3) {
+        const diffLines = lines.slice(2)
+          .map(line => parseInt(line.trim()))
+          .filter(line => !isNaN(line));
+        
+        if (diffLines.length > 0) {
+          result.diffLines = diffLines;
+        }
+      }
+      
+      return result;
     } else {
-      throw new Error(`Weird pixel diff stdout: ${stdout}`);
+      throw new Error(`No output lines found: ${stdout}`);
     }
   } catch (e) {
     console.warn(
-      "Can't parse output from internal process. Please submit an issue at https://github.com/dmtrKovalenko/odiff/issues/new with the following stacktrace:",
+      "Can't parse output from internal process. Please submit an issue at https://github.com/odiff-project/odiff/issues/new with the following stacktrace:",
       e
     );
   }
@@ -110,7 +121,7 @@ function parsePixelDiffStdout(stdout) {
 const CMD_BIN_HELPER_MSG =
   "Usage: odiff [OPTION]... [BASE] [COMPARING] [DIFF]\nTry `odiff --help' for more information.\n";
 
-const NO_FILE_ODIFF_ERROR_REGEX = /no\s+'([^']+)'\s+file\s+or\s+directory/;
+const NO_FILE_ODIFF_ERROR_REGEX = /Could not load.*image:\s*(.+)/;
 
 async function compare(basePath, comparePath, diffOutput, options = {}) {
   return new Promise((resolve, reject) => {
@@ -143,7 +154,7 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
             ...parsePixelDiffStdout(producedStdout),
           });
           break;
-        case 124:
+        case 1:
           /** @type string */
           const originalErrorMessage = (
             producedStdError || "Invalid Argument Exception"

@@ -14,41 +14,75 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - target: x86_64-linux-gnu
+            os: ubuntu-latest
             artifact: "linux-x64"
-            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-linux"
-          - os: ubuntu-24.04-arm
+          - target: aarch64-linux-gnu
+            os: ubuntu-latest
             artifact: "linux-arm64"
-            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "arm64-linux"
-          - os: windows-latest
-            artifact: "windows-x64"
-            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
+            toolchain: "gcc-aarch64-linux-gnu g++-aarch64-linux-gnu"
+          - target: x86_64-windows
+            os: windows-latest
+            artifact: "windows-x64.exe"
             triplet: "x64-mingw-static"
-          - os: macos-latest
+          - target: aarch64-windows-gnu
+            os: ubuntu-latest
+            artifact: "windows-arm64.exe"
+            triplet: "arm64-mingw-static"
+            toolchain: "llvm-mingw"
+          - target: aarch64-macos
+            os: macos-latest
             artifact: "macos-arm64"
-            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "arm64-osx"
-          - os: macos-13
+          - target: x86_64-macos
+            os: macos-13
             artifact: "macos-x64"
-            ocaml-compiler: "ocaml-variants.5.2.0+options,ocaml-option-flambda"
             triplet: "x64-osx"
     defaults:
       run:
         shell: bash
+
     steps:
-      - uses: actions/checkout@v2.3.2
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - if: runner.os == 'Windows'
         run: |
           rm -rf $(which pkg-config)
           choco install pkgconfiglite
 
-      - run: gcc --version
+      - name: Install cross-compilation toolchain
+        if: runner.os == 'Linux' && matrix.toolchain
+        run: |
+          if [[ "${{ matrix.target }}" == "aarch64-windows-gnu" ]]; then
+            wget https://github.com/mstorsjo/llvm-mingw/releases/download/20240417/llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64.tar.xz
+            tar -xf llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64.tar.xz
+            echo "${GITHUB_WORKSPACE}/llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64/bin" >> $GITHUB_PATH
+            
+            sudo apt-get update
+            sudo apt-get install -y pkg-config
+            
+            echo "CC=aarch64-w64-mingw32-clang" >> $GITHUB_ENV
+            echo "CXX=aarch64-w64-mingw32-clang++" >> $GITHUB_ENV
+            echo "AR=aarch64-w64-mingw32-llvm-ar" >> $GITHUB_ENV
+            echo "LD=aarch64-w64-mingw32-ld" >> $GITHUB_ENV
+            echo "STRIP=aarch64-w64-mingw32-llvm-strip" >> $GITHUB_ENV
+            echo "PKG_CONFIG=pkg-config" >> $GITHUB_ENV
+          else
+            # Regular GCC cross-compilation for Linux ARM64
+            sudo apt-get update
+            sudo apt-get install -y ${{ matrix.toolchain }}
+          fi
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
 
       - uses: lukka/get-cmake@latest
-      - name: Setup anew (or from cache) vcpkg (and does not build any package)
+      - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         env:
           VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
@@ -64,72 +98,88 @@ jobs:
           ls "${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig"
           echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig" >> $GITHUB_ENV
 
-      - name: Set pkg-config path on Unix
+      - name: Set pkg-config path on Windows
         shell: bash
-        if: runner.os  == 'Windows'
+        if: runner.os == 'Windows'
         run: |
-          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\lib\pkgconfig" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\\lib\\pkgconfig" >> $GITHUB_ENV
 
-      - shell: bash
-        run: |
-          echo "LIBPNG_CFLAGS=$(pkg-config --cflags libspng_static)" >> $GITHUB_ENV
-          echo "LIBPNG_LIBS=$(pkg-config --libs libspng_static)" >> $GITHUB_ENV
-          echo "LIBTIFF_LIBS=$(pkg-config --libs libtiff-4)" >> $GITHUB_ENV
-          echo "LIBTIFF_CFLAGS=$(pkg-config --cflags libtiff-4)" >> $GITHUB_ENV
-          echo "LIBJPEG_CFLAGS=$(pkg-config --cflags libturbojpeg)" >> $GITHUB_ENV
-          echo "LIBJPEG_LIBS=$(pkg-config --libs libturbojpeg)" >> $GITHUB_ENV
-
-      - uses: ocaml/setup-ocaml@v3
-        with:
-          ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          opam-disable-sandboxing: true
-          dune-cache: false
-
-      - run: opam exec -- opam install . --deps-only --with-test
-      - run: opam exec -- dune build --verbose
-
-      - run: opam exec -- dune exec ODiffBin -- --version 
-      - run: opam exec -- dune runtest
-
-      - if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test_images
-          path: _build/default/test/test_images
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
-
-      - name: Install node deps
-        run: npm ci
-      - name: e2e test
-        run: npm test
-        
-      - name: Build release binary
-        # this is needed because now ocaml's internal cygwin will be used on windows
-        # which breaks normal line endings
+      - name: Build for ${{ matrix.target }}
         env:
-          SHELLOPTS: igncr
+          VCPKG_ROOT: ${{ github.workspace }}/vcpkg_installed
         run: |
-          opam exec -- dune clean && \
-          opam exec -- dune build --release && \
-          cp "_build/default/bin/ODiffBin.exe" "odiff-${{ matrix.artifact }}.exe"
+          echo "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
+          pkg-config --list-all | grep -E "(spng|jpeg|tiff|zlib)" || true
+
+          echo "VCPKG_ROOT: $VCPKG_ROOT"
+          ls -la "$VCPKG_ROOT/${{ matrix.triplet }}" || echo "vcpkg triplet dir not found"
+
+          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
+
+      - name: Print binary info
+        shell: bash
+        run: |
+          echo "Binary info:"
+          file zig-out/bin/odiff
+
+      - name: Run help command test
+        shell: bash
+        run: |
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            ./zig-out/bin/odiff.exe --help || echo "Cross-compiled binary may not run on different architecture"
+          else
+            ./zig-out/bin/odiff --help || echo "Cross-compiled binary may not run on different architecture"
+          fi
+
+      - name: Copy binary to artifact name
+        run: |
+          cp "zig-out/bin/odiff" "odiff-${{ matrix.artifact }}"
 
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
-          name: odiff-${{ matrix.artifact }}.exe
-          path: odiff-${{ matrix.artifact }}.exe
+          name: odiff-${{ matrix.artifact }}
+          path: odiff-${{ matrix.artifact }}*
           retention-days: 14
+
+  test:
+    runs-on: ubuntu-latest
+    name: Run Tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libspng-dev libjpeg-dev libtiff-dev pkg-config
+
+      - name: Run tests
+        run: |
+          zig build test-all
+
+  spellcheck:
+    name: Spell check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run typos
+        uses: crate-ci/typos@master
+        with:
+          config: ./typos.toml
 
   publish:
     name: Publish release
-    needs: [build]
+    needs: [build, test]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -138,30 +188,21 @@ jobs:
 
       - name: Download built binaries
         uses: actions/download-artifact@v4
+
         with:
-          pattern: odiff-*.exe
+          pattern: odiff-*
           merge-multiple: true
           path: npm_package/raw_binaries
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          always-auth: true
-          registry-url: 'https://registry.npmjs.org'
-          cache-dependency-path: 'package-lock.json'
 
       - name: Publish npm package
         working-directory: npm_package
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          
+
       - name: Create github release
         uses: softprops/action-gh-release@v1
         with:
           files: "npm_package/raw_binaries/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

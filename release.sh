@@ -18,8 +18,8 @@ if ! git diff --quiet; then
   exit 1
 fi
 
-sed -i '' "s/(version [^)]*)/(version $VERSION)/g" dune-project
-dune build 
+sed -i '' "s/\.version = \"[^\"]*\"/\.version = \"$VERSION\"/g" build.zig.zon
+zig build
 
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
 npm install
@@ -35,3 +35,4 @@ else
   git push origin "v$VERSION"
   git push
 fi
+

@@ -1,9 +1,9 @@
 {
-  "name": "odiff-bin",
-  "version": "3.2.1",
-  "author": "Dmitriy Kovalenko <dmtr.kovalenko@outlook.com>",
+  "name": "odiff",
+  "version": "1.0.0",
+  "author": "odiff contributors",
   "license": "MIT",
-  "description": "The fastest image difference tool in the world",
+  "description": "The fastest image difference tool in the world (Zig port of odiff)",
   "scripts": {
     "test": "ava"
   },
@@ -12,7 +12,8 @@
     "pixelmatch",
     "image",
     "comparison",
-    "diff"
+    "diff",
+    "zig"
   ],
   "devDependencies": {
     "ava": "^6.1.3"

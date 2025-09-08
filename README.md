@@ -14,7 +14,6 @@
     <img src="https://forthebadge.com/images/badges/powered-by-overtime.svg">
 </div>
 
-
 ## Why Odiff?
 
 ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was originally designed to handle the "big" images. Thanks to [OCaml](https://ocaml.org/) and its speedy and predictable compiler we can significantly speed up your CI pipeline.
@@ -42,7 +41,7 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 ### Coming in the nearest future:
 
 - ⏹ Reading image from memory buffer
-- ⏹ Reading images from url 
+- ⏹ Reading images from url
 
 ## Usage
 
@@ -64,11 +63,12 @@ const { compare } = require("odiff-bin");
 const { match, reason } = await compare(
   "path/to/first/image.png",
   "path/to/second/image.png",
-  "path/to/diff.png"
+  "path/to/diff.png",
 );
 ```
 
 ### Cypress
+
 Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress plugin to add visual regression tests using `odiff-bin`.
 
 ### Visual regression services
@@ -77,9 +77,9 @@ Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress
 
 [Argos CI](https://argos-ci.com/) – Visual regression service powering projects like material-ui. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
 
-[Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) – Self hosted visual regression service that allows to use odiff as screenshot comparison engine 
+[Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) – Self hosted visual regression service that allows to use odiff as screenshot comparison engine
 
-[OSnap](https://github.com/eWert-Online/OSnap) – Snapshot testing tool written in OCaml that uses config based declaration to define test and was built by odiff collaborator. 
+[OSnap](https://github.com/eWert-Online/OSnap) – Snapshot testing tool written in OCaml that uses config based declaration to define test and was built by odiff collaborator.
 
 ## Api
 
@@ -98,6 +98,7 @@ odiff --help
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
 <!--inline-interface-start-->
+
 ```tsx
 export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
@@ -129,7 +130,7 @@ declare function compare(
   basePath: string,
   comparePath: string,
   diffPath: string,
-  options?: ODiffOptions
+  options?: ODiffOptions,
 ): Promise<
   | { match: true }
   | { match: false; reason: "layout-diff" }
@@ -153,15 +154,16 @@ declare function compare(
 
 export { compare };
 ```
+
 <!--inline-interface-end-->"
- 
+
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
 
 > Make sure that diff output file will be created only if images have pixel difference we can see 👀
 
 ## Installation
 
-We provide prebuilt binaries for most of the used platforms, there are a few ways to install them: 
+We provide prebuilt binaries for most of the used platforms, there are a few ways to install them:
 
 ### Cross-platform
 
@@ -230,3 +232,4 @@ This project was highly inspired by [pixelmatch](https://github.com/mapbox/pixel
 ## Support the project
 
 ...one day a donation button will appear here. But for now you can follow [author's twitter](https://twitter.com/dmtrKovalenko) :)
+

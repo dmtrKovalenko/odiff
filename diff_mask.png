@@ -1,0 +1,18 @@
+# Image Conversion Failed:
+
+## identify
+
+identify: Expected 8 bytes; found 0 bytes `/Users/neogoose/dev/odiff/diff_mask.png' @ warning/png.c/MagickPNGWarningHandler/1531.
+identify: unexpected end-of-file `/Users/neogoose/dev/odiff/diff_mask.png' @ error/png.c/MagickPNGError/1305.
+
+- **cwd**: ~/dev/odiff
+```sh
+magick identify -format \ 
+  '%m %[fx:w]x%[fx:h] %xx%y' \ 
+  /Users/neogoose/dev/odiff/diff_mask.png[0]
+```
+
+# Output
+identify: Expected 8 bytes; found 0 bytes `/Users/neogoose/dev/odiff/diff_mask.png' @ warning/png.c/MagickPNGWarningHandler/1531.
+identify: unexpected end-of-file `/Users/neogoose/dev/odiff/diff_mask.png' @ error/png.c/MagickPNGError/1305.
+
