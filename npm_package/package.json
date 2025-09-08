@@ -1,9 +1,9 @@
 {
   "name": "odiff-bin",
-  "version": "3.2.1",
-  "author": "Dmitriy Kovalenko <dmtr.kovalenko@outlook.com>",
+  "version": "3.0.0-beta.3",
+  "author": "odiff contributors",
   "license": "MIT",
-  "description": "The fastest image difference tool in the world",
+  "description": "The fastest image difference tool in the world (Zig port of odiff)",
   "scripts": {
     "postinstall": "node ./post_install.js"
   },
@@ -17,6 +17,7 @@
     "pixelmatch",
     "image",
     "comparison",
-    "diff"
+    "diff",
+    "zig"
   ]
 }

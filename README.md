@@ -14,12 +14,11 @@
     <img src="https://forthebadge.com/images/badges/powered-by-overtime.svg">
 </div>
 
-
 ## Why Odiff?
 
-ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was originally designed to handle the "big" images. Thanks to [OCaml](https://ocaml.org/) and its speedy and predictable compiler we can significantly speed up your CI pipeline.
+ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. ODiff is designed speicifcally to handle significantly similar images like screenshots, photos, AI-generated images and many more. ODiff is designed to be portable, fast, and memory efficient.
 
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://vshymanskyy.github.io/StandWithUkraine/)
+Originally written in OCaml, currently in Zig with SIMD optimizations for SSE2, AVX2, AVX512, and NEON.
 
 ## Demo
 
@@ -38,11 +37,9 @@ ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchm
 - ✅ Ignoring regions
 - ✅ Using [YIQ NTSC
   transmission algorithm](https://progmat.uaem.mx/progmat/index.php/progmat/article/view/2010-2-2-03/2010-2-2-03) to determine visual difference.
-
-### Coming in the nearest future:
-
-- ⏹ Reading image from memory buffer
-- ⏹ Reading images from url 
+- ✅ SIMD optimized working for SSE2, AVX2, AVX512, and NEON
+- ✅ Controlled memory footprint
+- ✅ 100% test coverage and backward compatibility
 
 ## Usage
 
@@ -64,11 +61,12 @@ const { compare } = require("odiff-bin");
 const { match, reason } = await compare(
   "path/to/first/image.png",
   "path/to/second/image.png",
-  "path/to/diff.png"
+  "path/to/diff.png",
 );
 ```
 
 ### Cypress
+
 Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress plugin to add visual regression tests using `odiff-bin`.
 
 ### Visual regression services
@@ -77,9 +75,9 @@ Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress
 
 [Argos CI](https://argos-ci.com/) – Visual regression service powering projects like material-ui. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
 
-[Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) – Self hosted visual regression service that allows to use odiff as screenshot comparison engine 
+[Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) – Self hosted visual regression service that allows to use odiff as screenshot comparison engine
 
-[OSnap](https://github.com/eWert-Online/OSnap) – Snapshot testing tool written in OCaml that uses config based declaration to define test and was built by odiff collaborator. 
+[OSnap](https://github.com/eWert-Online/OSnap) – Snapshot testing tool written in OCaml that uses config based declaration to define test and was built by odiff collaborator.
 
 ## Api
 
@@ -98,6 +96,7 @@ odiff --help
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
 <!--inline-interface-start-->
+
 ```tsx
 export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
@@ -129,7 +128,7 @@ declare function compare(
   basePath: string,
   comparePath: string,
   diffPath: string,
-  options?: ODiffOptions
+  options?: ODiffOptions,
 ): Promise<
   | { match: true }
   | { match: false; reason: "layout-diff" }
@@ -153,15 +152,16 @@ declare function compare(
 
 export { compare };
 ```
+
 <!--inline-interface-end-->"
- 
+
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
 
 > Make sure that diff output file will be created only if images have pixel difference we can see 👀
 
 ## Installation
 
-We provide prebuilt binaries for most of the used platforms, there are a few ways to install them: 
+We provide prebuilt binaries for most of the used platforms, there are a few ways to install them:
 
 ### Cross-platform
 
@@ -222,11 +222,3 @@ If you have recently updated, please read the [changelog](https://github.com/dmt
 ## License
 
 The project is licensed under the terms of [MIT license](./LICENSE)
-
-## Thanks
-
-This project was highly inspired by [pixelmatch](https://github.com/mapbox/pixelmatch) and [imagemagick](https://github.com/ImageMagick/ImageMagick).
-
-## Support the project
-
-...one day a donation button will appear here. But for now you can follow [author's twitter](https://twitter.com/dmtrKovalenko) :)

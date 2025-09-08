@@ -16,7 +16,7 @@ brew install hyperfine
 
 ## Run the benchmark
 
-> Make sure that provided benchmark results were achieved on MacBook Pro 16, MacOS 11 BigSur beta.
+> Make sure that provided benchmark results were achieved on MacBook Pro 16, MacOS 11 BigSure beta.
 
 Simple benchmark that compares [4k water image](./water-4k.png) with [corrupted one](./water-4k-2.png).
 

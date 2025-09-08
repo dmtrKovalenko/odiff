@@ -18,4 +18,3 @@ compare("path1", "path2", "path3", {
   // @ts-expect-error invalid field
   ab: true
 });
-

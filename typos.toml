@@ -1,8 +1,6 @@
 [files]
-extend-exclude = [
-   "package.json"
-]
+extend-exclude = ["vcpkg/"]
+
 [default.extend-words]
-esy = "esy"
-
-
+"ba" = "ba"
+"odiff" = "odiff"

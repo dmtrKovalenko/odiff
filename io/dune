@@ -1,6 +1,0 @@
-(library
- (name ODiffIO)
- (public_name odiff-io)
- (flags
-  (-w -40 -w +26))
- (libraries odiff-io.png odiff-io.jpg odiff-io.bmp odiff-io.tiff))
