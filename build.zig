@@ -76,9 +76,11 @@ pub fn build(b: *std.Build) void {
         target.result.os.tag != native_target.result.os.tag;
 
     // Always try to configure libraries (vcpkg works for cross-compilation)
-    configurePlatformLibraries(b, exe, target.result, &have_spng, &have_jpeg, &have_tiff) catch {
+    configurePlatformLibraries(b, exe, target.result, &have_spng, &have_jpeg, &have_tiff) catch |err| {
         if (is_cross_compiling) {
-            std.log.info("Cross-compiling for {}, could not find libraries - building without image support", .{target.result.os.tag});
+            // For cross-compilation, library configuration failure should fail the build
+            std.log.err("Build failed: {}", .{err});
+            @panic("Cross-compilation requires proper vcpkg setup");
         } else {
             std.log.warn("Could not detect all image libraries, using fallback configuration", .{});
         }
@@ -248,7 +250,19 @@ fn configurePlatformLibraries(
         return;
     }
 
-    // Fall back to platform-specific methods
+    // Check if we're cross-compiling
+    const native_target = b.resolveTargetQuery(.{});
+    const is_cross_compiling = target_info.cpu.arch != native_target.result.cpu.arch or
+        target_info.os.tag != native_target.result.os.tag;
+    
+    // For cross-compilation, vcpkg is required - don't fall back to native libraries
+    if (is_cross_compiling) {
+        std.log.err("Cross-compilation requires vcpkg libraries. Target: {s}-{s}", .{ @tagName(target_info.cpu.arch), @tagName(target_info.os.tag) });
+        std.log.err("Make sure VCPKG_ROOT is set and libraries are installed for the target.", .{});
+        return error.CrossCompilationRequiresVcpkg;
+    }
+
+    // Fall back to platform-specific methods for native compilation only
     const is_windows = target_info.os.tag == .windows;
     const is_macos = target_info.os.tag == .macos;
     const is_linux = target_info.os.tag == .linux;

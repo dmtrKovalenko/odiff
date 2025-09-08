@@ -23,7 +23,7 @@ jobs:
             artifact: "linux-arm64"
             triplet: "arm64-linux"
             toolchain: "gcc-aarch64-linux-gnu g++-aarch64-linux-gnu"
-          - target: x86_64-windows
+          - target: x86_64-windows-gnu
             os: windows-latest
             artifact: "windows-x64.exe"
             triplet: "x64-mingw-static"
@@ -108,39 +108,90 @@ jobs:
         env:
           VCPKG_ROOT: ${{ github.workspace }}/vcpkg_installed
         run: |
-          echo "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
-          pkg-config --list-all | grep -E "(spng|jpeg|tiff|zlib)" || true
-
-          echo "VCPKG_ROOT: $VCPKG_ROOT"
-          ls -la "$VCPKG_ROOT/${{ matrix.triplet }}" || echo "vcpkg triplet dir not found"
-
+          if [[ ! -d "$VCPKG_ROOT/${{ matrix.triplet }}" ]]; then
+            echo "ERROR: vcpkg triplet directory not found: $VCPKG_ROOT/${{ matrix.triplet }}"
+            exit 1
+          fi
           zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
 
-      - name: Print binary info
+      - name: Validate binary architecture
         shell: bash
         run: |
-          echo "Binary info:"
-          file zig-out/bin/odiff
-
-      - name: Run help command test
-        shell: bash
-        run: |
-          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
-            ./zig-out/bin/odiff.exe --help || echo "Cross-compiled binary may not run on different architecture"
+          # Find the binary
+          if [[ -f "zig-out/bin/odiff.exe" ]]; then
+            BINARY_PATH="zig-out/bin/odiff.exe"
+          elif [[ -f "zig-out/bin/odiff" ]]; then
+            BINARY_PATH="zig-out/bin/odiff"
           else
-            ./zig-out/bin/odiff --help || echo "Cross-compiled binary may not run on different architecture"
+            echo "ERROR: No binary found"
+            ls -la zig-out/bin/
+            exit 1
           fi
+
+          BINARY_INFO=$(file "$BINARY_PATH")
+          echo "$BINARY_INFO"
+          
+          case "${{ matrix.target }}" in
+            *"windows"*)
+              if [[ ! "$BINARY_INFO" =~ "PE32+".*"x86-64" ]] && [[ ! "$BINARY_INFO" =~ "PE32+".*"Aarch64" ]] && [[ ! "$BINARY_INFO" =~ "COFF" ]]; then
+                echo "ERROR: Expected Windows PE/COFF executable, got: $BINARY_INFO"
+                exit 1
+              fi
+              ;;
+            *"linux"*)
+              if [[ ! "$BINARY_INFO" =~ "ELF".*"x86-64" ]] && [[ ! "$BINARY_INFO" =~ "ELF".*"aarch64" ]]; then
+                echo "ERROR: Expected Linux ELF executable, got: $BINARY_INFO"
+                exit 1
+              fi
+              ;;
+            *"macos"*)
+              if [[ ! "$BINARY_INFO" =~ "Mach-O".*"x86_64" ]] && [[ ! "$BINARY_INFO" =~ "Mach-O".*"arm64" ]]; then
+                echo "ERROR: Expected macOS Mach-O executable, got: $BINARY_INFO"
+                exit 1
+              fi
+              ;;
+          esac
+
+      - name: Test binary execution (if possible)
+        shell: bash
+        run: |
+          case "${{ matrix.target }}" in
+            "x86_64-linux-gnu")
+              if [[ "${{ runner.os }}" == "Linux" ]]; then
+                ./zig-out/bin/odiff --help
+              fi
+              ;;
+            "x86_64-windows-gnu")
+              if [[ "${{ runner.os }}" == "Windows" ]]; then
+                ./zig-out/bin/odiff.exe --help
+              fi
+              ;;
+            "x86_64-macos")
+              if [[ "${{ runner.os }}" == "macOS" ]]; then
+                ./zig-out/bin/odiff --help
+              fi
+              ;;
+            "aarch64-macos")
+              if [[ "${{ runner.os }}" == "macOS" ]] && [[ "$(uname -m)" == "arm64" ]]; then
+                ./zig-out/bin/odiff --help
+              fi
+              ;;
+          esac
 
       - name: Copy binary to artifact name
         run: |
-          cp "zig-out/bin/odiff" "odiff-${{ matrix.artifact }}"
+          if [[ -f "zig-out/bin/odiff.exe" ]]; then
+            cp "zig-out/bin/odiff.exe" "odiff-${{ matrix.artifact }}"
+          else
+            cp "zig-out/bin/odiff" "odiff-${{ matrix.artifact }}"
+          fi
 
-      - if: always()
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: odiff-${{ matrix.artifact }}
-          path: odiff-${{ matrix.artifact }}*
+          path: odiff-${{ matrix.artifact }}
           retention-days: 14
 
   test:

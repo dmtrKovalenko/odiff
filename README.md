@@ -16,7 +16,9 @@
 
 ## Why Odiff?
 
-ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. It was originally designed to handle the "big" images. Thanks to [OCaml](https://ocaml.org/) and its speedy and predictable compiler we can significantly speed up your CI pipeline.
+ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. ODiff is designed speicifcally to handle significantly similar images like screenshots, photos, AI-generated images and many more. ODiff is designed to be portable, fast, and memory efficient.
+
+Originally written in OCaml, currently in Zig with SIMD optimizations for SSE2, AVX2, AVX512, and NEON.
 
 ## Demo
 
