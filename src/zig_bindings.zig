@@ -1,7 +1,4 @@
 const std = @import("std");
-const builtin = @import("builtin");
-const posix = std.posix;
-const win = std.os.windows;
 
 const ImageResult = @import("c_bindings.zig").ImageResult;
 
@@ -17,18 +14,22 @@ pub fn readPNG(allocator: std.mem.Allocator, file_path: []const u8) !ImageResult
 
     const ctx = c.spng_ctx_new(0) orelse return error.OutOfMemory;
     defer c.spng_ctx_free(ctx);
+
     // Ignore and don't calculate chunk CRC's for better performance
     _ = c.spng_set_crc_action(ctx, c.SPNG_CRC_USE, c.SPNG_CRC_USE);
+
     const limit = 1024 * 1024 * 64;
     _ = c.spng_set_chunk_limits(ctx, limit, limit);
-    const result = c.spng_set_png_buffer(ctx, @ptrCast(file.data.ptr), @intCast(file.data.len));
-    if (result != 0) return error.InvalidData;
+
+    if (c.spng_set_png_buffer(ctx, @ptrCast(file.data.ptr), @intCast(file.data.len)) != 0)
+        return error.InvalidData;
 
     var ihdr: c.spng_ihdr = undefined;
     if (c.spng_get_ihdr(ctx, &ihdr) != 0) return error.InvalidData;
 
     var out_size: usize = 0;
-    if (c.spng_decoded_image_size(ctx, c.SPNG_FMT_RGBA8, &out_size) != 0) return error.InvalidData;
+    if (c.spng_decoded_image_size(ctx, c.SPNG_FMT_RGBA8, &out_size) != 0)
+        return error.InvalidData;
 
     const result_data = try allocator.alloc(u32, out_size);
     errdefer allocator.free(result_data);
@@ -47,8 +48,19 @@ pub fn readPNG(allocator: std.mem.Allocator, file_path: []const u8) !ImageResult
 const MemoryMappeFile = struct {
     const Self = @This();
 
-    data: []align(std.heap.page_size_min) const u8,
+    const builtin = @import("builtin");
+    const posix = std.posix;
+    const win = std.os.windows;
+    const is_windows = builtin.os.tag == .windows;
+
     file: std.fs.File,
+    data: if (is_windows)
+        []const u8
+    else
+        []align(std.heap.page_size_min) const u8,
+
+    win_mapping: if (is_windows) win.HANDLE else void =
+        if (is_windows) undefined else ({}),
 
     pub fn open(file_path: []const u8) !Self {
         const file = try std.fs.cwd().openFile(file_path, .{});
@@ -57,11 +69,20 @@ const MemoryMappeFile = struct {
         const file_size = try file.getEndPos();
         if (file_size == 0) return error.FileEmpty;
 
+        const fd = file.handle;
         switch (builtin.os.tag) {
-            .windows => @compileError("Not implemented"),
+            .windows => {
+                const mapping = CreateFileMappingA(fd, null, win.PAGE_READONLY, 0, 0, null) orelse return error.CreateFileMappingFailed;
+                const ptr = MapViewOfFile(mapping, WIN_FILE_MAP_READ, 0, 0, @intCast(file_size)) orelse return error.MapViewOfFileFailed;
+                return .{
+                    .file = file,
+                    // explicitly casts to a const ptr cuz it is read-only
+                    .data = @as([*]const u8, @ptrCast(ptr))[0..file_size],
+                    .win_mapping = mapping,
+                };
+            },
             // TODO: everything else is posix ig but is this right tho?
             else => {
-                const fd = file.handle;
                 const ptr = try posix.mmap(null, @intCast(file_size), posix.PROT.READ, posix.MAP{ .TYPE = .PRIVATE }, fd, 0);
                 return .{
                     .data = ptr,
@@ -73,7 +94,11 @@ const MemoryMappeFile = struct {
 
     pub fn close(self: Self) void {
         switch (builtin.os.tag) {
-            .windows => @compileError("Not implemented"),
+            .windows => {
+                // cast away const cuz windows api uses c and nothing is const there ffs
+                _ = UnmapViewOfFile(@ptrCast(@constCast(self.data.ptr)));
+                win.CloseHandle(self.win_mapping);
+            },
             else => {
                 const ptr = self.data;
                 posix.munmap(ptr);
@@ -81,4 +106,24 @@ const MemoryMappeFile = struct {
         }
         self.file.close();
     }
+
+    // TODO: replace with zig std when they are available there
+    extern "kernel32" fn CreateFileMappingA(
+        hFile: win.HANDLE,
+        lpFileMappingAttributes: ?*win.SECURITY_ATTRIBUTES,
+        flProtect: win.DWORD,
+        dwMaximumSizeHigh: win.DWORD,
+        dwMaximumSizeLow: win.DWORD,
+        lpName: ?win.LPCWSTR,
+    ) callconv(.winapi) ?win.HANDLE;
+
+    const WIN_FILE_MAP_READ = 0x0004;
+    extern "kernel32" fn MapViewOfFile(
+        hFileMappingObject: win.HANDLE,
+        dwDesiredAccess: win.DWORD,
+        dwFileOffsetHigh: win.DWORD,
+        dwFileOffsetLow: win.DWORD,
+        dwNumberOfBytesToMap: win.DWORD,
+    ) callconv(.winapi) ?win.LPVOID;
+    extern "kernel32" fn UnmapViewOfFile(lpBaseAddress: win.LPVOID) callconv(.winapi) win.BOOL;
 };
