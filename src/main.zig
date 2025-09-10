@@ -42,6 +42,7 @@ pub fn main() !void {
             std.process.exit(1);
         },
         else => {
+            print("{}\n", .{err});
             print("Error: Failed to load base image\n", .{});
             std.process.exit(1);
         },

@@ -63,7 +63,23 @@ const MemoryMappeFile = struct {
         if (is_windows) undefined else ({}),
 
     pub fn open(file_path: []const u8) !Self {
-        const file = try std.fs.cwd().openFile(file_path, .{});
+        const file = switch (builtin.os.tag) {
+            .windows => blk: {
+                const win_path = try win.sliceToPrefixedFileW(std.fs.cwd().fd, file_path);
+                const handle =
+                    try win.OpenFile(win_path.span(), .{
+                        .dir = std.fs.cwd().fd,
+                        .access_mask = win.GENERIC_READ,
+                        .share_access = win.FILE_SHARE_READ,
+                        .creation = win.FILE_OPEN,
+                    });
+                break :blk std.fs.File{ .handle = handle };
+            },
+            else => blk: {
+                const file = try std.fs.cwd().openFile(file_path, .{ .mode = .read_only });
+                break :blk file;
+            },
+        };
         errdefer file.close();
 
         const file_size = try file.getEndPos();
