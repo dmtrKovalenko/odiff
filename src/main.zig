@@ -122,7 +122,7 @@ pub fn main() !void {
                 // Save diff output if requested
                 if (args.diff_output) |output_path| {
                     if (pixel_result.diff_output) |output_img| {
-                        image_io.saveImage(&output_img, output_path, allocator) catch {
+                        image_io.saveImage(&output_img, output_path) catch {
                             print("Error: Failed to save diff output\n", .{});
                             try stdout.flush();
 

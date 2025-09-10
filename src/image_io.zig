@@ -93,12 +93,12 @@ pub fn loadImage(filename: []const u8, allocator: std.mem.Allocator) !Image {
     };
 }
 
-pub fn saveImage(image: *const Image, filename: []const u8, allocator: std.mem.Allocator) !void {
+pub fn saveImage(image: *const Image, filename: []const u8) !void {
     const format = try getImageFormat(filename);
 
     switch (format) {
         .png => {
-            try c_bindings.writePngFile(filename, image.width, image.height, image.data, allocator);
+            try zig_bindings.writePNG(filename, image.width, image.height, image.data);
         },
         else => return ImageError.UnsupportedWriteFormat,
     }

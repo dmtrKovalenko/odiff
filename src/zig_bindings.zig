@@ -6,7 +6,7 @@ const c = @cImport({
     @cInclude("spng.h");
 });
 
-/// Reads a PNG file into a slice of pixels
+/// Reads a PNG file into a slice of pixels in RGBA format.
 /// caller owns the returned data
 pub fn readPNG(allocator: std.mem.Allocator, file_path: []const u8) !ImageResult {
     const file = try MemoryMappeFile.open(file_path);
@@ -31,7 +31,7 @@ pub fn readPNG(allocator: std.mem.Allocator, file_path: []const u8) !ImageResult
     if (c.spng_decoded_image_size(ctx, c.SPNG_FMT_RGBA8, &out_size) != 0)
         return error.InvalidData;
 
-    const result_data = try allocator.alloc(u32, out_size);
+    const result_data = try allocator.alignedAlloc(u8, .of(u32), out_size);
     errdefer allocator.free(result_data);
 
     if (c.spng_decode_image(ctx, @ptrCast(result_data.ptr), out_size, c.SPNG_FMT_RGBA8, c.SPNG_DECODE_TRNS) != 0)
@@ -40,8 +40,62 @@ pub fn readPNG(allocator: std.mem.Allocator, file_path: []const u8) !ImageResult
     return ImageResult{
         .width = ihdr.width,
         .height = ihdr.height,
-        .data = result_data,
+        .data = @ptrCast(result_data),
         .is_c_allocated = false,
+    };
+}
+
+/// Writes a PNG file to `file_path` using the SPNG library.
+/// The `pixel_data` is expected to be in RGBA format.
+pub fn writePNG(file_path: []const u8, width: u32, height: u32, pixel_data: []const u32) !void {
+    var file = try std.fs.cwd().createFile(file_path, .{
+        .truncate = true,
+    });
+    defer file.close();
+    var buffer: [1024 * 1024]u8 = undefined;
+    var file_writer = file.writer(&buffer);
+    const writer_interface = &file_writer.interface;
+
+    const ctx = c.spng_ctx_new(c.SPNG_CTX_ENCODER) orelse return error.OutOfMemory;
+    defer c.spng_ctx_free(ctx);
+
+    var ihdr = c.spng_ihdr{
+        .width = width,
+        .height = height,
+        .bit_depth = 8,
+        .color_type = c.SPNG_COLOR_TYPE_TRUECOLOR_ALPHA,
+        .compression_method = 0,
+        .filter_method = c.SPNG_FILTER_NONE,
+        .interlace_method = c.SPNG_INTERLACE_NONE,
+    };
+    if (c.spng_set_ihdr(ctx, &ihdr) != 0) return error.InvalidData;
+
+    if (c.spng_set_png_stream(
+        ctx,
+        struct {
+            pub fn writeFn(_: ?*c.spng_ctx, user_data: ?*anyopaque, src: ?*anyopaque, len: usize) callconv(.c) c_int {
+                const writer: *std.Io.Writer = @ptrCast(@alignCast(user_data.?));
+                const src_slice = @as([*]const u8, @ptrCast(src.?))[0..len];
+                writer.writeAll(src_slice) catch |err| {
+                    std.log.err("writePNG: failed to write data: {}", .{err});
+                    return c.SPNG_IO_ERROR;
+                };
+                return 0;
+            }
+        }.writeFn,
+        @ptrCast(@alignCast(writer_interface)),
+    ) != 0) return error.InvalidData;
+
+    const res = c.spng_encode_image(ctx, @ptrCast(@alignCast(pixel_data.ptr)), pixel_data.len * @sizeOf(u32), c.SPNG_FMT_PNG, c.SPNG_ENCODE_FINALIZE);
+    if (res != 0) {
+        const err_msg = std.mem.span(c.spng_strerror(res));
+        std.log.err("writePNG: failed to encode image {s}", .{err_msg});
+        return error.InvalidData;
+    }
+
+    writer_interface.flush() catch |err| {
+        std.log.err("writePNG: failed to flush file: {} mode {}", .{ file_writer.err orelse err, file_writer.mode });
+        return error.WriteFailed;
     };
 }
 
