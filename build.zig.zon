@@ -17,8 +17,8 @@
             .hash = "libjpeg_turbo-3.1.2-I3bQD4dJAADu01Tlp_4TVsVIgfAg3hNmL-UWPPxMF2O5",
         },
         .libtiff = .{
-            .url = "git+https://github.com/shreyassanthu77/libtiff-zig#85666610da9123f8ec336dfe4e45ca9a16b9c9b0",
-            .hash = "libtiff-0.0.1-BfJAZG0pAACX8MqnoBZUzf0BEaqeQXFe1f91-Cu-rQDt",
+            .url = "git+https://github.com/shreyassanthu77/libtiff-zig#291731870b5b008b7490ec42eb451f5dd145bc25",
+            .hash = "libtiff-0.0.1-BfJAZFApAAAoiLE4P8xY-lT_A6IEBmQUjcCy_WnXn93o",
         },
     },
 
