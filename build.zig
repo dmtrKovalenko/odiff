@@ -10,6 +10,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     const libjpeg = libjpeg_dep.artifact("jpeg");
+    const libtiff_dep = b.dependency("libtiff", .{
+        .target = target,
+        .optimize = optimize,
+        .has_libjpeg = true,
+    });
+    const libtiff = libtiff_dep.artifact("tiff");
+    libtiff.linkLibrary(libjpeg);
+
     const libspng = getSpng(b, target, optimize);
 
     const lib_mod = b.createModule(.{
@@ -20,25 +28,17 @@ pub fn build(b: *std.Build) void {
     });
     lib_mod.linkLibrary(libspng);
     lib_mod.linkLibrary(libjpeg);
-    // TODO: statically link libtiff
-    lib_mod.linkSystemLibrary("tiff", .{});
+    lib_mod.linkLibrary(libtiff);
 
     var c_flags = std.array_list.Managed([]const u8).init(b.allocator);
     defer c_flags.deinit();
     c_flags.append("-std=c99") catch @panic("OOM");
     c_flags.append("-Wno-nullability-completeness") catch @panic("OOM");
-
-    const have_spng = true;
-    const have_jpeg = true;
-    const have_tiff = true;
-
-    if (have_spng) {
-        c_flags.append("-DHAVE_SPNG") catch @panic("OOM");
-        c_flags.append("-DSPNG_STATIC") catch @panic("OOM");
-        c_flags.append("-DSPNG_SSE=3") catch @panic("OOM");
-    }
-    if (have_jpeg) c_flags.append("-DHAVE_JPEG") catch @panic("OOM");
-    if (have_tiff) c_flags.append("-DHAVE_TIFF") catch @panic("OOM");
+    c_flags.append("-DHAVE_SPNG") catch @panic("OOM");
+    c_flags.append("-DSPNG_STATIC") catch @panic("OOM");
+    c_flags.append("-DSPNG_SSE=3") catch @panic("OOM");
+    c_flags.append("-DHAVE_JPEG") catch @panic("OOM");
+    c_flags.append("-DHAVE_TIFF") catch @panic("OOM");
 
     lib_mod.addCSourceFiles(.{
         .files = &.{
