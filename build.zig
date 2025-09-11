@@ -4,21 +4,7 @@ const manifest = @import("build.zig.zon");
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    const libjpeg_dep = b.dependency("libjpeg_turbo", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const libjpeg = libjpeg_dep.artifact("jpeg");
-    const libtiff_dep = b.dependency("libtiff", .{
-        .target = target,
-        .optimize = optimize,
-        .has_libjpeg = true,
-    });
-    const libtiff = libtiff_dep.artifact("tiff");
-    libtiff.linkLibrary(libjpeg);
-
-    const libspng = getSpng(b, target, optimize);
+    const dynamic = b.option(bool, "dynamic", "Link against libspng, libjpeg and libtiff dynamically") orelse false;
 
     const lib_mod = b.createModule(.{
         .root_source_file = b.path("src/root.zig"),
@@ -26,9 +12,8 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .link_libc = true,
     });
-    lib_mod.linkLibrary(libspng);
-    lib_mod.linkLibrary(libjpeg);
-    lib_mod.linkLibrary(libtiff);
+
+    linkDeps(b, target, optimize, dynamic, lib_mod);
 
     var c_flags = std.array_list.Managed([]const u8).init(b.allocator);
     defer c_flags.deinit();
@@ -167,6 +152,44 @@ pub fn build(b: *std.Build) void {
     const test_all_step = b.step("test-all", "Run both unit and integration tests");
     test_all_step.dependOn(test_step);
     test_all_step.dependOn(integration_test_step);
+}
+
+pub fn linkDeps(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, dynamic: bool, module: *std.Build.Module) void {
+    const host_target = b.graph.host.result;
+    const build_target = target.result;
+    const is_cross_compiling = host_target.cpu.arch != build_target.cpu.arch or
+        host_target.os.tag != build_target.os.tag;
+    if (dynamic and !is_cross_compiling) {
+        switch (build_target.os.tag) {
+            .windows => {
+                std.log.warn("Dynamic linking is not supported on Windows, falling back to static linking", .{});
+                return linkDeps(b, target, optimize, false, module);
+            },
+            else => {
+                module.linkSystemLibrary("spng", .{});
+                module.linkSystemLibrary("jpeg", .{});
+                module.linkSystemLibrary("tiff", .{});
+            },
+        }
+    } else {
+        const libspng = getSpng(b, target, optimize);
+        const libjpeg_dep = b.dependency("libjpeg_turbo", .{
+            .target = target,
+            .optimize = optimize,
+        });
+        const libjpeg = libjpeg_dep.artifact("jpeg");
+        const libtiff_dep = b.dependency("libtiff", .{
+            .target = target,
+            .optimize = optimize,
+            .has_libjpeg = true,
+        });
+        const libtiff = libtiff_dep.artifact("tiff");
+        libtiff.linkLibrary(libjpeg);
+
+        module.linkLibrary(libspng);
+        module.linkLibrary(libjpeg);
+        module.linkLibrary(libtiff);
+    }
 }
 
 fn getSpng(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step.Compile {
