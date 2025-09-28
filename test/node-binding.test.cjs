@@ -3,33 +3,27 @@ const test = require("ava");
 const { compare } = require("../npm_package/odiff");
 
 const IMAGES_PATH = path.resolve(__dirname, "..", "images");
-const BINARY_PATH = path.resolve(
-  __dirname,
-  "..",
-  "zig-out",
-  "bin",
-  "odiff"
-);
+const BINARY_PATH = path.resolve(__dirname, "..", "zig-out", "bin", "odiff");
 
 console.log(`Testing binary ${BINARY_PATH}`);
 
 const options = {
   __binaryPath: BINARY_PATH,
-}
+};
 
 test("Outputs correct parsed result when images different", async (t) => {
   const result = await compare(
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey-2.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    options
+    options,
   );
 
   t.is(result.reason, "pixel-diff");
-  t.true(typeof result.diffCount === 'number');
+  t.true(typeof result.diffCount === "number");
   t.true(result.diffCount > 0);
   console.log(`Found ${result.diffCount} different pixels`);
-})
+});
 
 test("Correctly works with reduceRamUsage", async (t) => {
   const result = await compare(
@@ -39,11 +33,11 @@ test("Correctly works with reduceRamUsage", async (t) => {
     {
       ...options,
       reduceRamUsage: true,
-    }
+    },
   );
 
   t.is(result.reason, "pixel-diff");
-  t.true(typeof result.diffCount === 'number');
+  t.true(typeof result.diffCount === "number");
   t.true(result.diffCount > 0);
 });
 
@@ -55,11 +49,11 @@ test("Correctly parses threshold", async (t) => {
     {
       ...options,
       threshold: 0.5,
-    }
+    },
   );
 
   t.is(result.reason, "pixel-diff");
-  t.true(typeof result.diffCount === 'number');
+  t.true(typeof result.diffCount === "number");
   t.true(result.diffCount > 0);
 });
 
@@ -71,11 +65,11 @@ test("Correctly parses antialiasing", async (t) => {
     {
       ...options,
       antialiasing: true,
-    }
+    },
   );
 
   t.is(result.reason, "pixel-diff");
-  t.true(typeof result.diffCount === 'number');
+  t.true(typeof result.diffCount === "number");
   t.true(result.diffCount > 0);
 });
 
@@ -100,12 +94,12 @@ test("Correctly parses ignore regions", async (t) => {
           y2: 1334,
         },
       ],
-    }
+    },
   );
 
   // With our placeholder images, this might still show differences
   // but the test should at least run without errors
-  t.true(typeof result.match === 'boolean');
+  t.true(typeof result.match === "boolean");
 });
 
 test("Outputs correct parsed result when images different for cypress image", async (t) => {
@@ -113,11 +107,11 @@ test("Outputs correct parsed result when images different for cypress image", as
     path.join(IMAGES_PATH, "www.cypress.io.png"),
     path.join(IMAGES_PATH, "www.cypress.io-1.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    options
+    options,
   );
 
   // Our placeholder implementation returns synthetic data, so we just check structure
-  t.true(typeof result.match === 'boolean');
+  t.true(typeof result.match === "boolean");
 });
 
 test("Correctly handles same images", async (t) => {
@@ -125,7 +119,7 @@ test("Correctly handles same images", async (t) => {
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "donkey.png"),
     path.join(IMAGES_PATH, "diff.png"),
-    options
+    options,
   );
 
   // With placeholder C implementation, identical images should match
@@ -139,8 +133,8 @@ test("Correctly outputs diff lines", async (t) => {
     path.join(IMAGES_PATH, "diff.png"),
     {
       captureDiffLines: true,
-      ...options
-    }
+      ...options,
+    },
   );
 
   t.is(result.match, false);
@@ -158,10 +152,35 @@ test("Returns meaningful error if file does not exist and noFailOnFsErrors", asy
     {
       ...options,
       noFailOnFsErrors: true,
-    }
+    },
   );
 
   t.is(result.match, false);
   // Our error handling might be different, but it should handle the case gracefully
-  t.true(['file-not-exists', 'pixel-diff'].includes(result.reason));
+  t.true(["file-not-exists", "pixel-diff"].includes(result.reason));
 });
+
+test("Correctly calculates and outputs diff percentage", async (t) => {
+  const result = await compare(
+    path.join(__dirname, "png", "orange.png"),
+    path.join(__dirname, "png", "orange_diff.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    options,
+  );
+
+  t.is(result.match, false);
+  t.is(result.reason, "pixel-diff");
+
+  t.true(typeof result.diffPercentage === "number");
+  t.true(result.diffPercentage > 0);
+  t.true(typeof result.diffCount === "number");
+  t.true(result.diffCount > 0);
+
+  const expectedPercentage = (result.diffCount / (510 * 234)) * 100;
+  t.true(Math.abs(result.diffPercentage - expectedPercentage) < 0.01);
+
+  console.log(
+    `Percentage test: ${result.diffCount} pixels (${result.diffPercentage}%)`,
+  );
+});
+

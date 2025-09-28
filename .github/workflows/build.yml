@@ -122,7 +122,7 @@ jobs:
       - name: Run tests
         if: matrix.run_tests == true
         run: |
-          zig build test-all --summary all
+          zig build test-all --summary all --verbose
 
       - name: Skip (runner not available)
         if: matrix.run_tests != true

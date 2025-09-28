@@ -131,16 +131,19 @@ pub fn main() !void {
                 }
 
                 if (args.parsable_stdout) {
-                    stdout.print("{d}\n", .{pixel_result.diff_count}) catch {};
+                    stdout.print("{d};{:.2}", .{ pixel_result.diff_count, pixel_result.diff_percentage }) catch {};
                     if (pixel_result.diff_lines) |diff_lines| {
                         if (diff_lines.count > 0) {
-                            for (diff_lines.getItems()) |line| {
-                                stdout.print("{d}\n", .{line}) catch {};
+                            stdout.print(";", .{}) catch {};
+                            for (diff_lines.getItems(), 0..) |line, i| {
+                                if (i > 0) stdout.print(",", .{}) catch {};
+                                stdout.print("{d}", .{line}) catch {};
                             }
                         }
                     }
+                    stdout.print("\n", .{}) catch {};
                 } else {
-                    print("Found {d} different pixels ({d:.2}%)\n", .{ pixel_result.diff_count, pixel_result.diff_percentage });
+                    print("Found {d} different pixels ({:.2}%)\n", .{ pixel_result.diff_count, pixel_result.diff_percentage });
                     if (args.diff_lines) {
                         if (pixel_result.diff_lines) |diff_lines| {
                             if (diff_lines.count > 0) {
