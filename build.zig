@@ -6,11 +6,18 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const dynamic = b.option(bool, "dynamic", "Link against libspng, libjpeg and libtiff dynamically") orelse false;
 
+    const avx512_diff = b.option(bool, "avx512_diff", "Enable AVX-512 accelerated diff when supported") orelse false;
+
     const native_target = b.resolveTargetQuery(.{});
     const is_cross_compiling = target.result.cpu.arch != native_target.result.cpu.arch or
         target.result.os.tag != native_target.result.os.tag;
 
-    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic);
+    const build_options = b.addOptions();
+    build_options.addOption([]const u8, "version", manifest.version);
+    build_options.addOption(bool, "avx512_diff", avx512_diff);
+    const build_options_mod = build_options.createModule();
+
+    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic, avx512_diff, build_options_mod);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
@@ -36,6 +43,7 @@ pub fn build(b: *std.Build) !void {
         "src/test_io_bmp.zig",
         "src/test_io_jpg.zig",
         "src/test_io_tiff.zig",
+        "src/test_avx.zig",
     };
 
     const integration_tests_pure_zig = [_][]const u8{
@@ -58,6 +66,7 @@ pub fn build(b: *std.Build) !void {
                     .optimize = optimize,
                 }),
             });
+            integration_test.root_module.addImport("build_options", build_options_mod);
             integration_test.linkLibC();
             integration_test.linkLibrary(root_lib);
             linkDeps(b, target, optimize, false, integration_test.root_module);
@@ -74,6 +83,7 @@ pub fn build(b: *std.Build) !void {
                     .optimize = optimize,
                 }),
             });
+            pure_test.root_module.addImport("build_options", build_options_mod);
 
             const run_pure_test = b.addRunArtifact(pure_test);
             integration_test_steps.append(run_pure_test) catch @panic("OOM");
@@ -95,7 +105,7 @@ pub fn build(b: *std.Build) !void {
     const build_ci_step = b.step("ci", "Build the app for CI");
     for (build_targets) |target_query| {
         const t = b.resolveTargetQuery(target_query);
-        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic);
+        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic, avx512_diff, build_options_mod);
         odiff_exe.root_module.strip = true;
         const odiff_output = b.addInstallArtifact(odiff_exe, .{
             .dest_dir = .{
@@ -113,6 +123,8 @@ fn buildOdiff(
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
     dynamic: bool,
+    avx512_diff: bool,
+    build_options_mod: *std.Build.Module,
 ) struct { *std.Build.Module, *std.Build.Step.Compile } {
     const lib_mod = b.createModule(.{
         .root_source_file = b.path("src/root.zig"),
@@ -146,11 +158,25 @@ fn buildOdiff(
     });
 
     exe_mod.addImport("odiff_lib", lib_mod);
+    exe_mod.addImport("build_options", build_options_mod);
+    lib_mod.addImport("build_options", build_options_mod);
 
-    const options = b.addOptions();
-    options.addOption([]const u8, "version", manifest.version);
-    exe_mod.addImport("build_options", options.createModule());
-    lib_mod.addImport("build_options", options.createModule());
+    if (avx512_diff and target.result.cpu.arch == .x86_64) {
+        const os_tag = target.result.os.tag;
+        const fmt: ?[]const u8 = switch (os_tag) {
+            .linux => "elf64",
+            .macos => "macho64",
+            else => null,
+        };
+        if (fmt) |nasm_fmt| {
+            const nasm = b.addSystemCommand(&.{ "nasm", "-f", nasm_fmt, "-o" });
+            const asm_obj = nasm.addOutputFileArg("vxdiff.o");
+            nasm.addFileArg(b.path("src/vxdiff.asm"));
+            lib_mod.addObjectFile(asm_obj);
+        } else {
+            std.log.warn("Unsupported OS for AVX diff: {}", .{os_tag});
+        }
+    }
 
     const exe = b.addExecutable(.{
         .name = "odiff",
