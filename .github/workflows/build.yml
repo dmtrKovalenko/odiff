@@ -81,38 +81,20 @@ jobs:
         with:
           version: 0.15.1
 
-      - uses: lukka/get-cmake@latest
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        env:
-          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
-          VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.triplet }}
-          VCPKG_BUILD_TYPE: release
-        with:
-          runVcpkgInstall: true
-          runVcpkgFormatString: '["install", "--clean-after-build"]'
+       - name: Install NASM
+         if: startsWith(matrix.target, 'x86_64')
+         run: |
+           if [[ "${{ runner.os }}" == "Linux" ]]; then
+             sudo apt-get update
+             sudo apt-get install -y nasm
+           elif [[ "${{ runner.os }}" == "Windows" ]]; then
+             choco install nasm
+           elif [[ "${{ runner.os }}" == "macOS" ]]; then
+             brew install nasm
+           fi
 
-      - name: Set pkg-config path on Unix
-        if: runner.os != 'Windows'
-        run: |
-          ls "${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig"
-          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig" >> $GITHUB_ENV
-
-      - name: Set pkg-config path on Windows
-        shell: bash
-        if: runner.os == 'Windows'
-        run: |
-          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\\lib\\pkgconfig" >> $GITHUB_ENV
-
-      - name: Build for ${{ matrix.target }}
-        env:
-          VCPKG_ROOT: ${{ github.workspace }}/vcpkg_installed
-        run: |
-          if [[ ! -d "$VCPKG_ROOT/${{ matrix.triplet }}" ]]; then
-            echo "ERROR: vcpkg triplet directory not found: $VCPKG_ROOT/${{ matrix.triplet }}"
-            exit 1
-          fi
-          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
+       - name: Build for ${{ matrix.target }}
+         run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
 
       - name: Validate binary architecture
         shell: bash
