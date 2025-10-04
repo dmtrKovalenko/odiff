@@ -221,7 +221,7 @@ jobs:
 
           if [[ "$should_run" == true ]]; then
             echo "Running tests for native target $TARGET on $OS/$ARCH"
-            zig build test-all
+            zig build test-all --summary all
           else
             echo "Skipping tests: host $OS/$ARCH does not match target $TARGET"
           fi
