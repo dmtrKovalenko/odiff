@@ -146,9 +146,23 @@ jobs:
           retention-days: 14
 
   test:
-    runs-on: ubuntu-latest
-    name: Run Tests
-
+    name: Run Tests (all targets)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-windows-gnu
+            os: windows-latest
+          - target: aarch64-windows-gnu
+            os: ubuntu-latest
+          - target: aarch64-macos
+            os: macos-latest
+          - target: x86_64-macos
+            os: macos-13
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -158,15 +172,59 @@ jobs:
         with:
           version: 0.15.1
 
-      - name: Install nasm (host x86_64)
-        if: runner.os == 'Linux'
+      - name: Install nasm for x86 targets (Linux)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y nasm
 
-      - name: Run tests
+      - name: Install nasm for x86 targets (macOS)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'macOS'
         run: |
-          zig build test-all
+          brew install nasm
+
+      - name: Install nasm for x86 targets (Windows)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Windows'
+        run: |
+          choco install -y nasm
+
+      - name: Run tests (native targets only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="${{ matrix.target }}"
+          OS="${{ runner.os }}"
+          ARCH=$(uname -m || echo unknown)
+
+          should_run=false
+          case "$TARGET" in
+            x86_64-linux-gnu)
+              if [[ "$OS" == "Linux" && "$ARCH" == "x86_64" ]]; then should_run=true; fi
+              ;;
+            aarch64-linux-gnu)
+              if [[ "$OS" == "Linux" && ( "$ARCH" == "aarch64" || "$ARCH" == "arm64" ) ]]; then should_run=true; fi
+              ;;
+            x86_64-windows-gnu)
+              if [[ "$OS" == "Windows" ]]; then should_run=true; fi
+              ;;
+            aarch64-windows-gnu)
+              # Requires Windows ARM64 runner to actually run
+              if [[ "$OS" == "Windows" && "$PROCESSOR_ARCHITECTURE" == "ARM64" ]]; then should_run=true; fi
+              ;;
+            aarch64-macos)
+              if [[ "$OS" == "macOS" && ( "$ARCH" == "arm64" || "$ARCH" == "aarch64" ) ]]; then should_run=true; fi
+              ;;
+            x86_64-macos)
+              if [[ "$OS" == "macOS" && "$ARCH" == "x86_64" ]]; then should_run=true; fi
+              ;;
+          esac
+
+          if [[ "$should_run" == true ]]; then
+            echo "Running tests for native target $TARGET on $OS/$ARCH"
+            zig build test-all
+          else
+            echo "Skipping tests: host $OS/$ARCH does not match target $TARGET"
+          fi
 
   spellcheck:
     name: Spell check
@@ -217,4 +275,3 @@ jobs:
           files: "npm_package/raw_binaries/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
