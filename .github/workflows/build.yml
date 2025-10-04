@@ -204,7 +204,8 @@ jobs:
 
       - name: Skip (runner not available)
         if: matrix.run_tests != true
-        run: echo "Skipping: no hosted runner available for ${{ matrix.target }}"
+        run: |
+          echo "Skipping: no hosted runner available for ${{ matrix.target }}"
 
   spellcheck:
     name: Spell check
