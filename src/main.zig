@@ -42,7 +42,6 @@ pub fn main() !void {
             std.process.exit(1);
         },
         else => {
-            print("{}\n", .{err});
             print("Error: Failed to load base image\n", .{});
             std.process.exit(1);
         },
@@ -122,7 +121,7 @@ pub fn main() !void {
                 // Save diff output if requested
                 if (args.diff_output) |output_path| {
                     if (pixel_result.diff_output) |output_img| {
-                        image_io.saveImage(&output_img, output_path) catch {
+                        image_io.saveImage(&output_img, output_path, allocator) catch {
                             print("Error: Failed to save diff output\n", .{});
                             try stdout.flush();
 

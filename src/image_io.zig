@@ -1,7 +1,7 @@
 const std = @import("std");
 
 const c_bindings = @import("c_bindings.zig");
-const zig_bindings = @import("zig_bindings.zig");
+const CImageData = c_bindings.CImageData;
 
 pub const ImageFormat = enum {
     png,
@@ -76,7 +76,7 @@ pub fn loadImage(filename: []const u8, allocator: std.mem.Allocator) !Image {
     const format = try getImageFormat(filename);
 
     const result = switch (format) {
-        .png => try zig_bindings.readPNG(allocator, filename),
+        .png => try c_bindings.readPngFile(filename, allocator),
         .jpg => try c_bindings.readJpgFile(filename, allocator),
         .tiff => try c_bindings.readTiffFile(filename, allocator),
         .bmp => try c_bindings.readBmpFile(filename, allocator),
@@ -93,12 +93,12 @@ pub fn loadImage(filename: []const u8, allocator: std.mem.Allocator) !Image {
     };
 }
 
-pub fn saveImage(image: *const Image, filename: []const u8) !void {
+pub fn saveImage(image: *const Image, filename: []const u8, allocator: std.mem.Allocator) !void {
     const format = try getImageFormat(filename);
 
     switch (format) {
         .png => {
-            try zig_bindings.writePNG(filename, image.width, image.height, image.data);
+            try c_bindings.writePngFile(filename, image.width, image.height, image.data, allocator);
         },
         else => return ImageError.UnsupportedWriteFormat,
     }

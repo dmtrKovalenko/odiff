@@ -112,9 +112,9 @@ test "JPG: Creates correct diff output image" {
         // If there are differences, save debug images
         if (diff_result_count > 0) {
             // Note: We can only save as PNG currently, but that's fine for debug output
-            try image_io.saveImage(diff_output_img, "test/jpg/_diff-output.png");
+            try image_io.saveImage(diff_output_img, "test/jpg/_diff-output.png", allocator);
             if (diff_result_output) |*diff_mask| {
-                try image_io.saveImage(diff_mask, "test/jpg/_diff-of-diff.png");
+                try image_io.saveImage(diff_mask, "test/jpg/_diff-of-diff.png", allocator);
             }
         }
 

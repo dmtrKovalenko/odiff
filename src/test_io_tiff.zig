@@ -130,9 +130,9 @@ test "TIFF: Creates correct diff output image" {
         // If there are differences, save debug images
         if (nested_diff_count > 0) {
             // Note: We can only save as PNG currently, but that's fine for debug output
-            try image_io.saveImage(diff_output_img, "test/tiff/_diff-output.png");
+            try image_io.saveImage(diff_output_img, "test/tiff/_diff-output.png", allocator);
             if (nested_diff_output) |*diff_mask| {
-                try image_io.saveImage(diff_mask, "test/tiff/_diff-of-diff.png");
+                try image_io.saveImage(diff_mask, "test/tiff/_diff-of-diff.png", allocator);
             }
         }
 
