@@ -153,16 +153,25 @@ jobs:
         include:
           - target: x86_64-linux-gnu
             os: ubuntu-latest
+            run_tests: true
           - target: aarch64-linux-gnu
-            os: ubuntu-latest
+            os: ubuntu-24.04-arm64
+            run_tests: true
           - target: x86_64-windows-gnu
             os: windows-latest
+            run_tests: true
           - target: aarch64-windows-gnu
-            os: ubuntu-latest
+            os: windows-latest
+            run_tests: false
           - target: aarch64-macos
             os: macos-latest
+            run_tests: true
           - target: x86_64-macos
             os: macos-13
+            run_tests: true
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -188,43 +197,14 @@ jobs:
         run: |
           choco install -y nasm
 
-      - name: Run tests (native targets only)
-        shell: bash
+      - name: Run tests
+        if: matrix.run_tests == true
         run: |
-          set -euo pipefail
-          TARGET="${{ matrix.target }}"
-          OS="${{ runner.os }}"
-          ARCH=$(uname -m || echo unknown)
+          zig build test-all --summary all
 
-          should_run=false
-          case "$TARGET" in
-            x86_64-linux-gnu)
-              if [[ "$OS" == "Linux" && "$ARCH" == "x86_64" ]]; then should_run=true; fi
-              ;;
-            aarch64-linux-gnu)
-              if [[ "$OS" == "Linux" && ( "$ARCH" == "aarch64" || "$ARCH" == "arm64" ) ]]; then should_run=true; fi
-              ;;
-            x86_64-windows-gnu)
-              if [[ "$OS" == "Windows" ]]; then should_run=true; fi
-              ;;
-            aarch64-windows-gnu)
-              # Requires Windows ARM64 runner to actually run
-              if [[ "$OS" == "Windows" && "$PROCESSOR_ARCHITECTURE" == "ARM64" ]]; then should_run=true; fi
-              ;;
-            aarch64-macos)
-              if [[ "$OS" == "macOS" && ( "$ARCH" == "arm64" || "$ARCH" == "aarch64" ) ]]; then should_run=true; fi
-              ;;
-            x86_64-macos)
-              if [[ "$OS" == "macOS" && "$ARCH" == "x86_64" ]]; then should_run=true; fi
-              ;;
-          esac
-
-          if [[ "$should_run" == true ]]; then
-            echo "Running tests for native target $TARGET on $OS/$ARCH"
-            zig build test-all --summary all
-          else
-            echo "Skipping tests: host $OS/$ARCH does not match target $TARGET"
-          fi
+      - name: Skip (runner not available)
+        if: matrix.run_tests != true
+        run: echo "Skipping: no hosted runner available for ${{ matrix.target }}"
 
   spellcheck:
     name: Spell check
