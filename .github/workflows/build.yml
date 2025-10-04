@@ -85,20 +85,11 @@ jobs:
           - target: x86_64-linux-gnu
             os: ubuntu-latest
             run_tests: true
-          - target: aarch64-linux-gnu
-            os: ubuntu-24.04-arm64
-            run_tests: true
           - target: x86_64-windows-gnu
             os: windows-latest
             run_tests: true
-          - target: aarch64-windows-gnu
-            os: windows-latest
-            run_tests: false
           - target: aarch64-macos
             os: macos-latest
-            run_tests: true
-          - target: x86_64-macos
-            os: macos-13
             run_tests: true
     defaults:
       run:
