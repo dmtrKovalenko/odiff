@@ -89,6 +89,10 @@ pub fn build(b: *std.Build) void {
     defer integration_test_steps.deinit();
 
     if (!is_cross_compiling) {
+        const root_lib = b.addLibrary(.{
+            .name = "odiff_lib",
+            .root_module = lib_mod,
+        });
         for (integration_tests_with_io) |test_path| {
             const integration_test = b.addTest(.{
                 .root_module = b.createModule(.{
@@ -97,15 +101,8 @@ pub fn build(b: *std.Build) void {
                     .optimize = optimize,
                 }),
             });
-
             integration_test.linkLibC();
-
-            integration_test.addCSourceFiles(.{
-                .files = &.{
-                    "c_bindings/odiff_io.c",
-                },
-                .flags = c_flags.items,
-            });
+            integration_test.linkLibrary(root_lib);
             linkDeps(b, target, optimize, false, integration_test.root_module);
 
             const run_integration_test = b.addRunArtifact(integration_test);
