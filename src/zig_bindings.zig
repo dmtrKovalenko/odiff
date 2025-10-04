@@ -117,23 +117,7 @@ const MemoryMappeFile = struct {
         if (is_windows) undefined else ({}),
 
     pub fn open(file_path: []const u8) !Self {
-        const file = switch (builtin.os.tag) {
-            .windows => blk: {
-                const win_path = try win.sliceToPrefixedFileW(std.fs.cwd().fd, file_path);
-                const handle =
-                    try win.OpenFile(win_path.span(), .{
-                        .dir = std.fs.cwd().fd,
-                        .access_mask = win.GENERIC_READ,
-                        .share_access = win.FILE_SHARE_READ,
-                        .creation = win.FILE_OPEN,
-                    });
-                break :blk std.fs.File{ .handle = handle };
-            },
-            else => blk: {
-                const file = try std.fs.cwd().openFile(file_path, .{ .mode = .read_only });
-                break :blk file;
-            },
-        };
+        const file = try std.fs.cwd().openFile(file_path, .{ .mode = .read_only });
         errdefer file.close();
 
         const file_size = try file.getEndPos();
@@ -143,7 +127,7 @@ const MemoryMappeFile = struct {
         switch (builtin.os.tag) {
             .windows => {
                 const mapping = win_aux.CreateFileMappingA(fd, null, win.PAGE_READONLY, 0, 0, null) orelse return error.CreateFileMappingFailed;
-                const ptr = win_aux.MapViewOfFile(mapping, win_aux.FILE_MAP_READ, 0, 0, @intCast(file_size)) orelse return error.MapViewOfFileFailed;
+                const ptr = win_aux.MapViewOfFile(mapping, win_aux.FILE_MAP_READ, 0, 0, 0) orelse return error.MapViewOfFileFailed;
                 return .{
                     .file = file,
                     // explicitly casts to a const ptr cuz it is read-only
@@ -151,7 +135,6 @@ const MemoryMappeFile = struct {
                     .win_mapping = mapping,
                 };
             },
-            // TODO: everything else is posix ig but is this right tho?
             else => {
                 const ptr = try posix.mmap(null, @intCast(file_size), posix.PROT.READ, posix.MAP{ .TYPE = .PRIVATE }, fd, 0);
                 return .{
