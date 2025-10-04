@@ -142,8 +142,8 @@ const MemoryMappeFile = struct {
         const fd = file.handle;
         switch (builtin.os.tag) {
             .windows => {
-                const mapping = CreateFileMappingA(fd, null, win.PAGE_READONLY, 0, 0, null) orelse return error.CreateFileMappingFailed;
-                const ptr = MapViewOfFile(mapping, WIN_FILE_MAP_READ, 0, 0, @intCast(file_size)) orelse return error.MapViewOfFileFailed;
+                const mapping = win_aux.CreateFileMappingA(fd, null, win.PAGE_READONLY, 0, 0, null) orelse return error.CreateFileMappingFailed;
+                const ptr = win_aux.MapViewOfFile(mapping, win_aux.FILE_MAP_READ, 0, 0, @intCast(file_size)) orelse return error.MapViewOfFileFailed;
                 return .{
                     .file = file,
                     // explicitly casts to a const ptr cuz it is read-only
@@ -166,7 +166,7 @@ const MemoryMappeFile = struct {
         switch (builtin.os.tag) {
             .windows => {
                 // cast away const cuz windows api uses c and nothing is const there ffs
-                _ = UnmapViewOfFile(@ptrCast(@constCast(self.data.ptr)));
+                _ = win_aux.UnmapViewOfFile(@ptrCast(@constCast(self.data.ptr)));
                 win.CloseHandle(self.win_mapping);
             },
             else => {
@@ -178,22 +178,14 @@ const MemoryMappeFile = struct {
     }
 
     // TODO: replace with zig std when they are available there
-    extern "kernel32" fn CreateFileMappingA(
-        hFile: win.HANDLE,
-        lpFileMappingAttributes: ?*win.SECURITY_ATTRIBUTES,
-        flProtect: win.DWORD,
-        dwMaximumSizeHigh: win.DWORD,
-        dwMaximumSizeLow: win.DWORD,
-        lpName: ?win.LPCWSTR,
-    ) callconv(.winapi) ?win.HANDLE;
-
-    const WIN_FILE_MAP_READ = 0x0004;
-    extern "kernel32" fn MapViewOfFile(
-        hFileMappingObject: win.HANDLE,
-        dwDesiredAccess: win.DWORD,
-        dwFileOffsetHigh: win.DWORD,
-        dwFileOffsetLow: win.DWORD,
-        dwNumberOfBytesToMap: win.DWORD,
-    ) callconv(.winapi) ?win.LPVOID;
-    extern "kernel32" fn UnmapViewOfFile(lpBaseAddress: win.LPVOID) callconv(.winapi) win.BOOL;
+    const win_aux = if (builtin.os.tag == .windows) struct {
+        const win_h = @cImport({
+            @cDefine("WIN32_LEAN_AND_MEAN", "1");
+            @cInclude("windows.h");
+        });
+        pub const CreateFileMappingA = win_h.CreateFileMappingA;
+        pub const MapViewOfFile = win_h.MapViewOfFile;
+        pub const UnmapViewOfFile = win_h.UnmapViewOfFile;
+        pub const FILE_MAP_READ = win_h.FILE_MAP_READ;
+    } else void;
 };
