@@ -17,29 +17,21 @@ jobs:
           - target: x86_64-linux-gnu
             os: ubuntu-latest
             artifact: "linux-x64"
-            triplet: "x64-linux"
           - target: aarch64-linux-gnu
             os: ubuntu-latest
             artifact: "linux-arm64"
-            triplet: "arm64-linux"
-            toolchain: "gcc-aarch64-linux-gnu g++-aarch64-linux-gnu"
           - target: x86_64-windows-gnu
             os: windows-latest
             artifact: "windows-x64.exe"
-            triplet: "x64-mingw-static"
           - target: aarch64-windows-gnu
             os: ubuntu-latest
             artifact: "windows-arm64.exe"
-            triplet: "arm64-mingw-static"
-            toolchain: "llvm-mingw"
           - target: aarch64-macos
             os: macos-latest
             artifact: "macos-arm64"
-            triplet: "arm64-osx"
           - target: x86_64-macos
             os: macos-13
             artifact: "macos-x64"
-            triplet: "x64-osx"
     defaults:
       run:
         shell: bash
@@ -48,53 +40,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - if: runner.os == 'Windows'
-        run: |
-          rm -rf $(which pkg-config)
-          choco install pkgconfiglite
-
-      - name: Install cross-compilation toolchain
-        if: runner.os == 'Linux' && matrix.toolchain
-        run: |
-          if [[ "${{ matrix.target }}" == "aarch64-windows-gnu" ]]; then
-            wget https://github.com/mstorsjo/llvm-mingw/releases/download/20240417/llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64.tar.xz
-            tar -xf llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64.tar.xz
-            echo "${GITHUB_WORKSPACE}/llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64/bin" >> $GITHUB_PATH
-            
-            sudo apt-get update
-            sudo apt-get install -y pkg-config
-            
-            echo "CC=aarch64-w64-mingw32-clang" >> $GITHUB_ENV
-            echo "CXX=aarch64-w64-mingw32-clang++" >> $GITHUB_ENV
-            echo "AR=aarch64-w64-mingw32-llvm-ar" >> $GITHUB_ENV
-            echo "LD=aarch64-w64-mingw32-ld" >> $GITHUB_ENV
-            echo "STRIP=aarch64-w64-mingw32-llvm-strip" >> $GITHUB_ENV
-            echo "PKG_CONFIG=pkg-config" >> $GITHUB_ENV
-          else
-            # Regular GCC cross-compilation for Linux ARM64
-            sudo apt-get update
-            sudo apt-get install -y ${{ matrix.toolchain }}
-          fi
-
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v2
         with:
           version: 0.15.1
 
-       - name: Install NASM
-         if: startsWith(matrix.target, 'x86_64')
-         run: |
-           if [[ "${{ runner.os }}" == "Linux" ]]; then
-             sudo apt-get update
-             sudo apt-get install -y nasm
-           elif [[ "${{ runner.os }}" == "Windows" ]]; then
-             choco install nasm
-           elif [[ "${{ runner.os }}" == "macOS" ]]; then
-             brew install nasm
-           fi
+      - name: Install nasm for x86 targets (Linux)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm
 
-       - name: Build for ${{ matrix.target }}
-         run: zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
+      - name: Install nasm for x86 targets (macOS)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'macOS'
+        run: |
+          brew install nasm
+
+      - name: Install nasm for x86 targets (Windows)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Windows'
+        run: |
+          choco install -y nasm
+
+      - name: Build for ${{ matrix.target }}
+        run: |
+          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
 
       - name: Validate binary architecture
         shell: bash
@@ -189,10 +158,11 @@ jobs:
         with:
           version: 0.15.1
 
-      - name: Install system dependencies
+      - name: Install nasm (host x86_64)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libspng-dev libjpeg-dev libtiff-dev pkg-config
+          sudo apt-get install -y nasm
 
       - name: Run tests
         run: |
