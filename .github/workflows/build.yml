@@ -188,6 +188,8 @@ jobs:
           merge-multiple: true
           path: npm_package/raw_binaries
 
+      - name: List files run: ls -la npm_package/raw_binaries
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -197,15 +199,15 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache-dependency-path: "package-lock.json"
 
-      - name: Publish npm package
-        working-directory: npm_package
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create github release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: "npm_package/raw_binaries/*"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Publish npm package
+      #   working-directory: npm_package
+      #   run: npm publish
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #
+      # - name: Create github release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     files: "npm_package/raw_binaries/*"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
