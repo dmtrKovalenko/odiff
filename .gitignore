@@ -1,4 +1,3 @@
 .zig-cache/
 node_modules/
-vcpkg/
 zig-out/
