@@ -188,7 +188,8 @@ jobs:
           merge-multiple: true
           path: npm_package/raw_binaries
 
-      - name: List files run: ls -la npm_package/raw_binaries
+      - name: List files
+        run: ls -la npm_package/raw_binaries
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
