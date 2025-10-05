@@ -2,14 +2,20 @@
 #define _GNU_SOURCE
 #endif
 
+#include "odiff_io.h"
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include "odiff_io.h"
+#if defined(HAVE_JPEG)
 #include <jpeglib.h>
+#endif
+#if defined(HAVE_SPNG)
 #include <spng.h>
+#endif
+#if defined(HAVE_TIFF)
 #include <tiffio.h>
+#endif
 
 #ifdef _WIN32
 #include <io.h>
@@ -129,6 +135,7 @@ static void close_file_buffer(FileBuffer *buffer) {
 }
 
 ImageData read_png_file(const char *filename, void *allocator) {
+#if defined(HAVE_SPNG)
   ImageData result = {0, 0, NULL};
 
   // Memory-map the PNG file (cross-platform)
@@ -197,10 +204,15 @@ ImageData read_png_file(const char *filename, void *allocator) {
   spng_ctx_free(ctx);
   close_file_buffer(&file_buf);
   return result;
+#else
+  fprintf(stderr, "SPNG support not enabled\n");
+  abort();
+#endif
 }
 
 int write_png_file(const char *filename, int width, int height,
                    const uint32_t *data) {
+#if defined(HAVE_SPNG)
   FILE *fp = fopen(filename, "wb");
   if (fp == NULL) {
     fprintf(stderr, "Failed to open file for writing: %s\n", filename);
@@ -281,9 +293,14 @@ int write_png_file(const char *filename, int width, int height,
   spng_ctx_free(ctx);
   fclose(fp);
   return 0;
+#else
+  fprintf(stderr, "SPNG support not enabled\n");
+  abort();
+#endif
 }
 
 ImageData read_jpg_file(const char *filename, void *allocator) {
+#if defined(HAVE_JPEG)
   ImageData result = {0, 0, NULL};
   struct jpeg_error_mgr jerr;
   struct jpeg_decompress_struct cinfo;
@@ -349,9 +366,14 @@ ImageData read_jpg_file(const char *filename, void *allocator) {
   fclose(fp);
 
   return result;
+#else
+  fprintf(stderr, "JPEG support not enabled\n");
+  abort();
+#endif
 }
 
 ImageData read_tiff_file(const char *filename, void *allocator) {
+#if defined(HAVE_TIFF)
   ImageData result = {0, 0, NULL};
   TIFF *image = TIFFOpen(filename, "r");
   if (!image)
@@ -380,6 +402,10 @@ ImageData read_tiff_file(const char *filename, void *allocator) {
 
   TIFFClose(image);
   return result;
+#else
+  fprintf(stderr, "TIFF support not enabled\n");
+  abort();
+#endif
 }
 
 void free_image_data(ImageData *img, void *allocator) {

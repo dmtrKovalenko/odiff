@@ -9,212 +9,125 @@ on:
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Install nasm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm
+
+      - name: Cross-compile for all targets
+        run: |
+          zig build -Doptimize=ReleaseFast ci --verbose
+
+      - name: Upload x86_64-linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-linux-x64
+          path: zig-out/x86_64-linux/odiff
+          retention-days: 14
+
+      - name: Upload aarch64-linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-linux-arm64
+          path: zig-out/aarch64-linux/odiff
+          retention-days: 14
+
+      - name: Upload x86_64-windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-windows-x64.exe
+          path: zig-out/x86_64-windows/odiff.exe
+          retention-days: 14
+
+      - name: Upload aarch64-windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-windows-arm64.exe
+          path: zig-out/aarch64-windows/odiff.exe
+          retention-days: 14
+
+      - name: Upload x86_64-macos artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-macos-x64
+          path: zig-out/x86_64-macos/odiff
+          retention-days: 14
+
+      - name: Upload aarch64-macos artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-macos-arm64
+          path: zig-out/aarch64-macos/odiff
+          retention-days: 14
+
+  test:
+    name: Run Tests (all targets)
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     strategy:
       matrix:
         include:
           - target: x86_64-linux-gnu
             os: ubuntu-latest
-            artifact: "linux-x64"
-            triplet: "x64-linux"
-          - target: aarch64-linux-gnu
-            os: ubuntu-latest
-            artifact: "linux-arm64"
-            triplet: "arm64-linux"
-            toolchain: "gcc-aarch64-linux-gnu g++-aarch64-linux-gnu"
+            run_tests: true
           - target: x86_64-windows-gnu
             os: windows-latest
-            artifact: "windows-x64.exe"
-            triplet: "x64-mingw-static"
-          - target: aarch64-windows-gnu
-            os: ubuntu-latest
-            artifact: "windows-arm64.exe"
-            triplet: "arm64-mingw-static"
-            toolchain: "llvm-mingw"
+            run_tests: true
           - target: aarch64-macos
             os: macos-latest
-            artifact: "macos-arm64"
-            triplet: "arm64-osx"
-          - target: x86_64-macos
-            os: macos-13
-            artifact: "macos-x64"
-            triplet: "x64-osx"
+            run_tests: true
     defaults:
       run:
         shell: bash
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - if: runner.os == 'Windows'
-        run: |
-          rm -rf $(which pkg-config)
-          choco install pkgconfiglite
-
-      - name: Install cross-compilation toolchain
-        if: runner.os == 'Linux' && matrix.toolchain
-        run: |
-          if [[ "${{ matrix.target }}" == "aarch64-windows-gnu" ]]; then
-            wget https://github.com/mstorsjo/llvm-mingw/releases/download/20240417/llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64.tar.xz
-            tar -xf llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64.tar.xz
-            echo "${GITHUB_WORKSPACE}/llvm-mingw-20240417-ucrt-ubuntu-20.04-x86_64/bin" >> $GITHUB_PATH
-            
-            sudo apt-get update
-            sudo apt-get install -y pkg-config
-            
-            echo "CC=aarch64-w64-mingw32-clang" >> $GITHUB_ENV
-            echo "CXX=aarch64-w64-mingw32-clang++" >> $GITHUB_ENV
-            echo "AR=aarch64-w64-mingw32-llvm-ar" >> $GITHUB_ENV
-            echo "LD=aarch64-w64-mingw32-ld" >> $GITHUB_ENV
-            echo "STRIP=aarch64-w64-mingw32-llvm-strip" >> $GITHUB_ENV
-            echo "PKG_CONFIG=pkg-config" >> $GITHUB_ENV
-          else
-            # Regular GCC cross-compilation for Linux ARM64
-            sudo apt-get update
-            sudo apt-get install -y ${{ matrix.toolchain }}
-          fi
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.15.1
-
-      - uses: lukka/get-cmake@latest
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        env:
-          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
-          VCPKG_DEFAULT_HOST_TRIPLET: ${{ matrix.triplet }}
-          VCPKG_BUILD_TYPE: release
-        with:
-          runVcpkgInstall: true
-          runVcpkgFormatString: '["install", "--clean-after-build"]'
-
-      - name: Set pkg-config path on Unix
-        if: runner.os != 'Windows'
-        run: |
-          ls "${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig"
-          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}/vcpkg_installed/${VCPKG_DEFAULT_TRIPLET}/lib/pkgconfig" >> $GITHUB_ENV
-
-      - name: Set pkg-config path on Windows
-        shell: bash
-        if: runner.os == 'Windows'
-        run: |
-          echo "PKG_CONFIG_PATH=${GITHUB_WORKSPACE}\\vcpkg_installed\\${VCPKG_DEFAULT_TRIPLET}\\lib\\pkgconfig" >> $GITHUB_ENV
-
-      - name: Build for ${{ matrix.target }}
-        env:
-          VCPKG_ROOT: ${{ github.workspace }}/vcpkg_installed
-        run: |
-          if [[ ! -d "$VCPKG_ROOT/${{ matrix.triplet }}" ]]; then
-            echo "ERROR: vcpkg triplet directory not found: $VCPKG_ROOT/${{ matrix.triplet }}"
-            exit 1
-          fi
-          zig build -Dtarget=${{ matrix.target }} -Doptimize=ReleaseFast --verbose
-
-      - name: Validate binary architecture
-        shell: bash
-        run: |
-          # Find the binary
-          if [[ -f "zig-out/bin/odiff.exe" ]]; then
-            BINARY_PATH="zig-out/bin/odiff.exe"
-          elif [[ -f "zig-out/bin/odiff" ]]; then
-            BINARY_PATH="zig-out/bin/odiff"
-          else
-            echo "ERROR: No binary found"
-            ls -la zig-out/bin/
-            exit 1
-          fi
-
-          BINARY_INFO=$(file "$BINARY_PATH")
-          echo "$BINARY_INFO"
-          
-          case "${{ matrix.target }}" in
-            *"windows"*)
-              if [[ ! "$BINARY_INFO" =~ "PE32+".*"x86-64" ]] && [[ ! "$BINARY_INFO" =~ "PE32+".*"Aarch64" ]] && [[ ! "$BINARY_INFO" =~ "COFF" ]]; then
-                echo "ERROR: Expected Windows PE/COFF executable, got: $BINARY_INFO"
-                exit 1
-              fi
-              ;;
-            *"linux"*)
-              if [[ ! "$BINARY_INFO" =~ "ELF".*"x86-64" ]] && [[ ! "$BINARY_INFO" =~ "ELF".*"aarch64" ]]; then
-                echo "ERROR: Expected Linux ELF executable, got: $BINARY_INFO"
-                exit 1
-              fi
-              ;;
-            *"macos"*)
-              if [[ ! "$BINARY_INFO" =~ "Mach-O".*"x86_64" ]] && [[ ! "$BINARY_INFO" =~ "Mach-O".*"arm64" ]]; then
-                echo "ERROR: Expected macOS Mach-O executable, got: $BINARY_INFO"
-                exit 1
-              fi
-              ;;
-          esac
-
-      - name: Test binary execution (if possible)
-        shell: bash
-        run: |
-          case "${{ matrix.target }}" in
-            "x86_64-linux-gnu")
-              if [[ "${{ runner.os }}" == "Linux" ]]; then
-                ./zig-out/bin/odiff --help
-              fi
-              ;;
-            "x86_64-windows-gnu")
-              if [[ "${{ runner.os }}" == "Windows" ]]; then
-                ./zig-out/bin/odiff.exe --help
-              fi
-              ;;
-            "x86_64-macos")
-              if [[ "${{ runner.os }}" == "macOS" ]]; then
-                ./zig-out/bin/odiff --help
-              fi
-              ;;
-            "aarch64-macos")
-              if [[ "${{ runner.os }}" == "macOS" ]] && [[ "$(uname -m)" == "arm64" ]]; then
-                ./zig-out/bin/odiff --help
-              fi
-              ;;
-          esac
-
-      - name: Copy binary to artifact name
-        run: |
-          if [[ -f "zig-out/bin/odiff.exe" ]]; then
-            cp "zig-out/bin/odiff.exe" "odiff-${{ matrix.artifact }}"
-          else
-            cp "zig-out/bin/odiff" "odiff-${{ matrix.artifact }}"
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          if-no-files-found: error
-          name: odiff-${{ matrix.artifact }}
-          path: odiff-${{ matrix.artifact }}
-          retention-days: 14
-
-  test:
-    runs-on: ubuntu-latest
-    name: Run Tests
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
+        uses: mlugg/setup-zig@v2
         with:
           version: 0.15.1
 
-      - name: Install system dependencies
+      - name: Install nasm for x86 targets (Linux)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libspng-dev libjpeg-dev libtiff-dev pkg-config
+          sudo apt-get install -y nasm
+
+      - name: Install nasm for x86 targets (macOS)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'macOS'
+        run: |
+          brew install nasm
+
+      - name: Install nasm for x86 targets (Windows)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Windows'
+        run: |
+          choco install -y nasm
 
       - name: Run tests
+        if: matrix.run_tests == true
         run: |
-          zig build test-all
+          zig build test-all --summary all
+
+      - name: Skip (runner not available)
+        if: matrix.run_tests != true
+        run: |
+          echo "Skipping: no hosted runner available for ${{ matrix.target }}"
 
   spellcheck:
     name: Spell check
