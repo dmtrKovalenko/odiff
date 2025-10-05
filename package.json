@@ -1,6 +1,6 @@
 {
   "name": "odiff",
-  "version": "4.0.1-rc.4",
+  "version": "4.0.2",
   "author": "odiff contributors",
   "license": "MIT",
   "description": "The fastest image difference tool in the world (Zig port of odiff)",

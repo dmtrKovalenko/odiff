@@ -1,6 +1,6 @@
 .{
     .name = .odiff,
-    .version = "4.0.1-rc.4",
+    .version = "4.0.2",
     .fingerprint = 0xb9748f3661c8366c,
     .minimum_zig_version = "0.15.1",
     .dependencies = .{
