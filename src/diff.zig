@@ -217,7 +217,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     const base_data = base.data;
     const comp_data = comp.data;
 
-    const SIMD_SIZE = if (HAS_AVX512) 16 else if (HAS_NEON) 8 else 4;
+    const SIMD_SIZE = std.simd.suggestVectorLength(u32) orelse if (HAS_AVX512) 16 else if (HAS_NEON) 8 else 4;
     const simd_end = (size / SIMD_SIZE) * SIMD_SIZE;
 
     var offset: usize = 0;
