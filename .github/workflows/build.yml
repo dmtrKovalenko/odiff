@@ -129,6 +129,37 @@ jobs:
         run: |
           echo "Skipping: no hosted runner available for ${{ matrix.target }}"
 
+  e2e-tests:
+    name: End-to-end JavaScript tests
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download x86_64-linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: odiff-linux-x64
+          path: zig-out/bin
+
+      - run: |
+          ls -la zig-out/bin/
+          chmod +x zig-out/bin/odiff
+          file zig-out/bin/odiff
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run end-to-end tests
+        run: npm test
+
   spellcheck:
     name: Spell check
     runs-on: ubuntu-latest
@@ -143,7 +174,7 @@ jobs:
 
   publish:
     name: Publish release
-    needs: [build, test]
+    needs: [build, test, e2e-tests]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -160,7 +191,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           always-auth: true
           registry-url: "https://registry.npmjs.org"
