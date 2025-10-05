@@ -28,12 +28,22 @@ jobs:
         run: |
           zig build -Doptimize=ReleaseFast ci --verbose
 
+      - name: Prepare binaries as artifacts
+        run: |
+          mkdir binaries
+          cp zig-out/x86_64-linux/odiff binaries/odiff-linux-x64
+          cp zig-out/aarch64-linux/odiff binaries/odiff-linux-arm64
+          cp zig-out/x86_64-windows/odiff.exe binaries/odiff-windows-x64.exe
+          cp zig-out/aarch64-windows/odiff.exe binaries/odiff-windows-arm64.exe
+          cp zig-out/x86_64-macos/odiff binaries/odiff-macos-x64
+          cp zig-out/aarch64-macos/odiff binaries/odiff-macos-arm64
+
       - name: Upload x86_64-linux artifact
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: odiff-linux-x64
-          path: zig-out/x86_64-linux/odiff
+          path: binaries/odiff-linux-x64
           retention-days: 14
 
       - name: Upload aarch64-linux artifact
@@ -41,7 +51,7 @@ jobs:
         with:
           if-no-files-found: error
           name: odiff-linux-arm64
-          path: zig-out/aarch64-linux/odiff
+          path: binaries/odiff-linux-arm64
           retention-days: 14
 
       - name: Upload x86_64-windows artifact
@@ -49,7 +59,7 @@ jobs:
         with:
           if-no-files-found: error
           name: odiff-windows-x64.exe
-          path: zig-out/x86_64-windows/odiff.exe
+          path: binaries/odiff-windows-x64.exe
           retention-days: 14
 
       - name: Upload aarch64-windows artifact
@@ -57,7 +67,7 @@ jobs:
         with:
           if-no-files-found: error
           name: odiff-windows-arm64.exe
-          path: zig-out/aarch64-windows/odiff.exe
+          path: binaries/odiff-windows-arm64.exe
           retention-days: 14
 
       - name: Upload x86_64-macos artifact
@@ -65,7 +75,7 @@ jobs:
         with:
           if-no-files-found: error
           name: odiff-macos-x64
-          path: zig-out/x86_64-macos/odiff
+          path: binaries/odiff-macos-x64
           retention-days: 14
 
       - name: Upload aarch64-macos artifact
@@ -73,7 +83,7 @@ jobs:
         with:
           if-no-files-found: error
           name: odiff-macos-arm64
-          path: zig-out/aarch64-macos/odiff
+          path: binaries/odiff-macos-arm64
           retention-days: 14
 
   test:
@@ -187,9 +197,6 @@ jobs:
           pattern: odiff-*
           merge-multiple: true
           path: npm_package/raw_binaries
-
-      - name: List files
-        run: ls -la npm_package/raw_binaries
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
