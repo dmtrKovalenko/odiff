@@ -155,6 +155,7 @@ jobs:
 
       - run: |
           ls -la zig-out/bin/
+          cp zig-out/bin/odiff-linux-x64 zig-out/bin/odiff
           chmod +x zig-out/bin/odiff
           file zig-out/bin/odiff
 
