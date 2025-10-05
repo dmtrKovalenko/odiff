@@ -1,6 +1,6 @@
 {
   "name": "odiff-bin",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "author": "odiff contributors",
   "license": "MIT",
   "description": "The fastest image difference tool in the world (Zig port of odiff)",
