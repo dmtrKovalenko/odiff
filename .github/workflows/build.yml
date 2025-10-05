@@ -208,15 +208,23 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache-dependency-path: "package-lock.json"
 
-      # - name: Publish npm package
-      #   working-directory: npm_package
-      #   run: npm publish
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      #
-      # - name: Create github release
-      #   uses: softprops/action-gh-release@v1
-      #   with:
-      #     files: "npm_package/raw_binaries/*"
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify that we have 6 binaries
+        run: |
+          ls -la npm_package/raw_binaries
+          if [ $(ls -1 npm_package/raw_binaries | wc -l) -ne 6 ]; then
+            echo "Expected 6 binaries, but found $(ls -1 npm_package/raw_binaries | wc -l)"
+            exit 1
+          fi
+
+      - name: Publish npm package
+        working-directory: npm_package
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create github release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "npm_package/raw_binaries/*"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
