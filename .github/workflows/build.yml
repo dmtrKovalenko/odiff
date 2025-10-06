@@ -86,6 +86,50 @@ jobs:
           path: binaries/odiff-macos-arm64
           retention-days: 14
 
+  build-avx:
+    name: Build (AVX-accelerated x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Install nasm
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm
+
+      - name: Cross-compile with AVX enabled (x86_64 targets)
+        run: |
+          zig build -Doptimize=ReleaseFast -Davx512_diff=true ci --verbose
+
+      - name: Prepare AVX binaries as artifacts
+        run: |
+          mkdir -p binaries
+          # Only publish x86_64 Linux and macOS AVX builds to avoid interfering with release job
+          cp zig-out/x86_64-linux/odiff binaries/avx-odiff-linux-x64
+          cp zig-out/x86_64-macos/odiff binaries/avx-odiff-macos-x64
+
+      - name: Upload AVX x86_64-linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: avx-odiff-linux-x64
+          path: binaries/avx-odiff-linux-x64
+          retention-days: 14
+
+      - name: Upload AVX x86_64-macos artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: avx-odiff-macos-x64
+          path: binaries/avx-odiff-macos-x64
+          retention-days: 14
+
   test:
     name: Run Tests (all targets)
     runs-on: ${{ matrix.os }}
@@ -138,6 +182,43 @@ jobs:
         if: matrix.run_tests != true
         run: |
           echo "Skipping: no hosted runner available for ${{ matrix.target }}"
+
+  test-avx:
+    name: Run Tests (AVX x86_64)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-macos
+            os: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Install nasm for x86 targets (Linux)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm
+
+      - name: Install nasm for x86 targets (macOS)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'macOS'
+        run: |
+          brew install nasm
+
+      - name: Run AVX tests
+        run: |
+          zig build -Davx512_diff=true test-all --summary all
 
   e2e-tests:
     name: End-to-end JavaScript tests
