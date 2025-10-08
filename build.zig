@@ -6,7 +6,6 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const dynamic = b.option(bool, "dynamic", "Link against libspng, libjpeg and libtiff dynamically") orelse false;
 
-    const avx512_diff = b.option(bool, "avx512_diff", "Enable AVX-512 accelerated diff when supported") orelse false;
 
     const native_target = b.resolveTargetQuery(.{});
     const is_cross_compiling = target.result.cpu.arch != native_target.result.cpu.arch or
@@ -14,10 +13,9 @@ pub fn build(b: *std.Build) !void {
 
     const build_options = b.addOptions();
     build_options.addOption([]const u8, "version", manifest.version);
-    build_options.addOption(bool, "avx512_diff", avx512_diff);
     const build_options_mod = build_options.createModule();
 
-    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic, avx512_diff, build_options_mod);
+    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic, build_options_mod);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
@@ -105,7 +103,7 @@ pub fn build(b: *std.Build) !void {
     const build_ci_step = b.step("ci", "Build the app for CI");
     for (build_targets) |target_query| {
         const t = b.resolveTargetQuery(target_query);
-        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic, avx512_diff, build_options_mod);
+        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic, build_options_mod);
         odiff_exe.root_module.strip = true;
         const odiff_output = b.addInstallArtifact(odiff_exe, .{
             .dest_dir = .{
@@ -123,7 +121,6 @@ fn buildOdiff(
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
     dynamic: bool,
-    avx512_diff: bool,
     build_options_mod: *std.Build.Module,
 ) struct { *std.Build.Module, *std.Build.Step.Compile } {
     const lib_mod = b.createModule(.{
@@ -161,7 +158,7 @@ fn buildOdiff(
     exe_mod.addImport("build_options", build_options_mod);
     lib_mod.addImport("build_options", build_options_mod);
 
-    if (avx512_diff and target.result.cpu.arch == .x86_64) {
+    if (target.result.cpu.arch == .x86_64) {
         const os_tag = target.result.os.tag;
         const fmt: ?[]const u8 = switch (os_tag) {
             .linux => "elf64",

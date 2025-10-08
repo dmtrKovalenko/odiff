@@ -31,6 +31,7 @@ test "layoutDifference: diff images with different layouts without capture" {
         .antialiasing = false,
         .output_diff_mask = false,
         .capture_diff = false,
+        .enable_asm = true,
     };
 
     var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
@@ -54,6 +55,7 @@ test "PNG: finds difference between 2 images without capture" {
 
     const options = diff.DiffOptions{
         .capture_diff = false,
+        .enable_asm = true,
     };
     var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit();

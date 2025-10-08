@@ -16,6 +16,7 @@ pub const CliArgs = struct {
     antialiasing: bool = false,
     diff_lines: bool = false,
     reduce_ram_usage: bool = false,
+    enable_asm: bool = false,
     ignore_regions: std.array_list.Managed(diff.IgnoreRegion),
     allocator: std.mem.Allocator,
 
@@ -50,6 +51,7 @@ fn printUsage(program_name: []const u8) void {
     print("  --aa, --antialiasing        Ignore antialiased pixels in diff\n", .{});
     print("  --output-diff-lines         Output line numbers with differences\n", .{});
     print("  --reduce-ram-usage          Use less memory (slower)\n", .{});
+    print("  --enable-asm                Enable AVX-512 optimized asm path when supported (x86_64 only)\n", .{});
     print("  -i, --ignore <regions>      Ignore regions (format: x1:y1-x2:y2,x3:y3-x4:y4)\n", .{});
     print("  -h, --help                  Show this help message\n", .{});
     print("  --version                   Show version\n", .{});
@@ -158,6 +160,8 @@ pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
             parsed_args.diff_lines = true;
         } else if (std.mem.eql(u8, arg, "--reduce-ram-usage")) {
             parsed_args.reduce_ram_usage = true;
+        } else if (std.mem.eql(u8, arg, "--enable-asm")) {
+            parsed_args.enable_asm = true;
         } else if (std.mem.eql(u8, arg, "-i") or std.mem.eql(u8, arg, "--ignore")) {
             i += 1;
             if (i >= args.len) {

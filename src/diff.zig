@@ -1,7 +1,6 @@
 // Core image diffing algorithm - equivalent to Diff.ml
 const std = @import("std");
 const builtin = @import("builtin");
-const build_options = @import("build_options");
 const image_io = @import("image_io.zig");
 const color_delta = @import("color_delta.zig");
 const antialiasing = @import("antialiasing.zig");
@@ -14,7 +13,6 @@ const HAS_AVX512bwvl =
     HAS_AVX512f and
     std.Target.x86.featureSetHas(builtin.cpu.features, .avx512bw) and
     std.Target.x86.featureSetHas(builtin.cpu.features, .avx512vl);
-const ENABLE_AVX_DIFF = build_options.avx512_diff;
 const HAS_NEON = std.Target.aarch64.featureSetHas(builtin.cpu.features, .neon);
 
 const RED_PIXEL: u32 = 0xFF0000FF;
@@ -79,6 +77,7 @@ pub const DiffOptions = struct {
     ignore_regions: ?[]const IgnoreRegion = null,
     capture_diff: bool = true,
     fail_on_layout_change: bool = true,
+    enable_asm: bool = false,
 };
 
 fn unrollIgnoreRegions(width: u32, regions: ?[]const IgnoreRegion, allocator: std.mem.Allocator) !?[]struct { u32, u32 } {
@@ -144,7 +143,7 @@ pub noinline fn compare(
     const no_ignore_regions = options.ignore_regions == null or options.ignore_regions.?.len == 0;
     const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and threshold_ok;
 
-    if (ENABLE_AVX_DIFF and HAS_AVX512bwvl and avx_compatible) {
+    if (options.enable_asm and HAS_AVX512bwvl and avx_compatible) {
         try compareAVX(base, comp, &diff_count);
     } else if (layout_difference) {
         // slow path for different layout or weird widths
@@ -342,7 +341,7 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_dif
 }
 
 pub fn compareAVX(base: *const Image, comp: *const Image, diff_count: *u32) !void {
-    if (!ENABLE_AVX_DIFF or !HAS_AVX512bwvl) return error.Invalid;
+    if (!HAS_AVX512bwvl) return error.Invalid;
 
     const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data.ptr));
     const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data.ptr));
