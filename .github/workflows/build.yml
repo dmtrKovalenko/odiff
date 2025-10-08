@@ -86,6 +86,8 @@ jobs:
           path: binaries/odiff-macos-arm64
           retention-days: 14
 
+  
+
   test:
     name: Run Tests (all targets)
     runs-on: ${{ matrix.os }}
@@ -138,6 +140,43 @@ jobs:
         if: matrix.run_tests != true
         run: |
           echo "Skipping: no hosted runner available for ${{ matrix.target }}"
+
+  test-avx:
+    name: Run Tests (AVX x86_64)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-macos
+            os: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Install nasm for x86 targets (Linux)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm
+
+      - name: Install nasm for x86 targets (macOS)
+        if: contains(matrix.target, 'x86_64') && runner.os == 'macOS'
+        run: |
+          brew install nasm
+
+      - name: Run AVX tests
+        run: |
+          zig build test-all --summary all
 
   e2e-tests:
     name: End-to-end JavaScript tests
