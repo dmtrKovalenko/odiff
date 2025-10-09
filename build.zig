@@ -1,5 +1,6 @@
 const std = @import("std");
 const manifest = @import("build.zig.zon");
+const Imgz = @import("imgz");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
@@ -178,51 +179,15 @@ pub fn linkDeps(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.b
             },
         }
     } else {
-        const libspng = buildSpng(b, target, optimize);
-        const libjpeg_dep = b.dependency("libjpeg_turbo", .{
+        const imgz = Imgz.get(b, .{
             .target = target,
             .optimize = optimize,
-        });
-        const libjpeg = libjpeg_dep.artifact("jpeg");
-        const libtiff_dep = b.dependency("libtiff", .{
-            .target = target,
-            .optimize = optimize,
-            .has_libjpeg = true,
-        });
-        const libtiff = libtiff_dep.artifact("tiff");
-        libtiff.linkLibrary(libjpeg);
-
-        module.linkLibrary(libspng);
-        module.linkLibrary(libjpeg);
-        module.linkLibrary(libtiff);
+            .jpeg_turbo = .{},
+            .spng = .{},
+            .tiff = .{},
+        }) catch @panic("Failed to link required dependencies, please create an issue on the repo :)");
+        module.linkLibrary(imgz);
     }
-}
-
-fn buildSpng(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step.Compile {
-    const zlib_dep = b.dependency("zlib", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const spng_dep = b.dependency("spng", .{});
-
-    const spng_mod = b.createModule(.{
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    spng_mod.addCSourceFiles(.{
-        .files = &.{"spng.c"},
-        .flags = &.{"-std=c99"},
-        .root = spng_dep.path("spng"),
-    });
-    spng_mod.linkLibrary(zlib_dep.artifact("z"));
-
-    const spng_lib = b.addLibrary(.{
-        .name = "spng",
-        .root_module = spng_mod,
-    });
-    spng_lib.installHeader(spng_dep.path("spng/spng.h"), "spng.h");
-    return spng_lib;
 }
 
 const build_targets: []const std.Target.Query = &.{
