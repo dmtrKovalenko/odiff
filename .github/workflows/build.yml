@@ -33,6 +33,8 @@ jobs:
           mkdir binaries
           cp zig-out/x86_64-linux/odiff binaries/odiff-linux-x64
           cp zig-out/aarch64-linux/odiff binaries/odiff-linux-arm64
+          cp zig-out/riscv64-linux/odiff binaries/odiff-linux-riscv64
+          cp zig-out/riscv64-linux-rva23/odiff binaries/odiff-linux-riscv64-rva23
           cp zig-out/x86_64-windows/odiff.exe binaries/odiff-windows-x64.exe
           cp zig-out/aarch64-windows/odiff.exe binaries/odiff-windows-arm64.exe
           cp zig-out/x86_64-macos/odiff binaries/odiff-macos-x64
@@ -52,6 +54,22 @@ jobs:
           if-no-files-found: error
           name: odiff-linux-arm64
           path: binaries/odiff-linux-arm64
+          retention-days: 14
+
+      - name: Upload riscv64-linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-linux-riscv64
+          path: binaries/odiff-linux-riscv64
+          retention-days: 14
+
+      - name: Upload riscv64-linux rva23 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: odiff-linux-riscv64-rva23
+          path: binaries/odiff-linux-riscv64-rva23
           retention-days: 14
 
       - name: Upload x86_64-windows artifact
@@ -100,6 +118,9 @@ jobs:
             run_tests: true
           - target: aarch64-macos
             os: macos-latest
+            run_tests: true
+          - target: riscv64-linux-gnu
+            os: ubuntu-latest
             run_tests: true
     defaults:
       run:
