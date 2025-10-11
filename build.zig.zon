@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.15.1",
     .dependencies = .{
         .imgz = .{
-            .url = "git+https://github.com/shreyassanthu77/imgz.git#5f28754cddfd1a16ecf0c5e72c4003a8876b0e8e",
-            .hash = "imgz-0.0.1-BqHzkPp1CgDklZrcSJudplOWCfAZcOuK15irXQNmgPxP",
+            .url = "git+https://github.com/shreyassanthu77/imgz.git#8e371c3ee86975e1615a8d3b1b03dff55c7763c5",
+            .hash = "imgz-0.1.0-BqHzkAr3CgBMWfPWNAV2FV2A2Y8UT3U9k0ANmo3ct-BN",
         },
     },
 
