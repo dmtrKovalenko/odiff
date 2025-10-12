@@ -78,6 +78,7 @@ pub fn main() !void {
         .diff_lines = args.diff_lines,
         .ignore_regions = args.ignore_regions.items,
         .capture_diff = args.diff_output != null,
+        .enable_asm = args.enable_asm,
     };
 
     const result = diff.diff(&base_img, &comp_img, diff_options, allocator) catch |err| {
