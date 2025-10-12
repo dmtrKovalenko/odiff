@@ -42,6 +42,7 @@ pub fn build(b: *std.Build) !void {
         "src/test_io_jpg.zig",
         "src/test_io_tiff.zig",
         "src/test_avx.zig",
+        "src/test_io_webp.zig",
     };
 
     const integration_tests_pure_zig = [_][]const u8{
@@ -140,6 +141,7 @@ fn buildOdiff(
     c_flags.append("-DSPNG_SSE=3") catch @panic("OOM");
     c_flags.append("-DHAVE_JPEG") catch @panic("OOM");
     c_flags.append("-DHAVE_TIFF") catch @panic("OOM");
+    c_flags.append("-DHAVE_WEBP") catch @panic("OOM");
 
     lib_mod.addCSourceFiles(.{
         .files = &.{
@@ -206,6 +208,7 @@ pub fn linkDeps(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.b
             .jpeg_turbo = .{},
             .spng = .{},
             .tiff = .{},
+            .webp = .{},
         }) catch @panic("Failed to link required dependencies, please create an issue on the repo :)");
         module.linkLibrary(imgz);
     }

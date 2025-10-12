@@ -8,6 +8,7 @@ pub const ImageFormat = enum {
     jpg,
     bmp,
     tiff,
+    webp,
 };
 
 pub const Image = struct {
@@ -68,6 +69,7 @@ pub fn getImageFormat(filename: []const u8) !ImageFormat {
     if (std.mem.endsWith(u8, filename, ".jpg") or std.mem.endsWith(u8, filename, ".jpeg")) return .jpg;
     if (std.mem.endsWith(u8, filename, ".bmp")) return .bmp;
     if (std.mem.endsWith(u8, filename, ".tiff")) return .tiff;
+    if (std.mem.endsWith(u8, filename, ".webp")) return .webp;
 
     return error.UnsupportedFormat;
 }
@@ -80,6 +82,7 @@ pub fn loadImage(filename: []const u8, allocator: std.mem.Allocator) !Image {
         .jpg => try c_bindings.readJpgFile(filename, allocator),
         .tiff => try c_bindings.readTiffFile(filename, allocator),
         .bmp => try c_bindings.readBmpFile(filename, allocator),
+        .webp => try c_bindings.readWebpFile(filename, allocator),
     };
 
     const unwrapped_result = result orelse return ImageError.ImageNotLoaded;
