@@ -6,7 +6,6 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const dynamic = b.option(bool, "dynamic", "Link against libspng, libjpeg and libtiff dynamically") orelse false;
 
-
     const native_target = b.resolveTargetQuery(.{});
     const is_cross_compiling = target.result.cpu.arch != native_target.result.cpu.arch or
         target.result.os.tag != native_target.result.os.tag;
@@ -165,13 +164,12 @@ fn buildOdiff(
             .macos => "macho64",
             else => null,
         };
+
         if (fmt) |nasm_fmt| {
             const nasm = b.addSystemCommand(&.{ "nasm", "-f", nasm_fmt, "-o" });
             const asm_obj = nasm.addOutputFileArg("vxdiff.o");
             nasm.addFileArg(b.path("src/vxdiff.asm"));
             lib_mod.addObjectFile(asm_obj);
-        } else {
-            std.log.warn("Unsupported OS for AVX diff: {}", .{os_tag});
         }
     }
 
