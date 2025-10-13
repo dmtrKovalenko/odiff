@@ -1,0 +1,34 @@
+name: RISC-V QEMU Tests
+
+on:
+  pull_request:
+    # this is a VERY SLOW job try to run it only on the riscv C changes
+    paths:
+      - "src/rvv.c"
+
+jobs:
+  riscv:
+    name: ubuntu-24.04-riscv
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: riscv64
+          distro: ubuntu24.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/opt/odiff"
+          install: |
+            apt-get update
+            apt-get install -y nasm wget xz-utils
+          run: |
+            export TERM=dumb
+            export NO_COLOR=1
+
+            wget https://ziglang.org/download/0.15.1/zig-riscv64-linux-0.15.1.tar.xz
+            tar -xf zig-riscv64-linux-0.15.1.tar.xz
+            export PATH="$PWD/zig-riscv64-linux-0.15.1:$PATH"
+
+            cd /opt/odiff
+            zig build test-all -Dtarget=riscv64-linux -Dcpu=generic_rv64+rva23u64 -Doptimize=ReleaseFast

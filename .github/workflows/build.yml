@@ -104,8 +104,6 @@ jobs:
           path: binaries/odiff-macos-arm64
           retention-days: 14
 
-  
-
   test:
     name: Run Tests (all targets)
     runs-on: ${{ matrix.os }}
@@ -123,7 +121,7 @@ jobs:
             run_tests: true
           - target: riscv64-linux-gnu
             os: ubuntu-latest
-            run_tests: true
+            run_tests: false
     defaults:
       run:
         shell: bash
@@ -152,15 +150,15 @@ jobs:
         run: |
           choco install -y nasm
 
-      - name: Run tests
+      - name: Build and run tests
         if: matrix.run_tests == true
         run: |
-          zig build test-all --summary all
+          zig build -Dtarget=${{matrix.target}} test-all --summary all
 
-      - name: Skip (runner not available)
+      - name: Build without running tests
         if: matrix.run_tests != true
         run: |
-          echo "Skipping: no hosted runner available for ${{ matrix.target }}"
+          zig build -Dtarget=${{matrix.target}}
 
   test-avx:
     name: Run Tests (AVX x86_64)
