@@ -11,7 +11,11 @@ pub fn build(b: *std.Build) !void {
     const is_cross_compiling = target.result.cpu.arch != native_target.result.cpu.arch or
         target.result.os.tag != native_target.result.os.tag;
 
-    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic);
+    const build_options = b.addOptions();
+    build_options.addOption([]const u8, "version", manifest.version);
+    const build_options_mod = build_options.createModule();
+
+    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic, build_options_mod);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
@@ -37,6 +41,7 @@ pub fn build(b: *std.Build) !void {
         "src/test_io_bmp.zig",
         "src/test_io_jpg.zig",
         "src/test_io_tiff.zig",
+        "src/test_avx.zig",
     };
 
     const integration_tests_pure_zig = [_][]const u8{
@@ -60,6 +65,7 @@ pub fn build(b: *std.Build) !void {
                     .optimize = optimize,
                 }),
             });
+            integration_test.root_module.addImport("build_options", build_options_mod);
             integration_test.linkLibC();
             integration_test.linkLibrary(root_lib);
             linkDeps(b, target, optimize, dynamic, integration_test.root_module);
@@ -76,7 +82,11 @@ pub fn build(b: *std.Build) !void {
                     .optimize = optimize,
                 }),
             });
-            pure_test.addCSourceFiles(.{ .files = &.{ "src/rvv.c" }, });
+
+            pure_test.root_module.addImport("build_options", build_options_mod);
+            pure_test.addCSourceFiles(.{
+                .files = &.{"src/rvv.c"},
+            });
 
             const run_pure_test = b.addRunArtifact(pure_test);
             integration_test_steps.append(run_pure_test) catch @panic("OOM");
@@ -98,16 +108,14 @@ pub fn build(b: *std.Build) !void {
     const build_ci_step = b.step("ci", "Build the app for CI");
     for (build_targets) |target_query| {
         const t = b.resolveTargetQuery(target_query);
-        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic);
+        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic, build_options_mod);
         odiff_exe.root_module.strip = true;
         var target_name = try target_query.zigTriple(b.allocator);
         if (target_query.cpu_arch == .riscv64 and !target_query.cpu_features_add.isEmpty())
             target_name = try std.mem.join(b.allocator, "-", &[_][]const u8{ target_name, "rva23" });
         const odiff_output = b.addInstallArtifact(odiff_exe, .{
             .dest_dir = .{
-                .override = .{
-                    .custom = target_name
-                },
+                .override = .{ .custom = target_name },
             },
         });
         build_ci_step.dependOn(&odiff_output.step);
@@ -119,6 +127,7 @@ fn buildOdiff(
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
     dynamic: bool,
+    build_options_mod: *std.Build.Module,
 ) struct { *std.Build.Module, *std.Build.Step.Compile } {
     const lib_mod = b.createModule(.{
         .root_source_file = b.path("src/root.zig"),
@@ -153,11 +162,24 @@ fn buildOdiff(
     });
 
     exe_mod.addImport("odiff_lib", lib_mod);
+    exe_mod.addImport("build_options", build_options_mod);
+    lib_mod.addImport("build_options", build_options_mod);
 
-    const options = b.addOptions();
-    options.addOption([]const u8, "version", manifest.version);
-    exe_mod.addImport("build_options", options.createModule());
-    lib_mod.addImport("build_options", options.createModule());
+    if (target.result.cpu.arch == .x86_64) {
+        const os_tag = target.result.os.tag;
+        const fmt: ?[]const u8 = switch (os_tag) {
+            .linux => "elf64",
+            .macos => "macho64",
+            else => null,
+        };
+
+        if (fmt) |nasm_fmt| {
+            const nasm = b.addSystemCommand(&.{ "nasm", "-f", nasm_fmt, "-o" });
+            const asm_obj = nasm.addOutputFileArg("vxdiff.o");
+            nasm.addFileArg(b.path("src/vxdiff.asm"));
+            lib_mod.addObjectFile(asm_obj);
+        }
+    }
 
     const exe = b.addExecutable(.{
         .name = "odiff",
@@ -204,5 +226,5 @@ const build_targets: []const std.Target.Query = &.{
     .{ .cpu_arch = .x86_64, .os_tag = .linux },
     .{ .cpu_arch = .x86_64, .os_tag = .windows },
     .{ .cpu_arch = .riscv64, .os_tag = .linux },
-    .{ .cpu_arch = .riscv64, .os_tag = .linux, .cpu_features_add = std.Target.riscv.featureSet(&.{ std.Target.riscv.Feature.rva23u64 }) },
+    .{ .cpu_arch = .riscv64, .os_tag = .linux, .cpu_features_add = std.Target.riscv.featureSet(&.{std.Target.riscv.Feature.rva23u64}) },
 };

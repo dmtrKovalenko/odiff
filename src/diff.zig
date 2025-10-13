@@ -8,9 +8,13 @@ const antialiasing = @import("antialiasing.zig");
 const Image = image_io.Image;
 const ArrayList = std.ArrayList;
 
-const HAS_AVX512 = builtin.cpu.arch == .x86_64 and std.Target.x86.featureSetHas(builtin.cpu.features, .avx512f);
+const HAS_AVX512f = std.Target.x86.featureSetHas(builtin.cpu.features, .avx512f);
+const HAS_AVX512bwvl =
+    HAS_AVX512f and
+    std.Target.x86.featureSetHas(builtin.cpu.features, .avx512bw) and
+    std.Target.x86.featureSetHas(builtin.cpu.features, .avx512vl);
 const HAS_NEON = builtin.cpu.arch == .aarch64 and std.Target.aarch64.featureSetHas(builtin.cpu.features, .neon);
-const HAS_RVV = builtin.cpu.arch  == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
+const HAS_RVV = builtin.cpu.arch == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
 
 const RED_PIXEL: u32 = 0xFF0000FF;
 const MAX_YIQ_POSSIBLE_DELTA: f64 = 35215.0;
@@ -74,6 +78,7 @@ pub const DiffOptions = struct {
     ignore_regions: ?[]const IgnoreRegion = null,
     capture_diff: bool = true,
     fail_on_layout_change: bool = true,
+    enable_asm: bool = false,
 };
 
 fn unrollIgnoreRegions(width: u32, regions: ?[]const IgnoreRegion, allocator: std.mem.Allocator) !?[]struct { u32, u32 } {
@@ -134,8 +139,14 @@ pub noinline fn compare(
 
     const layout_difference = base.width != comp.width or base.height != comp.height;
 
+    // AVX diff only supports default options
+    const threshold_ok = @abs(options.threshold - 0.1) < 0.0000001;
+    const no_ignore_regions = options.ignore_regions == null or options.ignore_regions.?.len == 0;
+    const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and threshold_ok;
 
-    if (HAS_RVV and !options.antialiasing and (options.ignore_regions == null or options.ignore_regions.?.len == 0)) {
+    if (options.enable_asm and HAS_AVX512bwvl and avx_compatible) {
+        try compareAVX(base, comp, &diff_count);
+    } else if (HAS_RVV and !options.antialiasing and (options.ignore_regions == null or options.ignore_regions.?.len == 0)) {
         try compareRVV(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_f64, options);
     } else if (layout_difference) {
         // slow path for different layout or weird widths
@@ -221,7 +232,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     const base_data = base.data;
     const comp_data = comp.data;
 
-    const SIMD_SIZE = std.simd.suggestVectorLength(u32) orelse if (HAS_AVX512) 16 else if (HAS_NEON) 8 else 4;
+    const SIMD_SIZE = std.simd.suggestVectorLength(u32) orelse if (HAS_AVX512f) 16 else if (HAS_NEON) 8 else 4;
     const simd_end = (size / SIMD_SIZE) * SIMD_SIZE;
 
     var offset: usize = 0;
@@ -332,6 +343,29 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_dif
     }
 }
 
+pub fn compareAVX(base: *const Image, comp: *const Image, diff_count: *u32) !void {
+    if (!HAS_AVX512bwvl) return error.Invalid;
+
+    const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data.ptr));
+    const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data.ptr));
+
+    const base_w: usize = base.width;
+    const base_h: usize = base.height;
+    const comp_w: usize = comp.width;
+    const comp_h: usize = comp.height;
+
+    diff_count.* = vxdiff(base_ptr, comp_ptr, base_w, comp_w, base_h, comp_h);
+}
+
+extern fn vxdiff(
+    base_rgba: [*]const u8,
+    comp_rgba: [*]const u8,
+    base_width: usize,
+    comp_width: usize,
+    base_height: usize,
+    comp_height: usize,
+) u32;
+
 extern fn odiffRVV(
     basePtr: [*]const u32,
     compPtr: [*]const u32,
@@ -360,14 +394,14 @@ pub noinline fn compareRVV(base: *const Image, comp: *const Image, diff_output: 
             var x: u32 = 0;
             if (y < minHeight) {
                 if (diffPtr) |ptr| {
-                    cnt = odiffRVV(basePtr + y*base.width, compPtr + y*comp.width, minWidth, @floatCast(max_delta), ptr + y*base.width, options.diff_pixel);
+                    cnt = odiffRVV(basePtr + y * base.width, compPtr + y * comp.width, minWidth, @floatCast(max_delta), ptr + y * base.width, options.diff_pixel);
                 } else {
-                    cnt = odiffRVV(basePtr + y*base.width, compPtr + y*comp.width, minWidth, @floatCast(max_delta), null, options.diff_pixel);
+                    cnt = odiffRVV(basePtr + y * base.width, compPtr + y * comp.width, minWidth, @floatCast(max_delta), null, options.diff_pixel);
                 }
                 x = minWidth;
             }
             while (x < base.width) : (x += 1) {
-                const idx = y*base.width+x;
+                const idx = y * base.width + x;
                 const alpha = (basePtr[idx] >> 24) & 0xFF;
                 cnt += if (alpha != 0) 1 else 0;
                 if (diffPtr) |ptr| {
