@@ -16,6 +16,9 @@
 #if defined(HAVE_TIFF)
 #include <tiffio.h>
 #endif
+#if defined(HAVE_WEBP)
+#include <webp/decode.h>
+#endif
 
 #ifdef _WIN32
 #include <io.h>
@@ -423,3 +426,44 @@ void free_image_data_ptr(uint32_t *data, void *allocator, size_t size) {
     zig_free(allocator, data, size);
   }
 }
+
+ImageData read_webp_file(const char *filename, void *allocator) {
+#if defined(HAVE_WEBP)
+  ImageData result = {0, 0, NULL};
+
+  // Memory-map the WebP file (cross-platform)
+  FileBuffer file_buf = open_file_buffer(filename);
+  if (!file_buf.data)
+    return result;
+
+  int width, height;
+
+  // Decode WebP to RGBA format
+  uint8_t* rgba_data = WebPDecodeRGBA((const uint8_t*)file_buf.data, file_buf.size, &width, &height);
+
+  close_file_buffer(&file_buf);
+
+  if (!rgba_data) {
+    return result;
+  }
+
+  result.width = width;
+  result.height = height;
+  result.data = (uint32_t *)zig_alloc(allocator, width * height * sizeof(uint32_t));
+
+  if (!result.data) {
+    WebPFree(rgba_data);
+    return result;
+  }
+
+  // Copy RGBA data to our format (both are RGBA8888)
+  memcpy(result.data, rgba_data, width * height * sizeof(uint32_t));
+
+  WebPFree(rgba_data);
+  return result;
+#else
+  fprintf(stderr, "WebP support not enabled\n");
+  abort();
+#endif
+}
+

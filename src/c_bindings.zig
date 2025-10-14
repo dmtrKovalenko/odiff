@@ -16,6 +16,7 @@ extern fn read_png_file(filename: [*:0]const u8, allocator: *anyopaque) CImageDa
 extern fn write_png_file(filename: [*:0]const u8, width: c_int, height: c_int, data: [*]const u32) c_int;
 extern fn read_jpg_file(filename: [*:0]const u8, allocator: *anyopaque) CImageData;
 extern fn read_tiff_file(filename: [*:0]const u8, allocator: *anyopaque) CImageData;
+extern fn read_webp_file(filename: [*:0]const u8, allocator: *anyopaque) CImageData;
 
 extern fn free_image_data(data: *CImageData, allocator: *anyopaque) void;
 
@@ -111,3 +112,27 @@ pub fn readBmpFile(filename: []const u8, allocator: std.mem.Allocator) !?ImageRe
 
     return ImageResult{ .width = image.width, .height = image.height, .data = image.data };
 }
+
+pub fn readWebpFile(filename: []const u8, allocator: std.mem.Allocator) !?ImageResult {
+    const c_filename = try allocator.dupeZ(u8, filename);
+    defer allocator.free(c_filename);
+
+    var alloc = allocator;
+    const c_data = read_webp_file(c_filename.ptr, &alloc);
+
+    // Check if the C function failed (returned null data)
+    if (@intFromPtr(c_data.data) == 0) return null;
+
+    const width: u32 = @intCast(c_data.width);
+    const height: u32 = @intCast(c_data.height);
+    const data_len = width * height;
+    const data = c_data.data[0..data_len];
+
+    return ImageResult{
+        .width = width,
+        .height = height,
+        .data = data,
+        .is_c_allocated = true, // Pixel data is C-allocated
+    };
+}
+
