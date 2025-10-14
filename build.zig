@@ -55,6 +55,7 @@ pub fn build(b: *std.Build) !void {
         const root_lib = b.addLibrary(.{
             .name = "odiff_lib",
             .root_module = lib_mod,
+            .linkage = if (dynamic) .dynamic else .static,
         });
         for (integration_tests_with_io) |test_path| {
             const integration_test = b.addTest(.{
@@ -67,7 +68,7 @@ pub fn build(b: *std.Build) !void {
             integration_test.root_module.addImport("build_options", build_options_mod);
             integration_test.linkLibC();
             integration_test.linkLibrary(root_lib);
-            linkDeps(b, target, optimize, false, integration_test.root_module);
+            linkDeps(b, target, optimize, dynamic, integration_test.root_module);
 
             const run_integration_test = b.addRunArtifact(integration_test);
             integration_test_steps.append(run_integration_test) catch @panic("OOM");
@@ -81,7 +82,11 @@ pub fn build(b: *std.Build) !void {
                     .optimize = optimize,
                 }),
             });
+
             pure_test.root_module.addImport("build_options", build_options_mod);
+            pure_test.addCSourceFiles(.{
+                .files = &.{"src/rvv.c"},
+            });
 
             const run_pure_test = b.addRunArtifact(pure_test);
             integration_test_steps.append(run_pure_test) catch @panic("OOM");
@@ -105,11 +110,12 @@ pub fn build(b: *std.Build) !void {
         const t = b.resolveTargetQuery(target_query);
         _, const odiff_exe = buildOdiff(b, t, optimize, dynamic, build_options_mod);
         odiff_exe.root_module.strip = true;
+        var target_name = try target_query.zigTriple(b.allocator);
+        if (target_query.cpu_arch == .riscv64 and !target_query.cpu_features_add.isEmpty())
+            target_name = try std.mem.join(b.allocator, "-", &[_][]const u8{ target_name, "rva23" });
         const odiff_output = b.addInstallArtifact(odiff_exe, .{
             .dest_dir = .{
-                .override = .{
-                    .custom = try target_query.zigTriple(b.allocator),
-                },
+                .override = .{ .custom = target_name },
             },
         });
         build_ci_step.dependOn(&odiff_output.step);
@@ -144,6 +150,7 @@ fn buildOdiff(
     lib_mod.addCSourceFiles(.{
         .files = &.{
             "c_bindings/odiff_io.c",
+            "src/rvv.c",
         },
         .flags = c_flags.items,
     });
@@ -218,4 +225,6 @@ const build_targets: []const std.Target.Query = &.{
     .{ .cpu_arch = .x86_64, .os_tag = .macos },
     .{ .cpu_arch = .x86_64, .os_tag = .linux },
     .{ .cpu_arch = .x86_64, .os_tag = .windows },
+    .{ .cpu_arch = .riscv64, .os_tag = .linux },
+    .{ .cpu_arch = .riscv64, .os_tag = .linux, .cpu_features_add = std.Target.riscv.featureSet(&.{std.Target.riscv.Feature.rva23u64}) },
 };

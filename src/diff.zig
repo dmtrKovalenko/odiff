@@ -13,7 +13,8 @@ const HAS_AVX512bwvl =
     HAS_AVX512f and
     std.Target.x86.featureSetHas(builtin.cpu.features, .avx512bw) and
     std.Target.x86.featureSetHas(builtin.cpu.features, .avx512vl);
-const HAS_NEON = std.Target.aarch64.featureSetHas(builtin.cpu.features, .neon);
+const HAS_NEON = builtin.cpu.arch == .aarch64 and std.Target.aarch64.featureSetHas(builtin.cpu.features, .neon);
+const HAS_RVV = builtin.cpu.arch == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
 
 const RED_PIXEL: u32 = 0xFF0000FF;
 const MAX_YIQ_POSSIBLE_DELTA: f64 = 35215.0;
@@ -145,6 +146,8 @@ pub noinline fn compare(
 
     if (options.enable_asm and HAS_AVX512bwvl and avx_compatible) {
         try compareAVX(base, comp, &diff_count);
+    } else if (HAS_RVV and !options.antialiasing and (options.ignore_regions == null or options.ignore_regions.?.len == 0)) {
+        try compareRVV(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_f64, options);
     } else if (layout_difference) {
         // slow path for different layout or weird widths
         try compareDifferentLayouts(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_i64, options);
@@ -362,6 +365,61 @@ extern fn vxdiff(
     base_height: usize,
     comp_height: usize,
 ) u32;
+
+extern fn odiffRVV(
+    basePtr: [*]const u32,
+    compPtr: [*]const u32,
+    size: usize,
+    max_delta: f32,
+    diff: ?[*]u32,
+    diffcol: u32,
+) u32;
+
+pub noinline fn compareRVV(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: f64, options: DiffOptions) !void {
+    _ = ignore_regions;
+    const basePtr: [*]const u32 = @ptrCast(@alignCast(base.data.ptr));
+    const compPtr: [*]const u32 = @ptrCast(@alignCast(comp.data.ptr));
+    var diffPtr: ?[*]u32 = null;
+    if (diff_output.*) |*out| {
+        diffPtr = @ptrCast(@alignCast(out.data.ptr));
+    }
+
+    const line_by_line = base.width != comp.width or base.height != comp.height or diff_lines != null;
+    if (line_by_line) {
+        var y: u32 = 0;
+        const minHeight = @min(base.height, comp.height);
+        const minWidth = @min(base.width, comp.width);
+        while (y < base.height) : (y += 1) {
+            var cnt: u32 = 0;
+            var x: u32 = 0;
+            if (y < minHeight) {
+                if (diffPtr) |ptr| {
+                    cnt = odiffRVV(basePtr + y * base.width, compPtr + y * comp.width, minWidth, @floatCast(max_delta), ptr + y * base.width, options.diff_pixel);
+                } else {
+                    cnt = odiffRVV(basePtr + y * base.width, compPtr + y * comp.width, minWidth, @floatCast(max_delta), null, options.diff_pixel);
+                }
+                x = minWidth;
+            }
+            while (x < base.width) : (x += 1) {
+                const idx = y * base.width + x;
+                const alpha = (basePtr[idx] >> 24) & 0xFF;
+                cnt += if (alpha != 0) 1 else 0;
+                if (diffPtr) |ptr| {
+                    const old = ptr[idx]; // always read/write for better autovec
+                    ptr[idx] = if (alpha != 0) options.diff_pixel else old;
+                }
+            }
+            if (diff_lines) |lines| {
+                if (cnt > 0) {
+                    lines.addLine(y);
+                }
+            }
+            diff_count.* += cnt;
+        }
+    } else {
+        diff_count.* += odiffRVV(basePtr, compPtr, base.height * base.width, @floatCast(max_delta), diffPtr, options.diff_pixel);
+    }
+}
 
 pub fn diff(
     base: *const Image,
