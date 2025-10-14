@@ -207,14 +207,13 @@ pub fn linkDeps(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.b
             },
         }
     } else {
-        const imgz = Imgz.get(b, .{
+        Imgz.addToModule(b, module, .{
             .target = target,
             .optimize = optimize,
             .jpeg_turbo = .{},
             .spng = .{},
             .tiff = .{},
         }) catch @panic("Failed to link required dependencies, please create an issue on the repo :)");
-        module.linkLibrary(imgz);
     }
 }
 
