@@ -71,6 +71,7 @@ pub fn main() !void {
 
     const diff_options = diff.DiffOptions{
         .output_diff_mask = args.diff_mask,
+        .diff_overlay_factor = args.diff_overlay_factor,
         .threshold = args.threshold,
         .diff_pixel = diff_pixel,
         .fail_on_layout_change = args.fail_on_layout,

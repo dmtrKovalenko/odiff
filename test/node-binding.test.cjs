@@ -184,3 +184,44 @@ test("Correctly calculates and outputs diff percentage", async (t) => {
   );
 });
 
+test("Correctly works with diff-overlay", async (t) => {
+  const result = await compare(
+    path.join(__dirname, "png", "orange.png"),
+    path.join(__dirname, "png", "orange_diff.png"),
+    path.join(IMAGES_PATH, "diff_white_mask.png"),
+    {
+      ...options,
+      diffOverlay: true,
+    },
+  );
+
+  t.is(result.match, false);
+  t.is(result.reason, "pixel-diff");
+  t.true(typeof result.diffCount === "number");
+  t.true(result.diffCount > 0);
+
+  console.log(
+    `White shade mask test: ${result.diffCount} different pixels found`,
+  );
+});
+
+test("Works with numeric option to diffOverlay", async (t) => {
+  const result = await compare(
+    path.join(__dirname, "png", "orange.png"),
+    path.join(__dirname, "png", "orange_diff.png"),
+    path.join(IMAGES_PATH, "diff_white_mask.png"),
+    {
+      ...options,
+      diffOverlay: 0.6,
+    },
+  );
+
+  t.is(result.match, false);
+  t.is(result.reason, "pixel-diff");
+  t.true(typeof result.diffCount === "number");
+  t.true(result.diffCount > 0);
+
+  console.log(
+    `White shade mask test: ${result.diffCount} different pixels found`,
+  );
+});

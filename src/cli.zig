@@ -10,6 +10,7 @@ pub const CliArgs = struct {
     diff_output: ?[]const u8 = null,
     threshold: f32 = 0.1,
     diff_mask: bool = false,
+    diff_overlay_factor: ?f32 = null,
     fail_on_layout: bool = false,
     parsable_stdout: bool = false,
     diff_color: []const u8 = "",
@@ -45,14 +46,15 @@ fn printUsage(program_name: []const u8) void {
     print("\nOptions:\n", .{});
     print("  -t, --threshold <value>     Color difference threshold (0.0-1.0, default: 0.1)\n", .{});
     print("  --diff-mask                 Output only changed pixels over transparent background\n", .{});
+    print("  --diff-overlay <value?>     Render diff output on the white background\n", .{});
     print("  --fail-on-layout            Fail if image dimensions differ\n", .{});
     print("  --parsable-stdout           Machine-readable output format\n", .{});
-    print("  --diff-color <hex>          Color for highlighting differences (e.g., #cd2cc9)\n", .{});
+    print("  --diff-color <hex string>   Color for highlighting differences (e.g., #cd2cc9)\n", .{});
     print("  --aa, --antialiasing        Ignore antialiased pixels in diff\n", .{});
     print("  --output-diff-lines         Output line numbers with differences\n", .{});
     print("  --reduce-ram-usage          Use less memory (slower)\n", .{});
     print("  --enable-asm                Enable AVX-512 optimized asm path when supported (x86_64 only)\n", .{});
-    print("  -i, --ignore <regions>      Ignore regions (format: x1:y1-x2:y2,x3:y3-x4:y4)\n", .{});
+    print("  -i, --ignore <regions[]>    Ignore regions (format: x1:y1-x2:y2,x3:y3-x4:y4)\n", .{});
     print("  -h, --help                  Show this help message\n", .{});
     print("  --version                   Show version\n", .{});
     print("\nExit codes:\n", .{});
@@ -63,6 +65,40 @@ fn printUsage(program_name: []const u8) void {
 
 fn printVersion() void {
     print("odiff {s} - SIMD first pixel-by-pixel image comparison tool\n", .{build_options.version});
+}
+
+/// Parse float argument that supports both --option=value and --option value formats
+/// Updates the index pointer and returns the parsed f32 value or null if not matched
+fn parseFloatArg(args: [][:0]u8, index: *usize, option_name: []const u8) ?f32 {
+    if (index.* >= args.len) return null;
+    const arg = args[index.*];
+
+    // --option=value format
+    if (std.mem.startsWith(u8, arg, option_name) and
+        arg.len > option_name.len and
+        arg[option_name.len] == '=') {
+
+        const value_str = arg[option_name.len + 1..];
+        if (value_str.len == 0) return null;
+
+        index.* += 1;
+        return std.fmt.parseFloat(f32, value_str) catch null;
+    }
+
+    // --option {value} format
+    if (std.mem.eql(u8, arg, option_name)) {
+        if (index.* + 1 >= args.len) return null;
+
+        const next_arg = args[index.* + 1];
+
+        // Check if next argument is another option (starts with '-')
+        if (std.mem.startsWith(u8, next_arg, "-")) return null;
+
+        index.* += 2;
+        return std.fmt.parseFloat(f32, next_arg) catch null;
+    }
+
+    return null;
 }
 
 fn parseIgnoreRegions(input: []const u8, list: *std.array_list.Managed(diff.IgnoreRegion)) !void {
@@ -131,18 +167,16 @@ pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
         } else if (std.mem.eql(u8, arg, "--version")) {
             printVersion();
             std.process.exit(0);
-        } else if (std.mem.eql(u8, arg, "-t") or std.mem.eql(u8, arg, "--threshold")) {
-            i += 1;
-            if (i >= args.len) {
-                print("Error: --threshold requires a value\n", .{});
-                std.process.exit(1);
-            }
-            parsed_args.threshold = std.fmt.parseFloat(f32, args[i]) catch {
-                print("Error: Invalid threshold value\n", .{});
-                std.process.exit(1);
-            };
+        } else if (parseFloatArg(args, &i, "--threshold") orelse parseFloatArg(args, &i, "-t")) |value| {
+            parsed_args.threshold = value;
+            continue;
         } else if (std.mem.eql(u8, arg, "--diff-mask")) {
             parsed_args.diff_mask = true;
+        } else if (parseFloatArg(args, &i, "--diff-overlay")) |value| {
+            parsed_args.diff_overlay_factor = value;
+            continue;
+        } else if (std.mem.eql(u8, arg, "--diff-overlay")) {
+            parsed_args.diff_overlay_factor = 0.5;
         } else if (std.mem.eql(u8, arg, "--fail-on-layout")) {
             parsed_args.fail_on_layout = true;
         } else if (std.mem.eql(u8, arg, "--parsable-stdout")) {
@@ -170,12 +204,6 @@ pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
             }
             parseIgnoreRegions(args[i], &parsed_args.ignore_regions) catch {
                 print("Error: Invalid ignore regions format\n", .{});
-                std.process.exit(1);
-            };
-        } else if (std.mem.startsWith(u8, arg, "--threshold=") or std.mem.startsWith(u8, arg, "-t=")) {
-            const value_str = arg["--threshold=".len..];
-            parsed_args.threshold = std.fmt.parseFloat(f32, value_str) catch {
-                print("Error: Invalid threshold value\n", .{});
                 std.process.exit(1);
             };
         } else if (std.mem.startsWith(u8, arg, "--ignore=")) {

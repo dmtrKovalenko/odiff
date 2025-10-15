@@ -17,6 +17,7 @@ const HAS_NEON = builtin.cpu.arch == .aarch64 and std.Target.aarch64.featureSetH
 const HAS_RVV = builtin.cpu.arch == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
 
 const RED_PIXEL: u32 = 0xFF0000FF;
+const WHITE_PIXEL: u32 = 0xFFFFFFFF;
 const MAX_YIQ_POSSIBLE_DELTA: f64 = 35215.0;
 
 pub const DiffLines = struct {
@@ -72,6 +73,7 @@ pub const IgnoreRegion = struct {
 pub const DiffOptions = struct {
     antialiasing: bool = false,
     output_diff_mask: bool = false,
+    diff_overlay_factor: ?f32 = null,
     diff_lines: bool = false,
     diff_pixel: u32 = RED_PIXEL,
     threshold: f64 = 0.1,
@@ -114,7 +116,9 @@ pub noinline fn compare(
 
     var diff_output: ?Image = null;
     if (options.capture_diff) {
-        if (options.output_diff_mask) {
+        if (options.diff_overlay_factor) |factor| {
+            diff_output = try base.makeWithWhiteOverlay(factor, allocator);
+        } else if (options.output_diff_mask) {
             diff_output = try base.makeSameAsLayout(allocator);
         } else {
             const data = try allocator.dupe(u32, base.data);
