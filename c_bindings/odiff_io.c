@@ -431,19 +431,15 @@ ImageData read_webp_file(const char *filename, void *allocator) {
 #if defined(HAVE_WEBP)
   ImageData result = {0, 0, NULL};
 
-  // Memory-map the WebP file (cross-platform)
   FileBuffer file_buf = open_file_buffer(filename);
   if (!file_buf.data)
     return result;
 
   int width, height;
 
-  // Decode WebP to RGBA format
-  uint8_t* rgba_data = WebPDecodeRGBA((const uint8_t*)file_buf.data, file_buf.size, &width, &height);
-
-  close_file_buffer(&file_buf);
-
-  if (!rgba_data) {
+  // Get WebP image dimensions without decoding
+  if (!WebPGetInfo((const uint8_t*)file_buf.data, file_buf.size, &width, &height)) {
+    close_file_buffer(&file_buf);
     return result;
   }
 
@@ -452,14 +448,21 @@ ImageData read_webp_file(const char *filename, void *allocator) {
   result.data = (uint32_t *)zig_alloc(allocator, width * height * sizeof(uint32_t));
 
   if (!result.data) {
-    WebPFree(rgba_data);
+    close_file_buffer(&file_buf);
     return result;
   }
 
-  // Copy RGBA data to our format (both are RGBA8888)
-  memcpy(result.data, rgba_data, width * height * sizeof(uint32_t));
+  uint8_t* decoded_data = WebPDecodeRGBAInto((const uint8_t*)file_buf.data, file_buf.size,
+                                             (uint8_t*)result.data, width * height * 4, width * 4);
 
-  WebPFree(rgba_data);
+  close_file_buffer(&file_buf);
+
+  if (!decoded_data) {
+    zig_free(allocator, result.data, width * height * sizeof(uint32_t));
+    result.data = NULL;
+    return result;
+  }
+
   return result;
 #else
   fprintf(stderr, "WebP support not enabled\n");
