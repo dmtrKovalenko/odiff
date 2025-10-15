@@ -31,7 +31,7 @@ Originally written in OCaml, currently in Zig with SIMD optimizations for SSE2, 
 ## Features
 
 - ✅ Cross-format comparison - Yes .jpg vs .png comparison without any problems.
-- ✅ Support for `.png`, `.jpeg`, `.jpg`, and `.tiff`
+- ✅ Support for `.png`, `.jpeg`, `.jpg`, `.webp`, and `.tiff`
 - ✅ Supports comparison of images with different layouts.
 - ✅ Anti-aliasing detection
 - ✅ Ignoring regions
@@ -96,13 +96,14 @@ odiff --help
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
 <!--inline-interface-start-->
-
 ```tsx
 export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
   diffColor: string;
   /** Output full diff image. */
   outputDiffMask: boolean;
+  /** Outputs diff images with a white shaded overlay for easier diff reading */
+  diffOverlay: boolean | number;
   /** Do not compare images and produce output if images layout is different. */
   failOnLayoutDiff: boolean;
   /** Return { match: false, reason: '...' } instead of throwing error if file is missing. */
@@ -128,7 +129,7 @@ declare function compare(
   basePath: string,
   comparePath: string,
   diffPath: string,
-  options?: ODiffOptions,
+  options?: ODiffOptions
 ): Promise<
   | { match: true }
   | { match: false; reason: "layout-diff" }
@@ -152,7 +153,6 @@ declare function compare(
 
 export { compare };
 ```
-
 <!--inline-interface-end-->"
 
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
