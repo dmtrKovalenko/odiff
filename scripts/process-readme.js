@@ -13,7 +13,7 @@ const [startOfFile, afterStartMark] = currentReadmeContent.split(START_COMMENT);
 const [_, endOfFile] = afterStartMark.split(END_COMMENT);
 
 const tsInterface = fs.readFileSync(
-  path.resolve(__dirname, "..", "bin", "node-bindings", "odiff.d.ts"),
+  path.resolve(__dirname, "..", "npm_package", "odiff.d.ts"),
   {
     encoding: "utf-8",
   },

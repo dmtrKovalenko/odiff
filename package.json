@@ -5,7 +5,9 @@
   "license": "MIT",
   "description": "The fastest image difference tool in the world (Zig port of odiff)",
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "update-readme" : "node scripts/process-readme.js"
+
   },
   "keywords": [
     "visual-regression",
