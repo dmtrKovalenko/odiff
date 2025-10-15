@@ -266,10 +266,10 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache-dependency-path: "package-lock.json"
 
-      - name: Verify that we have 6 binaries
+      - name: Verify that we have 8 binaries
         run: |
           ls -la npm_package/raw_binaries
-          if [ $(ls -1 npm_package/raw_binaries | wc -l) -ne 6 ]; then
+          if [ $(ls -1 npm_package/raw_binaries | wc -l) -ne 8 ]; then
             echo "Expected 6 binaries, but found $(ls -1 npm_package/raw_binaries | wc -l)"
             exit 1
           fi
