@@ -34,6 +34,15 @@ function optionsToArgs(options) {
         setFlag("diff-mask", value);
         break;
 
+      case "diffOverlay":
+        if (typeof value === "number") {
+          setArgWithValue("diff-overlay", value);
+        } else {
+          setFlag("diff-overlay", value);
+        }
+
+        break;
+
       case "threshold":
         setArgWithValue("threshold", value);
         break;

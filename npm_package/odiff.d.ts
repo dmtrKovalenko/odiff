@@ -3,6 +3,8 @@ export type ODiffOptions = Partial<{
   diffColor: string;
   /** Output full diff image. */
   outputDiffMask: boolean;
+  /** Outputs diff images with a white shaded overlay for easier diff reading */
+  diffOveraly: boolean | number;
   /** Do not compare images and produce output if images layout is different. */
   failOnLayoutDiff: boolean;
   /** Return { match: false, reason: '...' } instead of throwing error if file is missing. */
