@@ -1,11 +1,11 @@
 // Core image diffing algorithm - equivalent to Diff.ml
 const std = @import("std");
 const builtin = @import("builtin");
-const image_io = @import("image_io.zig");
+const io = @import("io.zig");
 const color_delta = @import("color_delta.zig");
 const antialiasing = @import("antialiasing.zig");
 
-const Image = image_io.Image;
+const Image = io.Image;
 const ArrayList = std.ArrayList;
 
 const HAS_AVX512f = std.Target.x86.featureSetHas(builtin.cpu.features, .avx512f);
@@ -121,12 +121,12 @@ pub noinline fn compare(
         } else if (options.output_diff_mask) {
             diff_output = try base.makeSameAsLayout(allocator);
         } else {
-            const data = try allocator.dupe(u32, base.data);
+            const data = try allocator.dupe(u32, base.slice());
             diff_output = Image{
                 .width = base.width,
                 .height = base.height,
-                .data = data,
-                .allocator = allocator,
+                .data = data.ptr,
+                .len = data.len,
             };
         }
     }
@@ -350,8 +350,8 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_dif
 pub fn compareAVX(base: *const Image, comp: *const Image, diff_count: *u32) !void {
     if (!HAS_AVX512bwvl) return error.Invalid;
 
-    const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data.ptr));
-    const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data.ptr));
+    const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data));
+    const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data));
 
     const base_w: usize = base.width;
     const base_h: usize = base.height;
@@ -381,11 +381,11 @@ extern fn odiffRVV(
 
 pub noinline fn compareRVV(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: f64, options: DiffOptions) !void {
     _ = ignore_regions;
-    const basePtr: [*]const u32 = @ptrCast(@alignCast(base.data.ptr));
-    const compPtr: [*]const u32 = @ptrCast(@alignCast(comp.data.ptr));
+    const basePtr: [*]const u32 = @ptrCast(@alignCast(base.data));
+    const compPtr: [*]const u32 = @ptrCast(@alignCast(comp.data));
     var diffPtr: ?[*]u32 = null;
     if (diff_output.*) |*out| {
-        diffPtr = @ptrCast(@alignCast(out.data.ptr));
+        diffPtr = @ptrCast(@alignCast(out.data));
     }
 
     const line_by_line = base.width != comp.width or base.height != comp.height or diff_lines != null;

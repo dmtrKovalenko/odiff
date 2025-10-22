@@ -1,31 +1,23 @@
 const std = @import("std");
+const MemoryMappedFile = @import("memory_mapped_file.zig");
+const bmp = @import("bmp.zig");
+const png = @import("png.zig");
+const jpeg = @import("jpeg.zig");
+const tiff = @import("tiff.zig");
+const webp = @import("webp.zig");
 
-const c_bindings = @import("c_bindings.zig");
-const CImageData = c_bindings.CImageData;
-
-pub const ImageFormat = enum {
-    png,
-    jpg,
-    bmp,
-    tiff,
-    webp,
-};
-
-pub const Image = struct {
+pub const Image = extern struct {
+    data: [*]u32,
+    len: usize,
     width: u32,
     height: u32,
-    /// RGBA pixels as 32-bit integers
-    data: []u32,
-    is_c_allocated: bool = false,
-    allocator: std.mem.Allocator,
 
-    pub fn deinit(self: *Image) void {
-        if (self.is_c_allocated) {
-            var alloc = self.allocator;
-            c_bindings.free_image_data_ptr(self.data.ptr, &alloc, self.data.len * @sizeOf(u32));
-        } else {
-            self.allocator.free(self.data);
-        }
+    pub fn slice(self: Image) []u32 {
+        return self.data[0..self.len];
+    }
+
+    pub fn deinit(self: Image, allocator: std.mem.Allocator) void {
+        allocator.free(self.slice());
     }
 
     pub inline fn readRawPixelAtOffset(self: *const Image, offset: usize) u32 {
@@ -43,18 +35,18 @@ pub const Image = struct {
     }
 
     pub fn makeSameAsLayout(self: *const Image, allocator: std.mem.Allocator) !Image {
-        const data = try allocator.alloc(u32, self.data.len);
+        const data = try allocator.alloc(u32, self.len);
         @memset(data, 0);
         return Image{
             .width = self.width,
             .height = self.height,
-            .data = data,
-            .allocator = allocator,
+            .data = data.ptr,
+            .len = data.len,
         };
     }
 
     pub fn makeWithWhiteOverlay(self: *const Image, factor: f32, allocator: std.mem.Allocator) !Image {
-        const data = try allocator.alloc(u32, self.data.len);
+        const data = try allocator.alloc(u32, self.len);
 
         const R_COEFF: u32 = 19595; // 0.29889531 * 65536
         const G_COEFF: u32 = 38469; // 0.58662247 * 65536
@@ -109,61 +101,82 @@ pub const Image = struct {
         return Image{
             .width = self.width,
             .height = self.height,
-            .data = data,
-            .allocator = allocator,
+            .data = data.ptr,
+            .len = data.len,
         };
     }
 };
 
-pub const ImageError = error{
-    ImageNotLoaded,
-    UnsupportedFormat,
-    UnsupportedWriteFormat,
-    InvalidData,
-    OutOfMemory,
-    WriteFailed,
+pub const ImageFormat = enum(c_int) {
+    png,
+    jpg,
+    bmp,
+    tiff,
+    webp,
+
+    pub fn fromExtension(ext: []const u8) ?ImageFormat {
+        if (std.mem.eql(u8, ext, ".png")) return .png;
+        if (std.mem.eql(u8, ext, ".jpg") or std.mem.eql(u8, ext, ".jpeg")) return .jpg;
+        if (std.mem.eql(u8, ext, ".bmp")) return .bmp;
+        if (std.mem.eql(u8, ext, ".tiff")) return .tiff;
+        if (std.mem.eql(u8, ext, ".webp")) return .webp;
+        return null;
+    }
 };
 
-pub fn getImageFormat(filename: []const u8) !ImageFormat {
-    if (std.mem.endsWith(u8, filename, ".png")) return .png;
-
-    if (std.mem.endsWith(u8, filename, ".jpg") or std.mem.endsWith(u8, filename, ".jpeg")) return .jpg;
-    if (std.mem.endsWith(u8, filename, ".bmp")) return .bmp;
-    if (std.mem.endsWith(u8, filename, ".tiff")) return .tiff;
-    if (std.mem.endsWith(u8, filename, ".webp")) return .webp;
-
-    return error.UnsupportedFormat;
+/// Loads an image from a given file path.
+/// Automatically detects the image format based on the file extension.
+/// Image data is owned by the caller and must be freed using `allocator.free`.
+/// Also checkout `loadImageEx`
+pub fn loadImage(allocator: std.mem.Allocator, file_path: []const u8) !Image {
+    const ext = std.fs.path.extension(file_path);
+    const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
+    return try loadImageWithFormat(allocator, file_path, format);
 }
 
-pub fn loadImage(filename: []const u8, allocator: std.mem.Allocator) !Image {
-    const format = try getImageFormat(filename);
+/// Loads an image from a given file path.
+/// Image data is owned by the caller and must be freed using `allocator.free`.
+///
+/// Also checkout `loadImage`
+pub fn loadImageWithFormat(allocator: std.mem.Allocator, file_path: []const u8, format: ImageFormat) !Image {
+    const file = MemoryMappedFile.open(file_path) catch return error.ImageNotLoaded;
+    defer file.close();
 
-    const result = switch (format) {
-        .png => try c_bindings.readPngFile(filename, allocator),
-        .jpg => try c_bindings.readJpgFile(filename, allocator),
-        .tiff => try c_bindings.readTiffFile(filename, allocator),
-        .bmp => try c_bindings.readBmpFile(filename, allocator),
-        .webp => try c_bindings.readWebpFile(filename, allocator),
-    };
-
-    const unwrapped_result = result orelse return ImageError.ImageNotLoaded;
-
-    return Image{
-        .width = unwrapped_result.width,
-        .height = unwrapped_result.height,
-        .data = unwrapped_result.data,
-        .allocator = allocator,
-        .is_c_allocated = unwrapped_result.is_c_allocated,
+    return switch (format) {
+        .png => try png.load(allocator, file.data),
+        .jpg => try jpeg.load(allocator, file.data),
+        .bmp => try bmp.load(allocator, file.data),
+        .tiff => try tiff.load(allocator, file.data),
+        .webp => try webp.load(allocator, file.data),
     };
 }
 
-pub fn saveImage(image: *const Image, filename: []const u8, allocator: std.mem.Allocator) !void {
-    const format = try getImageFormat(filename);
+/// Saves an image to a given file path.
+/// Does not take ownership of the image data.
+///
+/// Also checkout `saveImageEx`
+pub fn saveImage(img: Image, file_path: []const u8) !void {
+    const ext = std.fs.path.extension(file_path);
+    const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
+    return saveImageWithFormat(img, file_path, format);
+}
+
+/// Saves an image to a given file path.
+/// Does not take ownership of the image data.
+///
+/// Also checkout `saveImage`
+pub fn saveImageWithFormat(img: Image, file_path: []const u8, format: ImageFormat) !void {
+    var file = try std.fs.cwd().createFile(file_path, .{
+        .truncate = true,
+    });
+    defer file.close();
+    var buffer: [1024 * 1024]u8 = undefined;
+    var file_writer = file.writer(&buffer);
 
     switch (format) {
-        .png => {
-            try c_bindings.writePngFile(filename, image.width, image.height, image.data, allocator);
-        },
-        else => return ImageError.UnsupportedWriteFormat,
+        .png => try png.save(img, &file_writer.interface),
+        else => return error.UnsupportedFormat,
     }
+
+    try file_writer.interface.flush();
 }

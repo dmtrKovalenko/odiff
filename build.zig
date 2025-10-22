@@ -151,7 +151,6 @@ fn buildOdiff(
 
     lib_mod.addCSourceFiles(.{
         .files = &.{
-            "c_bindings/odiff_io.c",
             "src/rvv.c",
         },
         .flags = c_flags.items,

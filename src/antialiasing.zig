@@ -1,9 +1,9 @@
 // Antialiasing detection - equivalent to Antialiasing.ml
 const std = @import("std");
-const image_io = @import("image_io.zig");
+const io = @import("io.zig");
 const color_delta = @import("color_delta.zig");
 
-const Image = image_io.Image;
+const Image = io.Image;
 
 fn hasManySiblingsWithSameColor(x: u32, y: u32, width: u32, height: u32, image: *const Image) bool {
     if (x <= width - 1 and y <= height - 1) {
