@@ -350,8 +350,8 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_dif
 pub fn compareAVX(base: *const Image, comp: *const Image, diff_count: *u32) !void {
     if (!HAS_AVX512bwvl) return error.Invalid;
 
-    const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data.ptr));
-    const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data.ptr));
+    const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data));
+    const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data));
 
     const base_w: usize = base.width;
     const base_h: usize = base.height;
