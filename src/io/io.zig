@@ -127,7 +127,7 @@ pub const ImageFormat = enum(c_int) {
 /// Loads an image from a given file path.
 /// Automatically detects the image format based on the file extension.
 /// Image data is owned by the caller and must be freed using `allocator.free`.
-/// Also checkout `loadImageEx`
+/// Also checkout `loadImageWithFormat`
 pub fn loadImage(allocator: std.mem.Allocator, file_path: []const u8) !Image {
     const ext = std.fs.path.extension(file_path);
     const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
@@ -154,7 +154,7 @@ pub fn loadImageWithFormat(allocator: std.mem.Allocator, file_path: []const u8, 
 /// Saves an image to a given file path.
 /// Does not take ownership of the image data.
 ///
-/// Also checkout `saveImageEx`
+/// Also checkout `saveImageWithFormat`
 pub fn saveImage(img: Image, file_path: []const u8) !void {
     const ext = std.fs.path.extension(file_path);
     const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
