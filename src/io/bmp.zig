@@ -191,7 +191,7 @@ fn loadImage32Data(data: []const u8, offset: usize, width: u32, height: u32, all
     return argb_data;
 }
 
-pub fn loadFromBuffer(allocator: std.mem.Allocator, file_data: []const u8) !io.Image {
+pub fn load(allocator: std.mem.Allocator, file_data: []const u8) !io.Image {
     if (file_data.len < @sizeOf(BitmapFileHeader) + @sizeOf(BitmapInfoHeader)) {
         return BmpError.FileCorrupted;
     }
