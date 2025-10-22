@@ -142,15 +142,13 @@ pub fn loadImageEx(allocator: std.mem.Allocator, file_path: []const u8, format: 
     const file = MemoryMappedFile.open(file_path) catch return error.ImageNotLoaded;
     defer file.close();
 
-    const image = switch (format) {
+    return switch (format) {
         .png => try png.load(allocator, file.data),
         .jpg => try jpeg.load(allocator, file.data),
         .bmp => try bmp.load(allocator, file.data),
         .tiff => try tiff.load(allocator, file.data),
         .webp => try webp.load(allocator, file.data),
     };
-
-    return image;
 }
 
 /// Saves an image to a given file path.
