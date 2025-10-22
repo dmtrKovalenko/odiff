@@ -131,14 +131,14 @@ pub const ImageFormat = enum(c_int) {
 pub fn loadImage(allocator: std.mem.Allocator, file_path: []const u8) !Image {
     const ext = std.fs.path.extension(file_path);
     const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
-    return try loadImageEx(allocator, file_path, format);
+    return try loadImageWithFormat(allocator, file_path, format);
 }
 
 /// Loads an image from a given file path.
 /// Image data is owned by the caller and must be freed using `allocator.free`.
 ///
 /// Also checkout `loadImage`
-pub fn loadImageEx(allocator: std.mem.Allocator, file_path: []const u8, format: ImageFormat) !Image {
+pub fn loadImageWithFormat(allocator: std.mem.Allocator, file_path: []const u8, format: ImageFormat) !Image {
     const file = MemoryMappedFile.open(file_path) catch return error.ImageNotLoaded;
     defer file.close();
 
@@ -158,14 +158,14 @@ pub fn loadImageEx(allocator: std.mem.Allocator, file_path: []const u8, format: 
 pub fn saveImage(img: Image, file_path: []const u8) !void {
     const ext = std.fs.path.extension(file_path);
     const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
-    return saveImageEx(img, file_path, format);
+    return saveImageWithFormat(img, file_path, format);
 }
 
 /// Saves an image to a given file path.
 /// Does not take ownership of the image data.
 ///
 /// Also checkout `saveImage`
-pub fn saveImageEx(img: Image, file_path: []const u8, format: ImageFormat) !void {
+pub fn saveImageWithFormat(img: Image, file_path: []const u8, format: ImageFormat) !void {
     var file = try std.fs.cwd().createFile(file_path, .{
         .truncate = true,
     });
