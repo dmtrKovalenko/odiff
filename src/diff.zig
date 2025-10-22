@@ -1,11 +1,11 @@
 // Core image diffing algorithm - equivalent to Diff.ml
 const std = @import("std");
 const builtin = @import("builtin");
-const image_io = @import("image_io.zig");
+const io = @import("io.zig");
 const color_delta = @import("color_delta.zig");
 const antialiasing = @import("antialiasing.zig");
 
-const Image = image_io.Image;
+const Image = io.Image;
 const ArrayList = std.ArrayList;
 
 const HAS_AVX512f = std.Target.x86.featureSetHas(builtin.cpu.features, .avx512f);
@@ -121,12 +121,12 @@ pub noinline fn compare(
         } else if (options.output_diff_mask) {
             diff_output = try base.makeSameAsLayout(allocator);
         } else {
-            const data = try allocator.dupe(u32, base.data);
+            const data = try allocator.dupe(u32, base.slice());
             diff_output = Image{
                 .width = base.width,
                 .height = base.height,
-                .data = data,
-                .allocator = allocator,
+                .data = data.ptr,
+                .len = data.len,
             };
         }
     }

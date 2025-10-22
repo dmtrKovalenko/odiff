@@ -4,7 +4,7 @@ const lib = @import("odiff_lib");
 const print = std.debug.print;
 
 const cli = lib.cli;
-const image_io = lib.image_io;
+const io = lib.io;
 const diff = lib.diff;
 
 // we need a large stdout for the lines parsable output
@@ -32,7 +32,7 @@ pub fn main() !void {
     defer args.deinit();
 
     // Load images
-    var base_img = image_io.loadImage(args.base_image, allocator) catch |err| switch (err) {
+    var base_img = io.loadImage(allocator, args.base_image) catch |err| switch (err) {
         error.ImageNotLoaded => {
             print("Error: Could not load base image: {s}\n", .{args.base_image});
             std.process.exit(1);
@@ -46,9 +46,9 @@ pub fn main() !void {
             std.process.exit(1);
         },
     };
-    defer base_img.deinit();
+    defer base_img.deinit(allocator);
 
-    var comp_img = image_io.loadImage(args.comp_image, allocator) catch |err| switch (err) {
+    var comp_img = io.loadImage(allocator, args.comp_image) catch |err| switch (err) {
         error.ImageNotLoaded => {
             print("Error: Could not load comparison image: {s}\n", .{args.comp_image});
             std.process.exit(1);
@@ -62,7 +62,7 @@ pub fn main() !void {
             std.process.exit(1);
         },
     };
-    defer comp_img.deinit();
+    defer comp_img.deinit(allocator);
 
     const diff_pixel = cli.parseHexColor(args.diff_color) catch {
         print("Error: Invalid hex color format\n", .{});
@@ -102,7 +102,7 @@ pub fn main() !void {
             defer {
                 if (pixel_result.diff_output) |*output| {
                     var img = output.*;
-                    img.deinit();
+                    img.deinit(allocator);
                 }
                 if (pixel_result.diff_lines) |lines| {
                     var mutable_lines = lines;
@@ -123,7 +123,7 @@ pub fn main() !void {
                 // Save diff output if requested
                 if (args.diff_output) |output_path| {
                     if (pixel_result.diff_output) |output_img| {
-                        image_io.saveImage(&output_img, output_path, allocator) catch {
+                        io.saveImage(output_img, output_path) catch {
                             print("Error: Failed to save diff output\n", .{});
                             try stdout.flush();
 

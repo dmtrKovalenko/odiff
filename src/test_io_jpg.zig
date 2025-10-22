@@ -5,12 +5,12 @@ const expectEqual = testing.expectEqual;
 const expectApproxEqRel = testing.expectApproxEqRel;
 
 const odiff = @import("root.zig");
-const image_io = odiff.image_io;
+const io = odiff.io;
 const diff = odiff.diff;
 
 // Helper function to load test images
-fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !image_io.Image {
-    return image_io.loadImage(path, allocator) catch |err| {
+fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
+    return io.loadImage(allocator, path) catch |err| {
         std.debug.print("Failed to load image: {s}\nError: {}\n", .{ path, err });
         return err;
     };
@@ -22,14 +22,14 @@ test "JPG: finds difference between 2 images" {
     const allocator = gpa.allocator();
 
     var img1 = try loadTestImage("test/jpg/tiger.jpg", allocator);
-    defer img1.deinit();
+    defer img1.deinit(allocator);
 
     var img2 = try loadTestImage("test/jpg/tiger-2.jpg", allocator);
-    defer img2.deinit();
+    defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
     var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
-    defer if (diff_output) |*img| img.deinit();
+    defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
     try expectEqual(@as(u32, 7789), diff_count); // diffPixels
@@ -42,10 +42,10 @@ test "JPG: Diff of mask and no mask are equal" {
     const allocator = gpa.allocator();
 
     var img1 = try loadTestImage("test/jpg/tiger.jpg", allocator);
-    defer img1.deinit();
+    defer img1.deinit(allocator);
 
     var img2 = try loadTestImage("test/jpg/tiger-2.jpg", allocator);
-    defer img2.deinit();
+    defer img2.deinit(allocator);
 
     // Test without mask
     const options_no_mask = diff.DiffOptions{
@@ -53,22 +53,22 @@ test "JPG: Diff of mask and no mask are equal" {
     };
     var diff_output_no_mask, const diff_count_no_mask, const diff_percentage_no_mask, var diff_lines_no_mask =
         try diff.compare(&img1, &img2, options_no_mask, allocator);
-    defer if (diff_output_no_mask) |*img| img.deinit();
+    defer if (diff_output_no_mask) |*img| img.deinit(allocator);
     defer if (diff_lines_no_mask) |*lines| lines.deinit();
 
     // Test with mask
     var img1_copy = try loadTestImage("test/jpg/tiger.jpg", allocator);
-    defer img1_copy.deinit();
+    defer img1_copy.deinit(allocator);
 
     var img2_copy = try loadTestImage("test/jpg/tiger-2.jpg", allocator);
-    defer img2_copy.deinit();
+    defer img2_copy.deinit(allocator);
 
     const options_with_mask = diff.DiffOptions{
         .output_diff_mask = true,
     };
     var diff_output_with_mask, const diff_count_with_mask, const diff_percentage_with_mask, var diff_lines_with_mask =
         try diff.compare(&img1_copy, &img2_copy, options_with_mask, allocator);
-    defer if (diff_output_with_mask) |*img| img.deinit();
+    defer if (diff_output_with_mask) |*img| img.deinit(allocator);
     defer if (diff_lines_with_mask) |*lines| lines.deinit();
 
     try expectEqual(diff_count_no_mask, diff_count_with_mask); // diffPixels should be equal
@@ -81,10 +81,10 @@ test "JPG: Creates correct diff output image" {
     const allocator = gpa.allocator();
 
     var img1 = try loadTestImage("test/jpg/tiger.jpg", allocator);
-    defer img1.deinit();
+    defer img1.deinit(allocator);
 
     var img2 = try loadTestImage("test/jpg/tiger-2.jpg", allocator);
-    defer img2.deinit();
+    defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
     var diff_output, const diff_count, const diff_percentage, var diff_lines =
@@ -92,19 +92,19 @@ test "JPG: Creates correct diff output image" {
 
     _ = diff_count;
     _ = diff_percentage;
-    defer if (diff_output) |*img| img.deinit();
+    defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
     try expect(diff_output != null); // diffOutput should exist
 
-    if (diff_output) |*diff_output_img| {
+    if (diff_output) |diff_output_img| {
         var original_diff = try loadTestImage("test/jpg/tiger-diff.png", allocator);
-        defer original_diff.deinit();
+        defer original_diff.deinit(allocator);
 
         const compare_options = diff.DiffOptions{};
         var diff_result_output, const diff_result_count, const diff_result_percentage, var diff_result_lines =
-            try diff.compare(&original_diff, diff_output_img, compare_options, allocator);
-        defer if (diff_result_output) |*img| img.deinit();
+            try diff.compare(&original_diff, &diff_output_img, compare_options, allocator);
+        defer if (diff_result_output) |*img| img.deinit(allocator);
         defer if (diff_result_lines) |*lines| lines.deinit();
 
         try expect(diff_result_output != null); // diffMaskOfDiff should exist
@@ -112,9 +112,9 @@ test "JPG: Creates correct diff output image" {
         // If there are differences, save debug images
         if (diff_result_count > 0) {
             // Note: We can only save as PNG currently, but that's fine for debug output
-            try image_io.saveImage(diff_output_img, "test/jpg/_diff-output.png", allocator);
-            if (diff_result_output) |*diff_mask| {
-                try image_io.saveImage(diff_mask, "test/jpg/_diff-of-diff.png", allocator);
+            try io.saveImage(diff_output_img, "test/jpg/_diff-output.png");
+            if (diff_result_output) |diff_mask| {
+                try io.saveImage(diff_mask, "test/jpg/_diff-of-diff.png");
             }
         }
 

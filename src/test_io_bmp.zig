@@ -2,13 +2,13 @@
 const std = @import("std");
 const testing = std.testing;
 const odiff = @import("root.zig");
-const image_io = odiff.image_io;
+const io = odiff.io;
 const diff = odiff.diff;
 
 const testing_allocator = testing.allocator;
 
-fn loadImage(path: []const u8) !image_io.Image {
-    return image_io.loadImage(path, testing_allocator) catch |err| {
+fn loadImage(path: []const u8) !io.Image {
+    return io.loadImage(testing_allocator, path) catch |err| {
         std.debug.print("Failed to load image: {s}\nError: {}\n", .{ path, err });
         return err;
     };
@@ -16,12 +16,12 @@ fn loadImage(path: []const u8) !image_io.Image {
 
 test "BMP: finds difference between 2 images" {
     var img1 = try loadImage("test/bmp/clouds.bmp");
-    defer img1.deinit();
+    defer img1.deinit(testing_allocator);
     var img2 = try loadImage("test/bmp/clouds-2.bmp");
-    defer img2.deinit();
+    defer img2.deinit(testing_allocator);
 
     var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, .{}, testing_allocator);
-    defer if (diff_output) |*img| img.deinit();
+    defer if (diff_output) |*img| img.deinit(testing_allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
     try testing.expectEqual(@as(u32, 192), diff_count);
@@ -30,23 +30,23 @@ test "BMP: finds difference between 2 images" {
 
 test "BMP: diff of mask and no mask are equal" {
     var img1 = try loadImage("test/bmp/clouds.bmp");
-    defer img1.deinit();
+    defer img1.deinit(testing_allocator);
     var img2 = try loadImage("test/bmp/clouds-2.bmp");
-    defer img2.deinit();
+    defer img2.deinit(testing_allocator);
 
     // Compare without diff mask
     var no_mask_diff_output, const no_mask_diff_count, const no_mask_diff_percentage, var no_mask_diff_lines = try diff.compare(&img1, &img2, .{ .output_diff_mask = false }, testing_allocator);
-    defer if (no_mask_diff_output) |*img| img.deinit();
+    defer if (no_mask_diff_output) |*img| img.deinit(testing_allocator);
     defer if (no_mask_diff_lines) |*lines| lines.deinit();
 
     // Compare with diff mask
     var img1_mask = try loadImage("test/bmp/clouds.bmp");
-    defer img1_mask.deinit();
+    defer img1_mask.deinit(testing_allocator);
     var img2_mask = try loadImage("test/bmp/clouds-2.bmp");
-    defer img2_mask.deinit();
+    defer img2_mask.deinit(testing_allocator);
 
     var with_mask_diff_output, const with_mask_diff_count, const with_mask_diff_percentage, var with_mask_diff_lines = try diff.compare(&img1_mask, &img2_mask, .{ .output_diff_mask = true }, testing_allocator);
-    defer if (with_mask_diff_output) |*img| img.deinit();
+    defer if (with_mask_diff_output) |*img| img.deinit(testing_allocator);
     defer if (with_mask_diff_lines) |*lines| lines.deinit();
 
     try testing.expectEqual(no_mask_diff_count, with_mask_diff_count);
