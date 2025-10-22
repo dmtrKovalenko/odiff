@@ -4,6 +4,7 @@ const bmp = @import("bmp.zig");
 const png = @import("png.zig");
 const jpeg = @import("jpeg.zig");
 const tiff = @import("tiff.zig");
+const webp = @import("webp.zig");
 
 pub const Image = extern struct {
     data: [*]u32,
@@ -146,7 +147,7 @@ pub fn loadImageEx(allocator: std.mem.Allocator, file_path: []const u8, format: 
         .jpg => try jpeg.load(allocator, file.data),
         .bmp => try bmp.load(allocator, file.data),
         .tiff => try tiff.load(allocator, file.data),
-        else => return error.UnsupportedFormat,
+        .webp => try webp.load(allocator, file.data),
     };
 
     return image;
