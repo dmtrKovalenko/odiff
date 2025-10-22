@@ -2,6 +2,9 @@ const std = @import("std");
 const Image = @import("io.zig").Image;
 const c = @cImport({
     @cInclude("tiffio.h");
+    @cInclude("sys/mman.h");
+    @cInclude("fcntl.h");
+    @cInclude("unistd.h");
 });
 
 pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
@@ -17,7 +20,10 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
         TIFFClient.size,
         TIFFClient.map,
         TIFFClient.unmap,
-    ) orelse return error.OutOfMemory;
+    ) orelse {
+        return error.InvalidData;
+    };
+    defer c.TIFFClose(handle);
 
     var width: u32 = 0;
     var height: u32 = 0;
@@ -45,12 +51,15 @@ const TIFFClient = struct {
     offset: usize = 0,
 
     pub fn read(self_ptr: c.thandle_t, buf_ptr: ?*anyopaque, buf_len: c.tmsize_t) callconv(.c) c.tmsize_t {
-        const self: *TIFFClient = @ptrCast(self_ptr orelse return -1);
-        const read_size = @min(buf_len, @as(c_int, @intCast(self.buf.len - self.offset)));
-        const dest_buf = (@as([*]u8, @ptrCast(buf_ptr orelse return -1)))[0..read_size];
+        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr orelse return @as(c.tmsize_t, -1)));
+        if (buf_ptr == null) return @as(c.tmsize_t, -1);
 
-        @memcpy(dest_buf, self.buf[self.offset .. self.offset + read_size]);
-        self.offset += read_size;
+        const read_size = @min(buf_len, @as(c.tmsize_t, @intCast(self.buf.len - self.offset)));
+        const dest_buf = @as([*]u8, @ptrCast(buf_ptr))[0..@as(usize, @intCast(read_size))];
+
+        @memcpy(dest_buf, self.buf[self.offset .. self.offset + @as(usize, @intCast(read_size))]);
+        self.offset += @as(usize, @intCast(read_size));
+
         return read_size;
     }
 
@@ -58,19 +67,22 @@ const TIFFClient = struct {
         _ = self_ptr;
         _ = buf_ptr;
         _ = buf_len;
-        std.log.err("TIFFClient.write: not implemented", .{});
-        return -1;
+
+        return @as(c.tmsize_t, -1);
     }
 
     pub fn seek(self_ptr: c.thandle_t, offset: c.toff_t, whence: c_int) callconv(.c) c.toff_t {
-        const self: *TIFFClient = @ptrCast(self_ptr orelse return -1);
-        switch (whence) {
-            c.SEEK_SET => self.offset = @intCast(offset),
-            c.SEEK_CUR => self.offset += @intCast(offset),
-            c.SEEK_END => self.offset = self.buf.len + @as(usize, @intCast(offset)),
-            else => return -1,
+        if (self_ptr == null) {
+            return @as(c.toff_t, @bitCast(@as(c_long, -1)));
         }
-        return self.offset;
+        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr));
+        switch (whence) {
+            c.SEEK_SET => self.offset = @as(usize, @intCast(offset)),
+            c.SEEK_CUR => self.offset += @as(usize, @intCast(offset)),
+            c.SEEK_END => self.offset = self.buf.len + @as(usize, @intCast(offset)),
+            else => return @as(c.toff_t, @bitCast(@as(c_long, -1))),
+        }
+        return @as(c.toff_t, @intCast(self.offset));
     }
 
     pub fn close(self_ptr: c.thandle_t) callconv(.c) c_int {
@@ -79,21 +91,21 @@ const TIFFClient = struct {
     }
 
     pub fn size(self_ptr: c.thandle_t) callconv(.c) c.toff_t {
-        const self: *TIFFClient = @ptrCast(self_ptr orelse return -1);
-        return @intCast(self.buf.len);
+        if (self_ptr == null) return @as(c.toff_t, @bitCast(@as(c_long, -1)));
+        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr));
+        return @as(c.toff_t, @intCast(self.buf.len));
     }
 
-    pub fn map(self_ptr: c.thandle_t, offset: c_long, sz: c_long) callconv(.c) c_int {
+    pub fn map(self_ptr: c.thandle_t, base: [*c]?*anyopaque, sz: [*c]c.toff_t) callconv(.c) c_int {
         _ = self_ptr;
-        _ = offset;
+        _ = base;
         _ = sz;
-        return 1;
+        return 0; // FALSE - we don't support mapping
     }
 
-    pub fn unmap(self_ptr: c.thandle_t, offset: c_long, sz: c_long) callconv(.c) c_int {
+    pub fn unmap(self_ptr: c.thandle_t, base: ?*anyopaque, sz: c.toff_t) callconv(.c) void {
         _ = self_ptr;
-        _ = offset;
+        _ = base;
         _ = sz;
-        return 1;
     }
 };
