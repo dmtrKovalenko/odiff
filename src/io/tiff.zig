@@ -2,9 +2,6 @@ const std = @import("std");
 const Image = @import("io.zig").Image;
 const c = @cImport({
     @cInclude("tiffio.h");
-    @cInclude("sys/mman.h");
-    @cInclude("fcntl.h");
-    @cInclude("unistd.h");
 });
 
 pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
@@ -68,21 +65,18 @@ const TIFFClient = struct {
         _ = buf_ptr;
         _ = buf_len;
 
-        return @as(c.tmsize_t, -1);
+        return -1;
     }
 
     pub fn seek(self_ptr: c.thandle_t, offset: c.toff_t, whence: c_int) callconv(.c) c.toff_t {
-        if (self_ptr == null) {
-            return @as(c.toff_t, @bitCast(@as(c_long, -1)));
-        }
-        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr));
+        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr orelse return 0));
         switch (whence) {
             c.SEEK_SET => self.offset = @as(usize, @intCast(offset)),
             c.SEEK_CUR => self.offset += @as(usize, @intCast(offset)),
             c.SEEK_END => self.offset = self.buf.len + @as(usize, @intCast(offset)),
-            else => return @as(c.toff_t, @bitCast(@as(c_long, -1))),
+            else => return 0,
         }
-        return @as(c.toff_t, @intCast(self.offset));
+        return self.offset;
     }
 
     pub fn close(self_ptr: c.thandle_t) callconv(.c) c_int {
@@ -91,8 +85,7 @@ const TIFFClient = struct {
     }
 
     pub fn size(self_ptr: c.thandle_t) callconv(.c) c.toff_t {
-        if (self_ptr == null) return @as(c.toff_t, @bitCast(@as(c_long, -1)));
-        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr));
+        const self: *TIFFClient = @ptrCast(@alignCast(self_ptr orelse return 0));
         return @as(c.toff_t, @intCast(self.buf.len));
     }
 
