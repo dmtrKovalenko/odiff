@@ -381,11 +381,11 @@ extern fn odiffRVV(
 
 pub noinline fn compareRVV(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: f64, options: DiffOptions) !void {
     _ = ignore_regions;
-    const basePtr: [*]const u32 = @ptrCast(@alignCast(base.data.ptr));
-    const compPtr: [*]const u32 = @ptrCast(@alignCast(comp.data.ptr));
+    const basePtr: [*]const u32 = @ptrCast(@alignCast(base.data));
+    const compPtr: [*]const u32 = @ptrCast(@alignCast(comp.data));
     var diffPtr: ?[*]u32 = null;
     if (diff_output.*) |*out| {
-        diffPtr = @ptrCast(@alignCast(out.data.ptr));
+        diffPtr = @ptrCast(@alignCast(out.data));
     }
 
     const line_by_line = base.width != comp.width or base.height != comp.height or diff_lines != null;
