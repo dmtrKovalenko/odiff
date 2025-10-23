@@ -4,13 +4,13 @@ const expect = testing.expect;
 const expectEqual = testing.expectEqual;
 const expectApproxEqRel = testing.expectApproxEqRel;
 
-const odiff = @import("root.zig");
-const image_io = odiff.io;
-const diff = odiff.diff;
-const color_delta = odiff.color_delta;
+const lib = @import("odiff");
+const io = lib.io;
+const diff = lib.diff;
+const color_delta = lib.color_delta;
 
-fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !image_io.Image {
-    return image_io.loadImage(allocator, path) catch |err| {
+fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !lib.Image {
+    return io.loadImage(allocator, path) catch |err| {
         std.debug.print("Failed to load image: {s}\nError: {}\n", .{ path, err });
         return err;
     };
@@ -154,9 +154,9 @@ test "diff color: creates diff output image with custom green diff color" {
 
         // If there are differences, save debug images
         if (nested_diff_count > 0) {
-            try image_io.saveImage(diff_output_img, "test/png/diff-output-green.png");
+            try io.saveImage(diff_output_img, "test/png/diff-output-green.png");
             if (nested_diff_output) |diff_mask| {
-                try image_io.saveImage(diff_mask, "test/png/diff-of-diff-green.png");
+                try io.saveImage(diff_mask, "test/png/diff-of-diff-green.png");
             }
         }
 

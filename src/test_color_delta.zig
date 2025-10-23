@@ -1,12 +1,18 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const testing = std.testing;
-const color_delta = @import("color_delta.zig");
+const color_delta = @import("odiff").color_delta;
 
-const HAS_RVV = builtin.cpu.arch  == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
-extern fn calculatePixelColorDeltaRVVForTest(pixel_a: u32, pixel_b: u32,) f64;
+const HAS_RVV = builtin.cpu.arch == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
+extern fn calculatePixelColorDeltaRVVForTest(
+    pixel_a: u32,
+    pixel_b: u32,
+) f64;
 
-fn calculatePixelColorDeltaUnderTest(pixel_a: u32, pixel_b: u32,) f64 {
+fn calculatePixelColorDeltaUnderTest(
+    pixel_a: u32,
+    pixel_b: u32,
+) f64 {
     if (HAS_RVV) {
         return calculatePixelColorDeltaRVVForTest(pixel_a, pixel_b);
     } else {
@@ -133,4 +139,3 @@ test "color delta: edge cases" {
         }
     }
 }
-

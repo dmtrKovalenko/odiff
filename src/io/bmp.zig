@@ -1,5 +1,5 @@
 const std = @import("std");
-const io = @import("io.zig");
+const Image = @import("image").Image;
 
 const BMP_SIGNATURE: u16 = 19778; // "BM" in little-endian
 const BYTES_PER_PIXEL_24: u8 = 3;
@@ -191,7 +191,7 @@ fn loadImage32Data(data: []const u8, offset: usize, width: u32, height: u32, all
     return argb_data;
 }
 
-pub fn load(allocator: std.mem.Allocator, file_data: []const u8) !io.Image {
+pub fn load(allocator: std.mem.Allocator, file_data: []const u8) !Image {
     if (file_data.len < @sizeOf(BitmapFileHeader) + @sizeOf(BitmapInfoHeader)) {
         return BmpError.FileCorrupted;
     }
@@ -251,7 +251,7 @@ pub fn load(allocator: std.mem.Allocator, file_data: []const u8) !io.Image {
         else => return BmpError.UnsupportedBitDepth,
     };
 
-    return io.Image{
+    return .{
         .width = width,
         .height = height,
         .data = pixel_data.ptr,

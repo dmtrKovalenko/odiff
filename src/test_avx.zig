@@ -4,12 +4,12 @@ const expect = testing.expect;
 const expectEqual = testing.expectEqual;
 const expectApproxEqRel = testing.expectApproxEqRel;
 
-const odiff = @import("root.zig");
-const io = odiff.io;
-const diff = odiff.diff;
-const color_delta = odiff.color_delta;
+const lib = @import("odiff");
+const io = lib.io;
+const diff = lib.diff;
+const color_delta = lib.color_delta;
 
-fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
+fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !lib.Image {
     return io.loadImage(allocator, path) catch |err| {
         std.debug.print("Failed to load image: {s}\nError: {}\n", .{ path, err });
         return err;
@@ -17,9 +17,7 @@ fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
 }
 
 test "layoutDifference: diff images with different layouts without capture" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    const allocator = std.testing.allocator;
 
     var img1 = try loadTestImage("test/png/white4x4.png", allocator);
     defer img1.deinit(allocator);

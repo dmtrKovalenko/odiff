@@ -1,11 +1,10 @@
 // Core image diffing algorithm - equivalent to Diff.ml
 const std = @import("std");
 const builtin = @import("builtin");
-const io = @import("io.zig");
+const Image = @import("image").Image;
 const color_delta = @import("color_delta.zig");
 const antialiasing = @import("antialiasing.zig");
 
-const Image = io.Image;
 const ArrayList = std.ArrayList;
 
 const HAS_AVX512f = std.Target.x86.featureSetHas(builtin.cpu.features, .avx512f);

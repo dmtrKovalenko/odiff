@@ -7,21 +7,22 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const dynamic = b.option(bool, "dynamic", "Link against libspng, libjpeg and libtiff dynamically") orelse false;
 
-    const native_target = b.resolveTargetQuery(.{});
-    const is_cross_compiling = target.result.cpu.arch != native_target.result.cpu.arch or
-        target.result.os.tag != native_target.result.os.tag;
-
-    const build_options = b.addOptions();
-    build_options.addOption([]const u8, "version", manifest.version);
-    const build_options_mod = build_options.createModule();
-
-    const lib_mod, const exe = buildOdiff(b, target, optimize, dynamic, build_options_mod);
+    const odiff_mod, const exe = makeOdiff(b, .{
+        .target = target,
+        .optimize = optimize,
+        .dynamic = dynamic,
+    });
     b.installArtifact(exe);
 
+    // const lib = b.addLibrary(.{
+    //     .name = "odiff",
+    //     .linkage = .static,
+    //     .root_module = odiff_mod,
+    // });
+    // b.installArtifact(lib);
+
     const run_cmd = b.addRunArtifact(exe);
-
     run_cmd.step.dependOn(b.getInstallStep());
-
     if (b.args) |args| {
         run_cmd.addArgs(args);
     }
@@ -29,143 +30,107 @@ pub fn build(b: *std.Build) !void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const lib_unit_tests = b.addTest(.{
-        .root_module = lib_mod,
-    });
-
-    const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
-
-    const integration_tests_with_io = [_][]const u8{
-        "src/test_core.zig",
-        "src/test_io_png.zig",
-        "src/test_io_bmp.zig",
-        "src/test_io_jpg.zig",
-        "src/test_io_tiff.zig",
-        "src/test_avx.zig",
-        "src/test_io_webp.zig",
-    };
-
-    const integration_tests_pure_zig = [_][]const u8{
+    const test_files: []const []const u8 = &.{
         "src/test_color_delta.zig",
+        "src/test_io.zig",
+        "src/test_core.zig",
+        "src/test_avx.zig",
     };
-
-    var integration_test_steps = std.array_list.Managed(*std.Build.Step.Run).init(b.allocator);
-    defer integration_test_steps.deinit();
-
-    if (!is_cross_compiling) {
-        const root_lib = b.addLibrary(.{
-            .name = "odiff_lib",
-            .root_module = lib_mod,
-            .linkage = if (dynamic) .dynamic else .static,
-        });
-        for (integration_tests_with_io) |test_path| {
-            const integration_test = b.addTest(.{
-                .root_module = b.createModule(.{
-                    .root_source_file = b.path(test_path),
-                    .target = target,
-                    .optimize = optimize,
-                }),
-            });
-            integration_test.root_module.addImport("build_options", build_options_mod);
-            integration_test.linkLibC();
-            integration_test.linkLibrary(root_lib);
-            linkDeps(b, target, optimize, dynamic, integration_test.root_module);
-
-            const run_integration_test = b.addRunArtifact(integration_test);
-            integration_test_steps.append(run_integration_test) catch @panic("OOM");
-        }
-
-        for (integration_tests_pure_zig) |test_path| {
-            const pure_test = b.addTest(.{
-                .root_module = b.createModule(.{
-                    .root_source_file = b.path(test_path),
-                    .target = target,
-                    .optimize = optimize,
-                }),
-            });
-
-            pure_test.root_module.addImport("build_options", build_options_mod);
-            pure_test.addCSourceFiles(.{
-                .files = &.{"src/rvv.c"},
-            });
-
-            const run_pure_test = b.addRunArtifact(pure_test);
-            integration_test_steps.append(run_pure_test) catch @panic("OOM");
-        }
-    }
-
     const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_lib_unit_tests.step);
-
-    const integration_test_step = b.step("test-integration", "Run integration tests with test images");
-    for (integration_test_steps.items) |test_run_step| {
-        integration_test_step.dependOn(&test_run_step.step);
+    for (test_files) |test_file_path| {
+        const test_exe = b.addTest(.{
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(test_file_path),
+                .target = target,
+                .optimize = optimize,
+                .imports = &.{
+                    .{ .name = "odiff", .module = odiff_mod },
+                },
+            }),
+        });
+        const run_test_exe = b.addRunArtifact(test_exe);
+        test_step.dependOn(&run_test_exe.step);
     }
-
-    const test_all_step = b.step("test-all", "Run both unit and integration tests");
-    test_all_step.dependOn(test_step);
-    test_all_step.dependOn(integration_test_step);
 
     const build_ci_step = b.step("ci", "Build the app for CI");
     for (build_targets) |target_query| {
         const t = b.resolveTargetQuery(target_query);
-        _, const odiff_exe = buildOdiff(b, t, optimize, dynamic, build_options_mod);
-        odiff_exe.root_module.strip = true;
         var target_name = try target_query.zigTriple(b.allocator);
         if (target_query.cpu_arch == .riscv64 and !target_query.cpu_features_add.isEmpty())
             target_name = try std.mem.join(b.allocator, "-", &[_][]const u8{ target_name, "rva23" });
-        const odiff_output = b.addInstallArtifact(odiff_exe, .{
+
+        const mod, const odiff_exe = makeOdiff(b, .{
+            .target = t,
+            .optimize = optimize,
+            .dynamic = dynamic,
+        });
+        odiff_exe.root_module.strip = true;
+
+        const odiff_bin_output = b.addInstallArtifact(odiff_exe, .{
             .dest_dir = .{
                 .override = .{ .custom = target_name },
             },
         });
-        build_ci_step.dependOn(&odiff_output.step);
+        build_ci_step.dependOn(&odiff_bin_output.step);
+
+        _ = mod;
+        // const odiff_lib = b.addLibrary(.{
+        //     .name = "odiff",
+        //     .linkage = .static,
+        //     .root_module = mod,
+        // });
+        // const odiff_lib_output = b.addInstallArtifact(odiff_lib, .{
+        //     .dest_dir = .{
+        //         .override = .{ .custom = target_name },
+        //     },
+        // });
+        // build_ci_step.dependOn(&odiff_lib_output.step);
     }
 }
 
-fn buildOdiff(
-    b: *std.Build,
+const OdiffBuildOptions = struct {
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
     dynamic: bool,
-    build_options_mod: *std.Build.Module,
-) struct { *std.Build.Module, *std.Build.Step.Compile } {
-    const lib_mod = b.createModule(.{
-        .root_source_file = b.path("src/root.zig"),
+};
+fn makeOdiff(b: *std.Build, options: OdiffBuildOptions) struct { *std.Build.Module, *std.Build.Step.Compile } {
+    const target = options.target;
+    const optimize = options.optimize;
+    const dynamic = options.dynamic;
+
+    const image_mod = b.createModule(.{
+        .root_source_file = b.path("src/image/image.zig"),
         .target = target,
         .optimize = optimize,
-        .link_libc = true,
     });
-    linkDeps(b, target, optimize, dynamic, lib_mod);
 
-    var c_flags = std.array_list.Managed([]const u8).init(b.allocator);
-    defer c_flags.deinit();
-    c_flags.append("-std=c99") catch @panic("OOM");
-    c_flags.append("-Wno-nullability-completeness") catch @panic("OOM");
-    c_flags.append("-DHAVE_SPNG") catch @panic("OOM");
-    c_flags.append("-DSPNG_STATIC") catch @panic("OOM");
-    c_flags.append("-DSPNG_SSE=3") catch @panic("OOM");
-    c_flags.append("-DHAVE_JPEG") catch @panic("OOM");
-    c_flags.append("-DHAVE_TIFF") catch @panic("OOM");
-    c_flags.append("-DHAVE_WEBP") catch @panic("OOM");
-
-    lib_mod.addCSourceFiles(.{
-        .files = &.{
-            "src/rvv.c",
+    const io_mod = b.createModule(.{
+        .root_source_file = b.path("src/io/io.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "image", .module = image_mod },
         },
-        .flags = c_flags.items,
     });
+    linkImageDeps(b, target, optimize, dynamic, io_mod);
 
-    const exe_mod = b.createModule(.{
-        .root_source_file = b.path("src/main.zig"),
+    const module = b.createModule(.{
+        .root_source_file = b.path("src/lib/root.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{ .name = "io", .module = io_mod },
+            .{ .name = "image", .module = image_mod },
+        },
     });
 
-    exe_mod.addImport("odiff_lib", lib_mod);
-    exe_mod.addImport("build_options", build_options_mod);
-    lib_mod.addImport("build_options", build_options_mod);
+    // riscv vector version
+    module.addCSourceFile(.{
+        .file = b.path("src/lib/rvv.c"),
+        .flags = &.{"-std=c99"},
+    });
 
+    // avx version
     if (target.result.cpu.arch == .x86_64) {
         const os_tag = target.result.os.tag;
         const fmt: ?[]const u8 = switch (os_tag) {
@@ -177,36 +142,46 @@ fn buildOdiff(
         if (fmt) |nasm_fmt| {
             const nasm = b.addSystemCommand(&.{ "nasm", "-f", nasm_fmt, "-o" });
             const asm_obj = nasm.addOutputFileArg("vxdiff.o");
-            nasm.addFileArg(b.path("src/vxdiff.asm"));
-            lib_mod.addObjectFile(asm_obj);
+            nasm.addFileArg(b.path("src/lib/vxdiff.asm"));
+            module.addObjectFile(asm_obj);
         }
     }
 
+    const build_options = b.addOptions();
+    build_options.addOption([]const u8, "version", manifest.version);
     const exe = b.addExecutable(.{
         .name = "odiff",
-        .root_module = exe_mod,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "odiff", .module = module },
+                .{ .name = "build_options", .module = build_options.createModule() },
+            },
+        }),
     });
 
-    return .{ lib_mod, exe };
+    return .{ module, exe };
 }
 
-pub fn linkDeps(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, dynamic: bool, module: *std.Build.Module) void {
+pub fn linkImageDeps(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode, dynamic: bool, module: *std.Build.Module) void {
     const host_target = b.graph.host.result;
     const build_target = target.result;
     const is_cross_compiling = host_target.cpu.arch != build_target.cpu.arch or
         host_target.os.tag != build_target.os.tag;
-    if (dynamic and !is_cross_compiling) {
-        switch (build_target.os.tag) {
-            .windows => {
-                std.log.warn("Dynamic linking is not supported on Windows, falling back to static linking", .{});
-                return linkDeps(b, target, optimize, false, module);
-            },
-            else => {
-                module.linkSystemLibrary("spng", .{});
-                module.linkSystemLibrary("jpeg", .{});
-                module.linkSystemLibrary("tiff", .{});
-            },
-        }
+    const can_link_dynamically = switch (build_target.os.tag) {
+        .windows => false,
+        else => is_cross_compiling,
+    };
+
+    if (dynamic and !can_link_dynamically) {
+        std.log.warn("Dynamic linking is not supported for this target, falling back to static linking", .{});
+    } else if (dynamic) {
+        module.linkSystemLibrary("spng", .{});
+        module.linkSystemLibrary("jpeg", .{});
+        module.linkSystemLibrary("tiff", .{});
+        module.linkSystemLibrary("webp", .{});
     } else {
         Imgz.addToModule(b, module, .{
             .target = target,

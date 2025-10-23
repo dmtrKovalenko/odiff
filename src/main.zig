@@ -1,9 +1,9 @@
 const std = @import("std");
-const lib = @import("odiff_lib");
+const lib = @import("odiff");
 
 const print = std.debug.print;
 
-const cli = lib.cli;
+const cli = @import("cli.zig");
 const io = lib.io;
 const diff = lib.diff;
 

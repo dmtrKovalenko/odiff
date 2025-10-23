@@ -153,7 +153,7 @@ jobs:
       - name: Build and run tests
         if: matrix.run_tests == true
         run: |
-          zig build -Dtarget=${{matrix.target}} test-all --summary all
+          zig build -Dtarget=${{matrix.target}} test --summary all
 
       - name: Build without running tests
         if: matrix.run_tests != true
@@ -195,7 +195,7 @@ jobs:
 
       - name: Run AVX tests
         run: |
-          zig build test-all --summary all
+          zig build test --summary all
 
   e2e-tests:
     name: End-to-end JavaScript tests

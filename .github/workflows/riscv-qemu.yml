@@ -4,7 +4,7 @@ on:
   pull_request:
     # this is a VERY SLOW job try to run it only on the riscv C changes
     paths:
-      - "src/rvv.c"
+      - "src/lib/rvv.c"
 
 jobs:
   riscv:
@@ -31,4 +31,4 @@ jobs:
             export PATH="$PWD/zig-riscv64-linux-0.15.1:$PATH"
 
             cd /opt/odiff
-            zig build test-all -Dtarget=riscv64-linux -Dcpu=generic_rv64+rva23u64 -Doptimize=ReleaseFast
+            zig build test -Dtarget=riscv64-linux -Dcpu=generic_rv64+rva23u64 -Doptimize=ReleaseFast

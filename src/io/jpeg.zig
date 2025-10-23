@@ -1,5 +1,5 @@
 const std = @import("std");
-const Image = @import("io.zig").Image;
+const Image = @import("image").Image;
 const c = @cImport({
     @cInclude("turbojpeg.h");
 });
