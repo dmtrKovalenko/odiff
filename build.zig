@@ -37,12 +37,8 @@ pub fn build(b: *std.Build) !void {
 
     const integration_tests_with_io = [_][]const u8{
         "src/test_core.zig",
-        "src/test_io_png.zig",
-        "src/test_io_bmp.zig",
-        "src/test_io_jpg.zig",
-        "src/test_io_tiff.zig",
         "src/test_avx.zig",
-        "src/test_io_webp.zig",
+        "src/io_test.zig",
     };
 
     const integration_tests_pure_zig = [_][]const u8{
