@@ -4,7 +4,7 @@ on:
   pull_request:
     # this is a VERY SLOW job try to run it only on the riscv C changes
     paths:
-      - "src/rvv.c"
+      - "src/lib/rvv.c"
 
 jobs:
   riscv:

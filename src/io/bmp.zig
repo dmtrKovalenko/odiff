@@ -1,5 +1,5 @@
 const std = @import("std");
-const Image = @import("image.zig").Image;
+const Image = @import("image").Image;
 
 const BMP_SIGNATURE: u16 = 19778; // "BM" in little-endian
 const BYTES_PER_PIXEL_24: u8 = 3;

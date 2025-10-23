@@ -1,6 +1,7 @@
 const std = @import("std");
-const diff = @import("diff.zig");
+const lib = @import("odiff");
 const build_options = @import("build_options");
+const diff = lib.diff;
 
 const print = std.debug.print;
 
@@ -76,9 +77,9 @@ fn parseFloatArg(args: [][:0]u8, index: *usize, option_name: []const u8) ?f32 {
     // --option=value format
     if (std.mem.startsWith(u8, arg, option_name) and
         arg.len > option_name.len and
-        arg[option_name.len] == '=') {
-
-        const value_str = arg[option_name.len + 1..];
+        arg[option_name.len] == '=')
+    {
+        const value_str = arg[option_name.len + 1 ..];
         if (value_str.len == 0) return null;
 
         index.* += 1;

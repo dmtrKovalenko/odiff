@@ -1,5 +1,5 @@
 const std = @import("std");
-const Image = @import("image.zig").Image;
+const Image = @import("image").Image;
 const c = @cImport({
     @cInclude("tiffio.h");
 });

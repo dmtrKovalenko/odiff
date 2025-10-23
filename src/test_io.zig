@@ -1,11 +1,11 @@
 const std = @import("std");
 const testing = std.testing;
 const builtin = @import("builtin");
-const lib = @import("root.zig");
+const lib = @import("odiff");
 const diff = lib.diff;
 const io = lib.io;
 
-const Image = io.Image;
+const Image = lib.Image;
 const alloc = std.testing.allocator;
 
 ///////// PNG

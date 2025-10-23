@@ -1,14 +1,29 @@
 const std = @import("std");
 const MemoryMappedFile = @import("memory_mapped_file.zig");
+const Image = @import("image").Image;
+
 const bmp = @import("bmp.zig");
 const png = @import("png.zig");
 const jpeg = @import("jpeg.zig");
 const tiff = @import("tiff.zig");
 const webp = @import("webp.zig");
-const image = @import("image.zig");
 
-const Image = image.Image;
-const ImageFormat = image.ImageFormat;
+pub const ImageFormat = enum(c_int) {
+    png,
+    jpg,
+    bmp,
+    tiff,
+    webp,
+
+    pub fn fromExtension(ext: []const u8) ?ImageFormat {
+        if (std.mem.eql(u8, ext, ".png")) return .png;
+        if (std.mem.eql(u8, ext, ".jpg") or std.mem.eql(u8, ext, ".jpeg")) return .jpg;
+        if (std.mem.eql(u8, ext, ".bmp")) return .bmp;
+        if (std.mem.eql(u8, ext, ".tiff")) return .tiff;
+        if (std.mem.eql(u8, ext, ".webp")) return .webp;
+        return null;
+    }
+};
 
 /// Loads an image from a given file path.
 /// Automatically detects the image format based on the file extension.

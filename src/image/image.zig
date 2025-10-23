@@ -100,20 +100,3 @@ pub const Image = extern struct {
         };
     }
 };
-
-pub const ImageFormat = enum(c_int) {
-    png,
-    jpg,
-    bmp,
-    tiff,
-    webp,
-
-    pub fn fromExtension(ext: []const u8) ?ImageFormat {
-        if (std.mem.eql(u8, ext, ".png")) return .png;
-        if (std.mem.eql(u8, ext, ".jpg") or std.mem.eql(u8, ext, ".jpeg")) return .jpg;
-        if (std.mem.eql(u8, ext, ".bmp")) return .bmp;
-        if (std.mem.eql(u8, ext, ".tiff")) return .tiff;
-        if (std.mem.eql(u8, ext, ".webp")) return .webp;
-        return null;
-    }
-};
