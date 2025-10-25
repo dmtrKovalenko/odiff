@@ -278,10 +278,15 @@ inline fn increment_coords_by(x: *u32, y: *u32, step: u32, width: u32) void {
     }
 }
 
-pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
-    var x: u32 = 0;
-    var y: u32 = 0;
+fn iota(comptime len: comptime_int, init: u32) @Vector(len, u32) {
+    var result: @Vector(len, u32) = undefined;
+    inline for (0..len) |i| {
+        result[i] = init + @as(u32, @intCast(i));
+    }
+    return result;
+}
 
+pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     const size = (base.height * base.width);
     const base_data = base.data;
     const comp_data = comp.data;
@@ -290,41 +295,51 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     const simd_end = (size / SIMD_SIZE) * SIMD_SIZE;
 
     var offset: usize = 0;
+    const Vec = @Vector(SIMD_SIZE, u32);
+    var xs: Vec = iota(SIMD_SIZE, 0);
+    var ys: Vec = @as(Vec, @splat(0));
     while (offset < simd_end) : (offset += SIMD_SIZE) {
-        const base_vec: @Vector(SIMD_SIZE, u32) = base_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
-        const comp_vec: @Vector(SIMD_SIZE, u32) = comp_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
+        const base_vec: Vec = base_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
+        const comp_vec: Vec = comp_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
 
         const diff_mask = base_vec != comp_vec;
-        if (!@reduce(.Or, diff_mask)) {
-            increment_coords_by(&x, &y, SIMD_SIZE, base.width);
-            continue;
-        }
+        if (@reduce(.Or, diff_mask)) {
+            for (0..SIMD_SIZE) |i| {
+                if (diff_mask[i]) {
+                    const pixel_offset = offset + i;
+                    const base_color = base_vec[i];
+                    const comp_color = comp_vec[i];
 
-        for (0..SIMD_SIZE) |i| {
-            if (diff_mask[i]) {
-                const pixel_offset = offset + i;
-                const base_color = base_vec[i];
-                const comp_color = comp_vec[i];
-
-                try processPixelDifference(
-                    pixel_offset,
-                    base_color,
-                    comp_color,
-                    x,
-                    y,
-                    base,
-                    comp,
-                    diff_output,
-                    diff_count,
-                    diff_lines,
-                    ignore_regions,
-                    max_delta,
-                    options,
-                );
+                    try processPixelDifference(
+                        pixel_offset,
+                        base_color,
+                        comp_color,
+                        xs[i],
+                        ys[i],
+                        base,
+                        comp,
+                        diff_output,
+                        diff_count,
+                        diff_lines,
+                        ignore_regions,
+                        max_delta,
+                        options,
+                    );
+                }
             }
-            increment_coords(&x, &y, base.width);
         }
+
+        xs += @splat(SIMD_SIZE);
+        const width_vec: Vec = @splat(base.width);
+        const mask: @Vector(SIMD_SIZE, bool) = xs >= width_vec;
+        const inc_y: Vec = @select(u32, mask, @as(Vec, @splat(1)), @as(Vec, @splat(0)));
+        ys += inc_y;
+        xs -= @select(u32, mask, width_vec, @as(Vec, @splat(0)));
     }
+
+    const width_usize: usize = base.width;
+    var x: u32 = @intCast(simd_end % width_usize);
+    var y: u32 = @intCast(simd_end / width_usize);
 
     // Handle remaining pixels
     while (offset < size) : (offset += 1) {
@@ -352,47 +367,122 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     }
 }
 
+<<<<<<< HEAD
 pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     var x: u32 = 0;
+=======
+pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: i64, options: DiffOptions) !void {
+    const base_size = (base.height * base.width);
+    const base_data = base.data;
+    const comp_data = comp.data;
+
+    const SIMD_SIZE = std.simd.suggestVectorLength(u32) orelse if (HAS_AVX512f) 16 else if (HAS_NEON) 8 else 4;
+    const min_width: u32 = @min(base.width, comp.width);
+    const min_height = @min(base.height, comp.height);
+    const steps: u32 = @intCast(min_width / SIMD_SIZE);
+    const base_delta: u32 = base.width - steps * SIMD_SIZE;
+    const comp_delta: u32 = comp.width - steps * SIMD_SIZE;
+
+    var base_offset: usize = 0;
+    var comp_offset: usize = 0;
+    const Vec = @Vector(SIMD_SIZE, u32);
+    var xs: Vec = iota(SIMD_SIZE, 0);
+>>>>>>> 8628a40 (Simdify compareDifferentLayouts)
     var y: u32 = 0;
-    var offset: u32 = 0;
+    for (0..min_height) |_| {
+        for (0..steps) |_| {
+            const base_vec: Vec = base_data[base_offset .. base_offset + SIMD_SIZE][0..SIMD_SIZE].*;
+            const comp_vec: Vec = comp_data[comp_offset .. comp_offset + SIMD_SIZE][0..SIMD_SIZE].*;
 
-    const size = (base.height * base.width);
-    while (offset < size) : (offset += 1) {
-        const base_color = base.readRawPixel(x, y);
+            const diff_mask = base_vec != comp_vec;
+            if (@reduce(.Or, diff_mask)) {
+                for (0..SIMD_SIZE) |i| {
+                    if (diff_mask[i]) {
+                        const pixel_offset = base_offset + i;
+                        const base_color = base_vec[i];
+                        const comp_color = comp_vec[i];
 
-        if (x >= comp.width or y >= comp.height) {
-            const alpha = (base_color >> 24) & 0xFF;
-            if (alpha != 0) {
-                diff_count.* += 1;
-                if (maybe_diff_output.*) |*output| {
-                    output.setImgColor(x, y, options.diff_pixel);
-                }
-
-                if (diff_lines) |lines| {
-                    lines.addLine(y);
+                        try processPixelDifference(
+                            pixel_offset,
+                            base_color,
+                            comp_color,
+                            xs[i],
+                            y,
+                            base,
+                            comp,
+                            diff_output,
+                            diff_count,
+                            diff_lines,
+                            ignore_regions,
+                            max_delta,
+                            options,
+                        );
+                    }
                 }
             }
-        } else {
-            const comp_color = comp.readRawPixel(x, y);
 
-            try processPixelDifference(
-                offset,
-                base_color,
-                comp_color,
-                x,
-                y,
-                base,
-                comp,
-                maybe_diff_output,
-                diff_count,
-                diff_lines,
-                ignore_regions,
-                max_delta,
-                options,
-            );
+            xs += @as(Vec, @splat(SIMD_SIZE));
+            base_offset += SIMD_SIZE;
+            comp_offset += SIMD_SIZE;
         }
+        // handle leftover pixels in a row
+        const processed: u32 = steps * SIMD_SIZE;
+        const remaining: u32 = base.width - processed;
+        for (0..remaining) |i| {
+            const x: u32 = processed + @as(u32, @intCast(i));
+            const base_color = base_data[base_offset + i];
+            if (x >= comp.width) {
+                const alpha = (base_color >> 24) & 0xFF;
+                if (alpha != 0) {
+                    diff_count.* += 1;
+                    if (diff_output.*) |*output| {
+                        output.setImgColor(x, y, options.diff_pixel);
+                    }
 
+                    if (diff_lines) |lines| {
+                        lines.addLine(y);
+                    }
+                }
+            } else {
+                const comp_color = comp.readRawPixel(x, y);
+                try processPixelDifference(
+                    base_offset + i,
+                    base_color,
+                    comp_color,
+                    x,
+                    y,
+                    base,
+                    comp,
+                    diff_output,
+                    diff_count,
+                    diff_lines,
+                    ignore_regions,
+                    max_delta,
+                    options,
+                );
+            }
+        }
+        xs = iota(SIMD_SIZE, 0);
+        y += 1;
+        base_offset += base_delta;
+        comp_offset += comp_delta;
+    }
+
+    // Handle remaining pixels
+    var x: u32 = 0;
+    while (base_offset < base_size) : (base_offset += 1) {
+        const base_color = base_data[base_offset];
+        const alpha = (base_color >> 24) & 0xFF;
+        if (alpha != 0) {
+            diff_count.* += 1;
+            if (diff_output.*) |*output| {
+                output.setImgColor(x, y, options.diff_pixel);
+            }
+
+            if (diff_lines) |lines| {
+                lines.addLine(y);
+            }
+        }
         increment_coords(&x, &y, base.width);
     }
 }
