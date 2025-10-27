@@ -278,14 +278,6 @@ inline fn increment_coords_by(x: *u32, y: *u32, step: u32, width: u32) void {
     }
 }
 
-fn iota(comptime len: comptime_int, init: u32) @Vector(len, u32) {
-    var result: @Vector(len, u32) = undefined;
-    inline for (0..len) |i| {
-        result[i] = init + @as(u32, @intCast(i));
-    }
-    return result;
-}
-
 pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     const size = (base.height * base.width);
     const base_data = base.data;
@@ -296,7 +288,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
 
     var offset: usize = 0;
     const Vec = @Vector(SIMD_SIZE, u32);
-    var xs: Vec = iota(SIMD_SIZE, 0);
+    var xs: Vec = std.simd.iota(u32, SIMD_SIZE);
     var ys: Vec = @as(Vec, @splat(0));
     while (offset < simd_end) : (offset += SIMD_SIZE) {
         const base_vec: Vec = base_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
@@ -386,8 +378,12 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
     var base_offset: usize = 0;
     var comp_offset: usize = 0;
     const Vec = @Vector(SIMD_SIZE, u32);
+<<<<<<< HEAD
     var xs: Vec = iota(SIMD_SIZE, 0);
 >>>>>>> 8628a40 (Simdify compareDifferentLayouts)
+=======
+    var xs: Vec = std.simd.iota(u32, SIMD_SIZE);
+>>>>>>> 604b84a (Use std.simd.iota)
     var y: u32 = 0;
     for (0..min_height) |_| {
         for (0..steps) |_| {
@@ -462,7 +458,7 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                 );
             }
         }
-        xs = iota(SIMD_SIZE, 0);
+        xs = std.simd.iota(u32, SIMD_SIZE);
         y += 1;
         base_offset += base_delta;
         comp_offset += comp_delta;
