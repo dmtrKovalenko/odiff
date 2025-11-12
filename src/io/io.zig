@@ -170,13 +170,9 @@ pub fn saveImageWithFormat(img: Image, file_path: []const u8, format: ImageForma
         .truncate = true,
     });
     defer file.close();
-    var buffer: [1024 * 1024]u8 = undefined;
-    var file_writer = file.writer(&buffer);
 
     switch (format) {
-        .png => try png.save(img, &file_writer.interface),
+        .png => try png.save(img, file),
         else => return error.UnsupportedFormat,
     }
-
-    try file_writer.interface.flush();
 }

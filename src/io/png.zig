@@ -38,7 +38,7 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
     };
 }
 
-pub fn save(img: Image, writer: *std.Io.Writer) !void {
+pub fn save(img: Image, file: std.fs.File) !void {
     const ctx = c.spng_ctx_new(c.SPNG_CTX_ENCODER) orelse return error.OutOfMemory;
     defer c.spng_ctx_free(ctx);
 
@@ -53,6 +53,10 @@ pub fn save(img: Image, writer: *std.Io.Writer) !void {
     };
     if (c.spng_set_ihdr(ctx, &ihdr) != 0) return error.InvalidData;
 
+    if (c.spng_set_option(ctx, c.SPNG_FILTER_CHOICE, c.SPNG_DISABLE_FILTERING) != 0) return error.InvalidData;
+
+    var buffer: [4096]u8 = undefined;
+    var file_writer = file.writer(&buffer);
     if (c.spng_set_png_stream(
         ctx,
         struct {
@@ -66,14 +70,33 @@ pub fn save(img: Image, writer: *std.Io.Writer) !void {
                 return 0;
             }
         }.writeFn,
-        @ptrCast(@alignCast(writer)),
+        @ptrCast(@alignCast(&file_writer.interface)),
     ) != 0) return error.InvalidData;
 
     const pixel_data = img.slice();
-    const res = c.spng_encode_image(ctx, @ptrCast(@alignCast(pixel_data.ptr)), pixel_data.len * @sizeOf(u32), c.SPNG_FMT_PNG, c.SPNG_ENCODE_FINALIZE);
+    const row_width = img.width * @sizeOf(u32);
+
+    const res = c.spng_encode_image(ctx, null, 0, c.SPNG_FMT_PNG, c.SPNG_ENCODE_PROGRESSIVE);
     if (res != 0) {
         const err_msg = std.mem.span(c.spng_strerror(res));
-        std.log.err("writePNG: failed to encode image {s}", .{err_msg});
+        std.log.err("writePNG: failed to setup progressive encoding {s}", .{err_msg});
+        return error.InvalidData;
+    }
+
+    for (0..img.height) |y| {
+        const row_ptr = pixel_data.ptr + y * img.width;
+        const row_res = c.spng_encode_scanline(ctx, row_ptr, row_width);
+        if (row_res != 0 and row_res != c.SPNG_EOI) {
+            const err_msg = std.mem.span(c.spng_strerror(row_res));
+            std.log.err("writePNG: failed to encode scanline {d} {s}", .{ y, err_msg });
+            return error.InvalidData;
+        }
+    }
+
+    const final_res = c.spng_encode_chunks(ctx);
+    if (final_res != 0) {
+        const err_msg = std.mem.span(c.spng_strerror(final_res));
+        std.log.err("writePNG: failed to finalize encoding {s}", .{err_msg});
         return error.InvalidData;
     }
 }
