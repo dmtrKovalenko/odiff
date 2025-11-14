@@ -73,30 +73,11 @@ pub fn save(img: Image, file: std.fs.File) !void {
         @ptrCast(@alignCast(&file_writer.interface)),
     ) != 0) return error.InvalidData;
 
-    const pixel_data = img.slice();
-    const row_width = img.width * @sizeOf(u32);
-
-    const res = c.spng_encode_image(ctx, null, 0, c.SPNG_FMT_PNG, c.SPNG_ENCODE_PROGRESSIVE);
+    const u8_slice: []u8 = @ptrCast(img.slice());
+    const res = c.spng_encode_image(ctx, u8_slice.ptr, u8_slice.len, c.SPNG_FMT_PNG, c.SPNG_ENCODE_FINALIZE);
     if (res != 0) {
         const err_msg = std.mem.span(c.spng_strerror(res));
-        std.log.err("writePNG: failed to setup progressive encoding {s}", .{err_msg});
-        return error.InvalidData;
-    }
-
-    for (0..img.height) |y| {
-        const row_ptr = pixel_data.ptr + y * img.width;
-        const row_res = c.spng_encode_scanline(ctx, row_ptr, row_width);
-        if (row_res != 0 and row_res != c.SPNG_EOI) {
-            const err_msg = std.mem.span(c.spng_strerror(row_res));
-            std.log.err("writePNG: failed to encode scanline {d} {s}", .{ y, err_msg });
-            return error.InvalidData;
-        }
-    }
-
-    const final_res = c.spng_encode_chunks(ctx);
-    if (final_res != 0) {
-        const err_msg = std.mem.span(c.spng_strerror(final_res));
-        std.log.err("writePNG: failed to finalize encoding {s}", .{err_msg});
+        std.log.err("writePNG: failed to encode image {s}", .{err_msg});
         return error.InvalidData;
     }
 }

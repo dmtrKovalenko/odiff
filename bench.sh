@@ -31,15 +31,16 @@ function build_project() {
 function checkout_and_build() {
 	local commit_id="$1"
 	local skip_if_exists="$2"
-	if [[ $skip_if_exists == true ]]; then
-		if [[ -d "zig-out/bench/$commit_id" ]]; then
-			echo "Skipping build of $commit_id"
-			return
-		fi
-	fi
 
 	echo "Checking out $commit_id"
 	if [[ $commit_id != "unstaged" ]]; then
+		if [[ $skip_if_exists == true ]]; then
+			if [[ -d "zig-out/bench/$commit_id" ]]; then
+				echo "Skipping build of $commit_id"
+				return
+			fi
+		fi
+
 		if [[ ! -d ".benchtree" ]]; then
 			git worktree add ".benchtree" "$commit_id"
 		fi
