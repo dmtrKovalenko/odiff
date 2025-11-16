@@ -35,7 +35,12 @@ fn hasManySiblingsWithSameColor(x: u32, y: u32, width: u32, height: u32, image: 
     }
 }
 
-pub fn detect(x: u32, y: u32, base_img: *const Image, comp_img: *const Image) bool {
+pub inline fn detect(pixel_offset: usize, base_img: *const Image, comp_img: *const Image) bool {
+    // for anti-aliasing detection we have to work with the actual coordinates to
+    // find the neighboring pixels grid of 3x3 size, but this is the WORST case scenario
+    const x = @as(u32, @intCast(pixel_offset % base_img.width));
+    const y = @as(u32, @intCast(pixel_offset / base_img.width));
+
     const x0 = @max(if (x > 0) x - 1 else 0, 0);
     const y0 = @max(if (y > 0) y - 1 else 0, 0);
     const x1 = @min(x + 1, base_img.width - 1);

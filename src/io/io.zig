@@ -29,6 +29,10 @@ pub const Image = extern struct {
         return self.data[offset];
     }
 
+    pub fn setImgColorAtOffset(self: *Image, offset: usize, color: u32) void {
+        self.data[offset] = color;
+    }
+
     pub fn setImgColor(self: *Image, x: u32, y: u32, color: u32) void {
         const offset = y * self.width + x;
         self.data[offset] = color;
