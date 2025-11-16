@@ -58,6 +58,7 @@ test "PNG: finds difference between 2 images without capture" {
         .enable_asm = true,
     };
     var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
