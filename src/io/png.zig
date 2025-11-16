@@ -38,7 +38,7 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
     };
 }
 
-pub fn save(img: Image, writer: *std.Io.Writer) !void {
+pub fn save(img: Image, file: std.fs.File) !void {
     const ctx = c.spng_ctx_new(c.SPNG_CTX_ENCODER) orelse return error.OutOfMemory;
     defer c.spng_ctx_free(ctx);
 
@@ -53,6 +53,10 @@ pub fn save(img: Image, writer: *std.Io.Writer) !void {
     };
     if (c.spng_set_ihdr(ctx, &ihdr) != 0) return error.InvalidData;
 
+    if (c.spng_set_option(ctx, c.SPNG_FILTER_CHOICE, c.SPNG_DISABLE_FILTERING) != 0) return error.InvalidData;
+
+    var buffer: [4096]u8 = undefined;
+    var file_writer = file.writer(&buffer);
     if (c.spng_set_png_stream(
         ctx,
         struct {
@@ -66,11 +70,11 @@ pub fn save(img: Image, writer: *std.Io.Writer) !void {
                 return 0;
             }
         }.writeFn,
-        @ptrCast(@alignCast(writer)),
+        @ptrCast(@alignCast(&file_writer.interface)),
     ) != 0) return error.InvalidData;
 
-    const pixel_data = img.slice();
-    const res = c.spng_encode_image(ctx, @ptrCast(@alignCast(pixel_data.ptr)), pixel_data.len * @sizeOf(u32), c.SPNG_FMT_PNG, c.SPNG_ENCODE_FINALIZE);
+    const u8_slice: []u8 = @ptrCast(img.slice());
+    const res = c.spng_encode_image(ctx, u8_slice.ptr, u8_slice.len, c.SPNG_FMT_PNG, c.SPNG_ENCODE_FINALIZE);
     if (res != 0) {
         const err_msg = std.mem.span(c.spng_strerror(res));
         std.log.err("writePNG: failed to encode image {s}", .{err_msg});
