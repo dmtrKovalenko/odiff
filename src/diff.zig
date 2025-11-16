@@ -216,7 +216,11 @@ pub noinline fn compare(
 }
 
 inline fn processPixelDifference(
-    pixel_offset: usize,
+    // because for antialiasing detection we run both check from both image sides
+    // we have to provide the actual offset for both base and comp images
+    // if the layout is different but in most cases they will be the same
+    base_pixel_offset: usize,
+    comp_pixel_offset: usize,
     base_color: u32,
     comp_color: u32,
     base: *const Image,
@@ -228,7 +232,7 @@ inline fn processPixelDifference(
     max_delta: i64,
     options: DiffOptions,
 ) !void {
-    if (isInIgnoreRegion(@intCast(pixel_offset), ignore_regions)) {
+    if (isInIgnoreRegion(@intCast(base_pixel_offset), ignore_regions)) {
         return;
     }
 
@@ -237,18 +241,18 @@ inline fn processPixelDifference(
         var is_antialiased = false;
 
         if (options.antialiasing) {
-            is_antialiased = antialiasing.detect(pixel_offset, base, comp) or
-                antialiasing.detect(pixel_offset, comp, base);
+            is_antialiased = antialiasing.detect(base_pixel_offset, base, comp) or
+                antialiasing.detect(comp_pixel_offset, comp, base);
         }
 
         if (!is_antialiased) {
             diff_count.* += 1;
             if (diff_output.*) |*output| {
-                output.setImgColorAtOffset(pixel_offset, options.diff_pixel);
+                output.setImgColorAtOffset(base_pixel_offset, options.diff_pixel);
             }
 
             if (diff_lines) |lines| {
-                lines.addLine(@intCast(pixel_offset / base.width));
+                lines.addLine(@intCast(base_pixel_offset / base.width));
             }
         }
     }
@@ -300,6 +304,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
 
                     try processPixelDifference(
                         pixel_offset,
+                        pixel_offset,
                         base_color,
                         comp_color,
                         base,
@@ -328,6 +333,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
         if (base_color != comp_color) {
             try processPixelDifference(
                 offset,
+                offset,
                 base_color,
                 comp_color,
                 base,
@@ -344,11 +350,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     }
 }
 
-<<<<<<< HEAD
-pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
-    var x: u32 = 0;
-=======
-pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: i64, options: DiffOptions) !void {
+pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     const base_size = (base.height * base.width);
     const base_data = base.data;
     const comp_data = comp.data;
@@ -363,12 +365,6 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
     var base_offset: usize = 0;
     var comp_offset: usize = 0;
     const Vec = @Vector(SIMD_SIZE, u32);
-<<<<<<< HEAD
-    var xs: Vec = iota(SIMD_SIZE, 0);
->>>>>>> 8628a40 (Simdify compareDifferentLayouts)
-=======
-    var xs: Vec = std.simd.iota(u32, SIMD_SIZE);
->>>>>>> 604b84a (Use std.simd.iota)
     var y: u32 = 0;
     for (0..min_height) |_| {
         for (0..steps) |_| {
@@ -379,12 +375,14 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
             if (@reduce(.Or, diff_mask)) {
                 for (0..SIMD_SIZE) |i| {
                     if (diff_mask[i]) {
-                        const pixel_offset = base_offset + i;
+                        const base_pixel_offset = base_offset + i;
+                        const comp_pixel_offset = comp_offset + i;
                         const base_color = base_vec[i];
                         const comp_color = comp_vec[i];
 
                         try processPixelDifference(
-                            pixel_offset,
+                            base_pixel_offset,
+                            comp_pixel_offset,
                             base_color,
                             comp_color,
                             base,
@@ -400,7 +398,6 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                 }
             }
 
-            xs += @as(Vec, @splat(SIMD_SIZE));
             base_offset += SIMD_SIZE;
             comp_offset += SIMD_SIZE;
         }
@@ -426,6 +423,7 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                 const comp_color = comp.readRawPixel(x, y);
                 try processPixelDifference(
                     base_offset + i,
+                    comp_offset + i,
                     base_color,
                     comp_color,
                     base,
@@ -439,7 +437,6 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                 );
             }
         }
-        xs = std.simd.iota(u32, SIMD_SIZE);
         y += 1;
         base_offset += base_delta;
         comp_offset += comp_delta;
