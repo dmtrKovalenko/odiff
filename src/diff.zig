@@ -169,8 +169,6 @@ inline fn processPixelDifference(
     pixel_offset: usize,
     base_color: u32,
     comp_color: u32,
-    x: u32,
-    y: u32,
     base: *const Image,
     comp: *const Image,
     diff_output: *?Image,
@@ -180,26 +178,27 @@ inline fn processPixelDifference(
     max_delta: i64,
     options: DiffOptions,
 ) !void {
-    const is_ignored = isInIgnoreRegion(@intCast(pixel_offset), ignore_regions);
-    if (!is_ignored) {
-        const delta = @call(.never_inline, color_delta.calculatePixelColorDeltaSimd, .{ base_color, comp_color });
-        if (delta > max_delta) {
-            var is_antialiased = false;
+    if (isInIgnoreRegion(@intCast(pixel_offset), ignore_regions)) {
+        return;
+    }
 
-            if (options.antialiasing) {
-                is_antialiased = antialiasing.detect(x, y, base, comp) or
-                    antialiasing.detect(x, y, comp, base);
+    const delta = color_delta.calculatePixelColorDeltaSimd(base_color, comp_color);
+    if (delta > max_delta) {
+        var is_antialiased = false;
+
+        if (options.antialiasing) {
+            is_antialiased = antialiasing.detect(pixel_offset, base, comp) or
+                antialiasing.detect(pixel_offset, comp, base);
+        }
+
+        if (!is_antialiased) {
+            diff_count.* += 1;
+            if (diff_output.*) |*output| {
+                output.setImgColorAtOffset(pixel_offset, options.diff_pixel);
             }
 
-            if (!is_antialiased) {
-                diff_count.* += 1;
-                if (diff_output.*) |*output| {
-                    output.setImgColor(x, y, options.diff_pixel);
-                }
-
-                if (diff_lines) |lines| {
-                    lines.addLine(y);
-                }
+            if (diff_lines) |lines| {
+                lines.addLine(@intCast(pixel_offset / base.width));
             }
         }
     }
@@ -237,12 +236,9 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     const simd_end = (size / SIMD_SIZE) * SIMD_SIZE;
 
     var offset: usize = 0;
-    const Vec = @Vector(SIMD_SIZE, u32);
-    var xs: Vec = std.simd.iota(u32, SIMD_SIZE);
-    var ys: Vec = @as(Vec, @splat(0));
     while (offset < simd_end) : (offset += SIMD_SIZE) {
-        const base_vec: Vec = base_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
-        const comp_vec: Vec = comp_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
+        const base_vec: @Vector(SIMD_SIZE, u32) = base_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
+        const comp_vec: @Vector(SIMD_SIZE, u32) = comp_data[offset .. offset + SIMD_SIZE][0..SIMD_SIZE].*;
 
         const diff_mask = base_vec != comp_vec;
         if (@reduce(.Or, diff_mask)) {
@@ -256,8 +252,6 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
                         pixel_offset,
                         base_color,
                         comp_color,
-                        xs[i],
-                        ys[i],
                         base,
                         comp,
                         diff_output,
@@ -270,13 +264,6 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
                 }
             }
         }
-
-        xs += @splat(SIMD_SIZE);
-        const width_vec: Vec = @splat(base.width);
-        const mask: @Vector(SIMD_SIZE, bool) = xs >= width_vec;
-        const inc_y: Vec = @select(u32, mask, @as(Vec, @splat(1)), @as(Vec, @splat(0)));
-        ys += inc_y;
-        xs -= @select(u32, mask, width_vec, @as(Vec, @splat(0)));
     }
 
     const width_usize: usize = base.width;
@@ -293,8 +280,6 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
                 offset,
                 base_color,
                 comp_color,
-                x,
-                y,
                 base,
                 comp,
                 diff_output,
@@ -343,8 +328,6 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                             pixel_offset,
                             base_color,
                             comp_color,
-                            xs[i],
-                            y,
                             base,
                             comp,
                             diff_output,
@@ -386,8 +369,6 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                     base_offset + i,
                     base_color,
                     comp_color,
-                    x,
-                    y,
                     base,
                     comp,
                     diff_output,

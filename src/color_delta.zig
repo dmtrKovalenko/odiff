@@ -120,13 +120,14 @@ inline fn blendChannelSimd(
     return @select(i64, alpha_zero, VEC_2X_WHITE_SHIFTED, @select(i64, alpha_full, opaque_value, blended));
 }
 
-pub fn calculatePixelColorDeltaSimd(pixel_a: u32, pixel_b: u32) i64 {
+pub noinline fn calculatePixelColorDeltaSimd(pixel_a: u32, pixel_b: u32) i64 {
     const pixels: @Vector(2, u32) = .{ pixel_a, pixel_b };
     const mask_ff: @Vector(2, u32) = comptime @splat(0xFF);
 
     const vec_r_u32 = pixels & mask_ff;
     const vec_g_u32 = (pixels >> @as(@Vector(2, u5), @splat(8))) & mask_ff;
-    const vec_b_u32 = (pixels >> @as(@Vector(2, u5), @splat(16))) & mask_ff; const vec_alpha_u32 = (pixels >> @as(@Vector(2, u5), @splat(24))) & mask_ff;
+    const vec_b_u32 = (pixels >> @as(@Vector(2, u5), @splat(16))) & mask_ff;
+    const vec_alpha_u32 = (pixels >> @as(@Vector(2, u5), @splat(24))) & mask_ff;
 
     const vec_r: @Vector(2, i64) = @intCast(vec_r_u32);
     const vec_g: @Vector(2, i64) = @intCast(vec_g_u32);
