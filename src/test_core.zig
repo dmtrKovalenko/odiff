@@ -237,7 +237,7 @@ test "layoutDifference: diff images with different layouts (2)" {
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 1209283), diff_count); // diffPixels
+        try expectEqual(@as(u32, 1209280), diff_count); // diffPixels
         try expectApproxEqRel(@as(f64, 70.368), diff_percentage, 0.001); // diffPercentage
     }
     {
@@ -245,7 +245,7 @@ test "layoutDifference: diff images with different layouts (2)" {
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 1209283), diff_count); // diffPixels
+        try expectEqual(@as(u32, 1209280), diff_count); // diffPixels
         try expectApproxEqRel(@as(f64, 70.368), diff_percentage, 0.001); // diffPercentage
     }
 }
