@@ -208,3 +208,36 @@ test "layoutDifference: diff images with different layouts" {
     try expectEqual(@as(u32, 16), diff_count); // diffPixels
     try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
 }
+
+// Bug pinning https://github.com/dmtrKovalenko/odiff/issues/149
+test "unrollIgnoreRegions: should only mark rectangular region pixels, not entire linear range (bug #149)" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const width: u32 = 100;
+    const regions = [_]diff.IgnoreRegion{
+        .{ .x1 = 70, .y1 = 50, .x2 = 90, .y2 = 52 },
+    };
+
+    const unrolled = try diff.unrollIgnoreRegions(width, &regions, allocator);
+    defer if (unrolled) |u| allocator.free(u);
+
+    // Test pixels that SHOULD be ignored (inside the rectangle)
+    const pixel_inside_1 = (50 * width) + 75; // (75, 50) - inside rectangle
+    const pixel_inside_2 = (51 * width) + 80; // (80, 51) - inside rectangle
+    const pixel_inside_3 = (52 * width) + 85; // (85, 52) - inside rectangle
+
+    try expect(diff.isInIgnoreRegion(pixel_inside_1, unrolled));
+    try expect(diff.isInIgnoreRegion(pixel_inside_2, unrolled));
+    try expect(diff.isInIgnoreRegion(pixel_inside_3, unrolled));
+
+    // Test pixels that should NOT be ignored (outside the rectangle but within linear range)
+    const pixel_outside_left_row51 = (51 * width) + 10; // (10, 51) - LEFT side, OUTSIDE rectangle
+    const pixel_outside_left_row52 = (52 * width) + 10; // (10, 52) - LEFT side, OUTSIDE rectangle
+    const pixel_outside_left_row50 = (50 * width) + 10; // (10, 50) - LEFT side, OUTSIDE rectangle
+
+    try expect(!diff.isInIgnoreRegion(pixel_outside_left_row50, unrolled));
+    try expect(!diff.isInIgnoreRegion(pixel_outside_left_row51, unrolled));
+    try expect(!diff.isInIgnoreRegion(pixel_outside_left_row52, unrolled));
+}
