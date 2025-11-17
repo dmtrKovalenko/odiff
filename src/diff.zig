@@ -83,25 +83,75 @@ pub const DiffOptions = struct {
     enable_asm: bool = false,
 };
 
-fn unrollIgnoreRegions(width: u32, regions: ?[]const IgnoreRegion, allocator: std.mem.Allocator) !?[]struct { u32, u32 } {
+pub fn unrollIgnoreRegions(width: u32, regions: ?[]const IgnoreRegion, allocator: std.mem.Allocator) !?[]u64 {
     if (regions == null) return null;
-    var unrolled = try allocator.alloc(struct { u32, u32 }, regions.?.len);
-    for (regions.?, 0..) |region, i| {
-        const p1 = (region.y1 * width) + region.x1;
-        const p2 = (region.y2 * width) + region.x2;
-        unrolled[i] = .{ p1, p2 };
+
+    // First, calculate how many line ranges we need
+    var total_lines: usize = 0;
+    for (regions.?) |region| {
+        const num_lines = region.y2 - region.y1 + 1;
+        total_lines += num_lines;
     }
+
+    // Allocate space for all line ranges as u64 (packed start|end)
+    var unrolled = try allocator.alloc(u64, total_lines);
+    var idx: usize = 0;
+
+    // For each region, create a separate range for each row
+    // Pack as: lower 32 bits = start, upper 32 bits = end
+    for (regions.?) |region| {
+        var y = region.y1;
+        while (y <= region.y2) : (y += 1) {
+            const line_start: u64 = (y * width) + region.x1;
+            const line_end: u64 = (y * width) + region.x2;
+            unrolled[idx] = (line_end << 32) | line_start;
+            idx += 1;
+        }
+    }
+
     return unrolled;
 }
 
-fn isInIgnoreRegion(offset: u32, regions: ?[]const struct { u32, u32 }) bool {
+/// Because we unroll the ignore regions there could be easily be hundreds of them if the height of a region is large
+pub fn isInIgnoreRegion(offset: u32, regions: ?[]const u64) bool {
     if (regions == null) return false;
 
-    for (regions.?) |region| {
-        if (offset >= region[0] and offset <= region[1]) {
+    const regions_slice = regions.?;
+    const len = regions_slice.len;
+
+    const SIMD_SIZE = comptime std.simd.suggestVectorLength(u64) orelse 4;
+    const simd_end = (len / SIMD_SIZE) * SIMD_SIZE;
+
+    const offset_vec: @Vector(SIMD_SIZE, u32) = @splat(offset);
+
+    var i: usize = 0;
+    while (i < simd_end) : (i += SIMD_SIZE) {
+        const packed_vec: @Vector(SIMD_SIZE, u64) = regions_slice[i..][0..SIMD_SIZE].*;
+
+        const starts: @Vector(SIMD_SIZE, u32) = @truncate(packed_vec);
+        const ends: @Vector(SIMD_SIZE, u32) = @truncate(packed_vec >> @splat(32));
+
+        const ge_mask = offset_vec >= starts;
+        const le_mask = offset_vec <= ends;
+        const in_range_mask = ge_mask & le_mask;
+
+        // If any lane is true, we found a match
+        if (@reduce(.Or, in_range_mask)) {
             return true;
         }
     }
+
+    // Handle remaining regions with scalar code
+    i = simd_end;
+    while (i < len) : (i += 1) {
+        const packed_region = regions_slice[i];
+        const start: u32 = @truncate(packed_region);
+        const end: u32 = @truncate(packed_region >> 32);
+        if (offset >= start and offset <= end) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -176,7 +226,7 @@ inline fn processPixelDifference(
     diff_output: *?Image,
     diff_count: *u32,
     diff_lines: ?*DiffLines,
-    ignore_regions: ?[]struct { u32, u32 },
+    ignore_regions: ?[]u64,
     max_delta: i64,
     options: DiffOptions,
 ) !void {
@@ -228,7 +278,7 @@ inline fn increment_coords_by(x: *u32, y: *u32, step: u32, width: u32) void {
     }
 }
 
-pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: i64, options: DiffOptions) !void {
+pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     var x: u32 = 0;
     var y: u32 = 0;
 
@@ -302,7 +352,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     }
 }
 
-pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: i64, options: DiffOptions) !void {
+pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, maybe_diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     var x: u32 = 0;
     var y: u32 = 0;
     var offset: u32 = 0;
@@ -379,7 +429,7 @@ extern fn odiffRVV(
     diffcol: u32,
 ) u32;
 
-pub noinline fn compareRVV(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]struct { u32, u32 }, max_delta: f64, options: DiffOptions) !void {
+pub noinline fn compareRVV(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: f64, options: DiffOptions) !void {
     _ = ignore_regions;
     const basePtr: [*]const u32 = @ptrCast(@alignCast(base.data));
     const compPtr: [*]const u32 = @ptrCast(@alignCast(comp.data));
