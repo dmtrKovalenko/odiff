@@ -201,12 +201,53 @@ test "layoutDifference: diff images with different layouts" {
         .output_diff_mask = false,
     };
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
-    defer if (diff_output) |*img| img.deinit(allocator);
-    defer if (diff_lines) |*lines| lines.deinit();
+    {
+        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+        defer if (diff_output) |*img| img.deinit(allocator);
+        defer if (diff_lines) |*lines| lines.deinit();
 
-    try expectEqual(@as(u32, 16), diff_count); // diffPixels
-    try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
+        try expectEqual(@as(u32, 16), diff_count); // diffPixels
+        try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
+    }
+    {
+        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img2, &img1, options, allocator);
+        defer if (diff_output) |*img| img.deinit(allocator);
+        defer if (diff_lines) |*lines| lines.deinit();
+
+        try expectEqual(@as(u32, 64), diff_count); // diffPixels
+        try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
+    }
+}
+
+test "layoutDifference: diff images with different layouts (2)" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var img1 = try loadTestImage("test/png/odiff-logo-dark.png", allocator);
+    defer img1.deinit(allocator);
+
+    var img2 = try loadTestImage("test/png/odiff-logo-dark-rotated.png", allocator);
+    defer img2.deinit(allocator);
+
+    const options = diff.DiffOptions{};
+
+    {
+        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+        defer if (diff_output) |*img| img.deinit(allocator);
+        defer if (diff_lines) |*lines| lines.deinit();
+
+        try expectEqual(@as(u32, 1209280), diff_count); // diffPixels
+        try expectApproxEqRel(@as(f64, 70.368), diff_percentage, 0.001); // diffPercentage
+    }
+    {
+        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img2, &img1, options, allocator);
+        defer if (diff_output) |*img| img.deinit(allocator);
+        defer if (diff_lines) |*lines| lines.deinit();
+
+        try expectEqual(@as(u32, 1209280), diff_count); // diffPixels
+        try expectApproxEqRel(@as(f64, 70.368), diff_percentage, 0.001); // diffPercentage
+    }
 }
 
 // Bug pinning https://github.com/dmtrKovalenko/odiff/issues/149
