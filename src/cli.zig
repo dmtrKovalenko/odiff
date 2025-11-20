@@ -18,6 +18,7 @@ pub const CliArgs = struct {
     diff_lines: bool = false,
     reduce_ram_usage: bool = false,
     enable_asm: bool = false,
+    server_mode: bool = false,
     ignore_regions: std.array_list.Managed(diff.IgnoreRegion),
     allocator: std.mem.Allocator,
 
@@ -54,6 +55,7 @@ fn printUsage(program_name: []const u8) void {
     print("  --output-diff-lines         Output line numbers with differences\n", .{});
     print("  --reduce-ram-usage          Use less memory (slower)\n", .{});
     print("  --enable-asm                Enable AVX-512 optimized asm path when supported (x86_64 only)\n", .{});
+    print("  --server                    Run in server mode (reads JSON from stdin)\n", .{});
     print("  -i, --ignore <regions[]>    Ignore regions (format: x1:y1-x2:y2,x3:y3-x4:y4)\n", .{});
     print("  -h, --help                  Show this help message\n", .{});
     print("  --version                   Show version\n", .{});
@@ -76,9 +78,9 @@ fn parseFloatArg(args: [][:0]u8, index: *usize, option_name: []const u8) ?f32 {
     // --option=value format
     if (std.mem.startsWith(u8, arg, option_name) and
         arg.len > option_name.len and
-        arg[option_name.len] == '=') {
-
-        const value_str = arg[option_name.len + 1..];
+        arg[option_name.len] == '=')
+    {
+        const value_str = arg[option_name.len + 1 ..];
         if (value_str.len == 0) return null;
 
         index.* += 1;
@@ -196,6 +198,8 @@ pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
             parsed_args.reduce_ram_usage = true;
         } else if (std.mem.eql(u8, arg, "--enable-asm")) {
             parsed_args.enable_asm = true;
+        } else if (std.mem.eql(u8, arg, "--server")) {
+            parsed_args.server_mode = true;
         } else if (std.mem.eql(u8, arg, "-i") or std.mem.eql(u8, arg, "--ignore")) {
             i += 1;
             if (i >= args.len) {
@@ -237,7 +241,8 @@ pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
         i += 1;
     }
 
-    if (positional_count < 2) {
+    // Server mode doesn't need positional arguments
+    if (!parsed_args.server_mode and positional_count < 2) {
         print("Error: Missing required arguments\n", .{});
         printUsage(args[0]);
         std.process.exit(1);

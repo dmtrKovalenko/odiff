@@ -47,6 +47,7 @@ pub fn build(b: *std.Build) !void {
 
     const integration_tests_pure_zig = [_][]const u8{
         "src/test_color_delta.zig",
+        "src/test_server.zig",
     };
 
     var integration_test_steps = std.array_list.Managed(*std.Build.Step.Run).init(b.allocator);
@@ -98,6 +99,8 @@ pub fn build(b: *std.Build) !void {
     test_step.dependOn(&run_lib_unit_tests.step);
 
     const integration_test_step = b.step("test-integration", "Run integration tests with test images");
+    // Ensure the main executable is built before running integration tests
+    integration_test_step.dependOn(b.getInstallStep());
     for (integration_test_steps.items) |test_run_step| {
         integration_test_step.dependOn(&test_run_step.step);
     }

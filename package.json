@@ -1,23 +1,17 @@
 {
-  "name": "odiff",
+  "name": "odiff-dev-monorepo",
   "version": "4.1.2",
+  "private": true,
   "author": "odiff contributors",
   "license": "MIT",
-  "description": "The fastest image difference tool in the world (Zig port of odiff)",
-  "scripts": {
-    "test": "ava",
-    "update-readme" : "node scripts/process-readme.js"
-
-  },
-  "keywords": [
-    "visual-regression",
-    "pixelmatch",
-    "image",
-    "comparison",
-    "diff",
-    "zig"
+  "workspaces": [
+    "npm_packages/*"
   ],
-  "devDependencies": {
-    "ava": "^6.1.3"
+  "scripts": {
+    "update-readme": "node scripts/process-readme.js",
+    "prepare": "(test -f ./zig-out/bin/odiff && cp ./zig-out/bin/odiff ./npm_packages/odiff-bin/bin/odiff.exe || true)", 
+    "test": "npm run prepare && npm run test -w @odiff/tests && npm run test -w playwright-odiff -- --reporter line",
+    "test:js": "npm run prepare && npm run test -w @odiff/tests",
+    "test:docker": "docker run --rm -it --user 1001:1001 --ipc=host -v /home/neogoose/dev/odiff:/workspace -w /workspace mcr.microsoft.com/playwright:v1.56.0-noble bash -c \"npm install --ignore-scripts && npm test\""
   }
 }

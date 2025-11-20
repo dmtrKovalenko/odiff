@@ -1,9 +1,0 @@
-src/
-test/
-playwright.config.ts
-tsconfig.json
-*.spec.ts
-test-results/
-playwright-report/
-node_modules/
-.DS_Store

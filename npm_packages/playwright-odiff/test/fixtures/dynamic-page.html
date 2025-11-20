@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Number Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.4);
+            padding: 80px;
+            text-align: center;
+            width: 800px;
+        }
+
+        .label {
+            font-size: 2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .big-number {
+            font-size: 8em;
+            font-weight: bold;
+            color: #667eea;
+            letter-spacing: 5px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="label">Performance Now</div>
+        <div class="big-number" id="number">0</div>
+        <button id="trigger">Trigger</button>
+    </div>
+
+    <script>
+        function updateNumber() {
+            document.getElementById('number').textContent = performance.now().toFixed(0);
+        }
+
+        // Update number once when trigger button is clicked
+        document.getElementById('trigger').addEventListener('click', updateNumber);
+    </script>
+</body>
+</html>

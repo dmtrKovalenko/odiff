@@ -1,0 +1,23 @@
+{
+  "name": "odiff-bin",
+  "version": "4.1.2",
+  "author": "odiff contributors",
+  "license": "MIT",
+  "description": "The fastest image difference tool in the world (Zig port of odiff)",
+  "scripts": {
+    "postinstall": "node ./post_install.js"
+  },
+  "bin": {
+    "odiff": "bin/odiff.exe"
+  },
+  "types": "odiff.d.ts",
+  "main": "odiff.js",
+  "keywords": [
+    "visual-regression",
+    "pixelmatch",
+    "image",
+    "comparison",
+    "diff",
+    "zig"
+  ]
+}
