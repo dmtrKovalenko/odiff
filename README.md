@@ -1,8 +1,8 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./odiff-logo-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./odiff-logo-light.png">
-    <img alt="pixeletad caml and odiff text with highlighted red pixels difference" src="./odiff-logo-dark.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/odiff-logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/odiff-logo-light.png">
+    <img alt="pixeletad caml and odiff text with highlighted red pixels difference" src="https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/odiff-logo-dark.png">
   </picture>
 </p>
 
@@ -16,7 +16,7 @@
 
 ## Why Odiff?
 
-ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. ODiff is designed speicifcally to handle significantly similar images like screenshots, photos, AI-generated images and many more. ODiff is designed to be portable, fast, and memory efficient.
+ODiff is a blazing fast native image comparison tool. Check [benchmarks](#benchmarks) for the results, but it compares the visual difference between 2 images in **milliseconds**. ODiff is designed specifically to handle significantly similar images like screenshots, photos, AI-generated images and many more. ODiff is designed to be portable, fast, and memory efficient.
 
 Originally written in OCaml, currently in Zig with SIMD optimizations for SSE2, AVX2, AVX512, and NEON.
 
@@ -24,9 +24,9 @@ Originally written in OCaml, currently in Zig with SIMD optimizations for SSE2, 
 
 | base                           | comparison                       | diff                                  |
 | ------------------------------ | -------------------------------- | ------------------------------------- |
-| ![](images/tiger.jpg)          | ![](images/tiger-2.jpg)          | ![1diff](images/tiger-diff.png)       |
-| ![](images/www.cypress.io.png) | ![](images/www.cypress.io-1.png) | ![1diff](images/www.cypress-diff.png) |
-| ![](images/donkey.png)         | ![](images/donkey-2.png)         | ![1diff](images/donkey-diff.png)      |
+| ![](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/tiger.jpg)          | ![](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/tiger-2.jpg)          | ![1diff](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/tiger-diff.png)       |
+| ![](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/www.cypress.io.png) | ![](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/www.cypress.io-1.png) | ![1diff](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/www.cypress-diff.png) |
+| ![](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/donkey.png)         | ![](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/donkey-2.png)         | ![1diff](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/donkey-diff.png)      |
 
 ## Features
 
@@ -53,7 +53,7 @@ odiff <IMG1 path> <IMG2 path> [DIFF output path]
 
 ### Node.js
 
-We also provides direct node.js binding for the `odiff`. Run the `odiff` from nodejs:
+We also provide direct node.js binding for the `odiff`. Run the `odiff` from nodejs:
 
 ```js
 const { compare } = require("odiff-bin");
@@ -65,13 +65,61 @@ const { match, reason } = await compare(
 );
 ```
 
+## Server mode
+
+Odiff provides a server mode for the long lasting runtime application to reduce a time you have to spend on forking and initializing child process on each odiff call. From node js it works as simply as
+
+```js
+const { ODiffServer } = require("odiff-bin");
+
+// it is safe to run from the module scope as it will automatically lazy load
+// and will cleanup and gracefully close on exits/sigints
+const odiffServer = new ODiffServer();
+
+const { match, reason } = await odiffServer.compare(
+  "path/to/first/image.png",
+  "path/to/second/image.png",
+  "path/to/diff.png",
+);
+```
+
+For the pure binary usage this is a simple readline stdio protocol with JSON message, here is a simple example
+
+```sh
+odiff --server
+
+$ odiff --server
+{"ready":true} # ready signal
+
+# your input
+{"requestId":1,"base":"images/www.cypress.io.png","compare":"images/www.cypress.io-1.png","output":"images/www.cypress-diff.
+png"}
+# server response
+{"requestId":1,"match":false,"reason":"pixel-diff","diffCount":1090946,"diffPercentage":2.95}
+```
+
+## Using from other frameworks
+
+### Playwright
+
+Just install `playwright-odiff` and simply
+
+```ts
+// in your setup file or test entrypoint
+import "playwright-odiff/setup";
+
+expect(page).toHaveScreenshotOdiff("screenshot-name", { /* any odiff and playwright options */ });
+```
+
+More details at [playwright-odiff doc](https://github.com/dmtrKovalenko/odiff/tree/main/npm_packages/playwright-odiff)
+
 ### Cypress
 
 Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress plugin to add visual regression tests using `odiff-bin`.
 
 ### Visual regression services
 
-[LostPixel](https://github.com/lost-pixel/lost-pixel) – Holistic visual testing for your Frontend allows very easy integration with storybook and uses odiff for comparison
+[LostPixel](https://github.com/lost-pixel/lost-pixel) – Holistic visual testing for your Frontend that allows very easy integration with storybook and uses odiff for comparison
 
 [Argos CI](https://argos-ci.com/) – Visual regression service powering projects like material-ui. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
 
@@ -95,7 +143,7 @@ odiff --help
 
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
-<!--inline-interface-start-->
+
 ```tsx
 export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
@@ -125,12 +173,7 @@ export type ODiffOptions = Partial<{
   }>;
 }>;
 
-declare function compare(
-  basePath: string,
-  comparePath: string,
-  diffPath: string,
-  options?: ODiffOptions
-): Promise<
+export type ODiffResult =
   | { match: true }
   | { match: false; reason: "layout-diff" }
   | {
@@ -148,12 +191,88 @@ declare function compare(
       reason: "file-not-exists";
       /** Errored file path */
       file: string;
-    }
->;
+    };
 
-export { compare };
+declare function compare(
+  basePath: string,
+  comparePath: string,
+  diffPath: string,
+  options?: ODiffOptions,
+): Promise<ODiffResult>;
+
+/**
+ * ODiffServer - Persistent server instance for multiple comparisons
+ *
+ * Use this when you need to perform multiple image comparisons to avoid
+ * process spawn overhead. The server process stays alive and reuses resources.
+ *
+ * The server initializes automatically on first compare() call, so you can
+ * create an instance and start using it immediately.
+ *
+ * @example
+ * ```ts
+ * const server = new ODiffServer();
+ *
+ * const result1 = await server.compare('a.png', 'b.png', 'diff1.png');
+ * // add optional timeout to catch any possible crashes on the server side:
+ * const result2 = await server.compare('c.png', 'd.png', 'diff2.png', { threshold: 0.3, timeout: 5000 });
+ *
+ * server.stop();
+ * ```
+ *
+ * It is absolutely fine to keep odiff server living in the module root
+ * even if you have several independent workers, it will automatically spawn
+ * a server process per each multiplexed core to work in parallel
+ *
+ * @example
+ * ```typescript
+ * const odiffServer = new ODiffServer();
+ *
+ * test('visual test 1', async () => {
+ *   await odiffServer.compare('a.png', 'b.png', 'diff1.png');
+ * });
+ *
+ * test('visual test 2', async () => {
+ *   await odiffServer.compare('c.png', 'd.png', 'diff2.png');
+ * });
+ * ```
+ */
+export declare class ODiffServer {
+  /**
+   * Create a new ODiffServer instance
+   * Server initialization begins immediately in the background
+   * @param binaryPath - Optional path to odiff binary (defaults to bundled binary)
+   */
+  constructor(binaryPath?: string);
+
+  /**
+   * Compare two images using the persistent server
+   * Automatically waits for server initialization if needed
+   * @param basePath - Path to base image
+   * @param comparePath - Path to comparison image
+   * @param diffOutput - Path to output diff image
+   * @param options - Comparison options with optional timeout for request
+   * @returns Promise resolving to comparison result
+   */
+  compare(
+    basePath: string,
+    comparePath: string,
+    diffOutput: string,
+    options?: ODiffOptions & { timeout?: number },
+  ): Promise<ODiffResult>;
+
+  /**
+   * Stop the odiff server process
+   * Should be called when done with all comparisons
+   * Safe to call even if server is not running
+   */
+  stop(): void;
+}
+
+export { compare, ODiffServer };
 ```
-<!--inline-interface-end-->"
+
+<!--inline-interface-end-->
 
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
 
@@ -185,9 +304,9 @@ Download the binaries for your platform from [release](https://github.com/dmtrKo
 
 ## Benchmarks
 
-> Run the benchmarks by yourself. Instructions of how to run the benchmark is [here](./images)
+> Run the benchmarks by yourself. Instructions on how to run the benchmark is [here](https://github.com/dmtrKovalenko/odiff/tree/main/images)
 
-![benchmark](images/benchmarks.png)
+![benchmark](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/benchmarks.png)
 
 Performance matters. At least for sort of tasks like visual regression. For example, if you are running 25000 image snapshots per month you can save **20 hours** of CI time per month by speeding up comparison time in just **3 seconds** per snapshot.
 
@@ -197,7 +316,7 @@ Performance matters. At least for sort of tasks like visual regression. For exam
 
 Here is `odiff` performance comparison with other popular visual difference solutions. We are going to compare some real-world use cases.
 
-Lets compare 2 screenshots of full-size [https::/cypress.io](cypress.io) page:
+Let's compare 2 screenshots of full-size [https://cypress.io](cypress.io) page:
 
 | Command                                                                                    |      Mean [s] | Min [s] | Max [s] |    Relative |
 | :----------------------------------------------------------------------------------------- | ------------: | ------: | ------: | ----------: |
@@ -205,7 +324,7 @@ Lets compare 2 screenshots of full-size [https::/cypress.io](cypress.io) page:
 | ImageMagick `compare www.cypress.io-1.png www.cypress.io.png -compose src diff-magick.png` | 8.881 ± 0.121 |   8.692 |   9.066 | 7.65 ± 0.04 |
 | `odiff www.cypress.io-1.png www.cypress.io.png www.cypress-diff.png`                       | 1.168 ± 0.008 |   1.157 |   1.185 |        1.00 |
 
-Wow. Odiff is mostly 6 times faster than imagemagick and pixelmatch. And this will be even clearer if image will become larger. Lets compare an [8k image](images/water-4k.png) to find a difference with [another 8k image](images/water-4k-2.png):
+Wow. Odiff is 6 times faster than imagemagick and pixelmatch. And this will be even clearer if image will become larger. Let's compare an [8k image](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/water-4k.png) to find a difference with [another 8k image](https://raw.githubusercontent.com/dmtrKovalenko/odiff/main/images/water-4k-2.png):
 
 | Command                                                                       |       Mean [s] | Min [s] | Max [s] |    Relative |
 | :---------------------------------------------------------------------------- | -------------: | ------: | ------: | ----------: |
@@ -221,4 +340,4 @@ If you have recently updated, please read the [changelog](https://github.com/dmt
 
 ## License
 
-The project is licensed under the terms of [MIT license](./LICENSE)
+The project is licensed under the terms of [MIT license](https://github.com/dmtrKovalenko/odiff/blob/main/LICENSE)

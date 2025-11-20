@@ -2,3 +2,14 @@
 node_modules/
 zig-out/
 .benchtree/
+
+# node js + playwright
+node_modules/
+dist/
+test-results/
+playwright-report/
+.DS_Store
+*.log
+__screenshots__/
+test-results/
+npm_packages/odiff-bin/bin/odiff.exe

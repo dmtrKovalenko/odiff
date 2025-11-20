@@ -24,7 +24,9 @@ zig build
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
 npm install
 
-sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_package/package.json
+sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/odiff-bin/package.json
+
+sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
 
 if [ "$DRY_RUN" == true ]; then
   echo "Dry run, not committing or tagging"

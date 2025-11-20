@@ -17,7 +17,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.1
+          version: 0.15.2
 
       - name: Install nasm
         run: |
@@ -132,7 +132,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.1
+          version: 0.15.2
 
       - name: Install nasm for x86 targets (Linux)
         if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
@@ -180,7 +180,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.1
+          version: 0.15.2
 
       - name: Install nasm for x86 targets (Linux)
         if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
@@ -198,7 +198,7 @@ jobs:
           zig build test-all --summary all
 
   e2e-tests:
-    name: End-to-end JavaScript tests
+    name: JavaScript tests
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -211,23 +211,68 @@ jobs:
           name: odiff-linux-x64
           path: zig-out/bin
 
-      - run: |
-          ls -la zig-out/bin/
-          cp zig-out/bin/odiff-linux-x64 zig-out/bin/odiff
-          chmod +x zig-out/bin/odiff
-          file zig-out/bin/odiff
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install root dependencies
+        run: npm ci --ignore-scripts
 
-      - name: Run end-to-end tests
+      - name: Prepare binary for tests
+        run: |
+          ls -la zig-out/bin/
+          cp zig-out/bin/odiff-linux-x64 zig-out/bin/odiff
+          chmod +x zig-out/bin/odiff
+          file zig-out/bin/odiff
+          zig-out/bin/odiff --version
+
+      - run: npm run test:js
+
+  playwright-tests:
+    name: Playwright visual regression tests
+    needs: [build]
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download x86_64-linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: odiff-linux-x64
+          path: zig-out/bin
+
+      - name: Install root dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Prepare binary for tests
+        run: |
+          ls -la zig-out/bin/
+          cp zig-out/bin/odiff-linux-x64 zig-out/bin/odiff
+          cp zig-out/bin/odiff-linux-x64 npm_packages/odiff-bin/bin/odiff.exe
+          chmod +x zig-out/bin/odiff
+          chmod +x npm_packages/odiff-bin/bin/odiff.exe
+          zig-out/bin/odiff --version
+
+      - name: Build playwright-odiff package
+        working-directory: npm_packages/playwright-odiff
+        run: npm run build
+
+      - name: Run Playwright tests
+        working-directory: npm_packages/playwright-odiff
         run: npm test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: npm_packages/playwright-odiff/test-results
+          retention-days: 7
 
   spellcheck:
     name: Spell check
@@ -255,7 +300,7 @@ jobs:
         with:
           pattern: odiff-*
           merge-multiple: true
-          path: npm_package/raw_binaries
+          path: npm_packages/odiff-bin/raw_binaries
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -268,14 +313,20 @@ jobs:
 
       - name: Verify that we have 8 binaries
         run: |
-          ls -la npm_package/raw_binaries
-          if [ $(ls -1 npm_package/raw_binaries | wc -l) -ne 8 ]; then
-            echo "Expected 6 binaries, but found $(ls -1 npm_package/raw_binaries | wc -l)"
+          ls -la npm_packages/odiff-bin/raw_binaries
+          if [ $(ls -1 npm_packages/odiff-bin/raw_binaries | wc -l) -ne 8 ]; then
+            echo "Expected 6 binaries, but found $(ls -1 npm_packages/odiff-bin/raw_binaries | wc -l)"
             exit 1
           fi
 
-      - name: Publish npm package
-        working-directory: npm_package
+      - name: Publish odiff-bin package
+        working-directory: npm_packages/odiff-bin
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish playwright-odiff package
+        working-directory: npm_packages/playwright-odiff
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -283,6 +334,6 @@ jobs:
       - name: Create github release
         uses: softprops/action-gh-release@v1
         with:
-          files: "npm_package/raw_binaries/*"
+          files: "npm_packages/odiff-bin/raw_binaries/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
