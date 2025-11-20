@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "playwright test"
+    "test": "playwright test",
+    "debug": "playwright test --debug"
   },
   "keywords": [
     "playwright",
@@ -19,13 +20,13 @@
   "author": "odiff contributors",
   "license": "MIT",
   "peerDependencies": {
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.56.0"
   },
   "dependencies": {
     "odiff-bin": "^4.1.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.56.0",
     "@types/node": "^22.0.0",
     "typescript": "^5.0.0"
   }

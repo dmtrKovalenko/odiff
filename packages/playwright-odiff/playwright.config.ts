@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Register custom matchers once globally
+require('./dist/setup');
+
 export default defineConfig({
   testDir: './test',
   fullyParallel: true,

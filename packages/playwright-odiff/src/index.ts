@@ -1,6 +1,6 @@
-import type { OdiffScreenshotOptions } from './types';
+import type { OdiffScreenshotOptions } from "./types";
 
-export { toHaveScreenshotOdiff } from './toHaveScreenshotOdiff';
+export { toHaveScreenshotOdiff } from "./toHaveScreenshotOdiff";
 export type { OdiffScreenshotOptions };
 
 // Type augmentation for Playwright's expect
@@ -15,7 +15,7 @@ declare global {
        */
       toHaveScreenshotOdiff(
         name?: string | string[],
-        options?: OdiffScreenshotOptions
+        options?: OdiffScreenshotOptions,
       ): Promise<R>;
 
       /**
@@ -24,7 +24,7 @@ declare global {
        * @param options Odiff screenshot options including name
        */
       toHaveScreenshotOdiff(
-        options?: { name?: string | string[] } & OdiffScreenshotOptions
+        options?: { name?: string | string[] } & OdiffScreenshotOptions,
       ): Promise<R>;
     }
   }
