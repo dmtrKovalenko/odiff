@@ -80,4 +80,5 @@ pub fn save(img: Image, file: std.fs.File) !void {
         std.log.err("writePNG: failed to encode image {s}", .{err_msg});
         return error.InvalidData;
     }
+    try file_writer.interface.flush();
 }

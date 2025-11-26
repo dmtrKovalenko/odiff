@@ -147,3 +147,86 @@ test "PNG: Correctly handles different encodings of transparency" {
 
     try expectEqual(@as(u32, 0), diff_count); // diffPixels should be 0
 }
+
+// Bug pinning test https://github.com/dmtrKovalenko/odiff/issues/153
+test "PNG: Correctly writes and reads large images without truncation" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    // Create a 3840x2160 (4K) synthetic image
+    const width: u32 = 3840;
+    const height: u32 = 2160;
+    const len = width * height;
+
+    const data = try allocator.alloc(u32, len);
+    defer allocator.free(data);
+
+    // Fill with a pattern that's unique for each row (to detect truncation)
+    for (0..height) |y| {
+        const row_color: u32 = 0xFF000000 | (@as(u32, @intCast(y)) << 8);
+        const row_start = y * width;
+        for (0..width) |x| {
+            data[row_start + x] = row_color | @as(u32, @intCast(x % 256));
+        }
+    }
+
+    const img = io.Image{
+        .width = width,
+        .height = height,
+        .data = data.ptr,
+        .len = len,
+    };
+
+    const temp_path = "test_large_output.png";
+    try io.saveImage(img, temp_path);
+    defer std.fs.cwd().deleteFile(temp_path) catch {};
+
+    var loaded_img = try io.loadImage(allocator, temp_path);
+    defer loaded_img.deinit(allocator);
+
+    try expectEqual(width, loaded_img.width);
+    try expectEqual(height, loaded_img.height);
+
+    // Verify last row is intact (this would fail with truncation bug)
+    const last_row_start = (height - 1) * width;
+    const expected_last_row_color: u32 = 0xFF000000 | (@as(u32, height - 1) << 8);
+    try expectEqual(expected_last_row_color | 0, loaded_img.data[last_row_start]);
+}
+
+// Bug pinning test https://github.com/dmtrKovalenko/odiff/issues/153
+test "PNG: Large image with diff overlay writes completely" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    // Create a large synthetic image (2560x1440)
+    const width: u32 = 2560;
+    const height: u32 = 1440;
+    const len = width * height;
+
+    const data = try allocator.alloc(u32, len);
+    defer allocator.free(data);
+    @memset(data, 0xFFFF0000); // Red image
+
+    const img = io.Image{
+        .width = width,
+        .height = height,
+        .data = data.ptr,
+        .len = len,
+    };
+
+    const overlay_img = try img.makeWithWhiteOverlay(0.5, allocator);
+    defer overlay_img.deinit(allocator);
+
+    const temp_path = "test_large_overlay_output.png";
+    try io.saveImage(overlay_img, temp_path);
+    defer std.fs.cwd().deleteFile(temp_path) catch {};
+
+    var loaded_img = try io.loadImage(allocator, temp_path);
+    defer loaded_img.deinit(allocator);
+
+    try expectEqual(width, loaded_img.width);
+    try expectEqual(height, loaded_img.height);
+    try expectEqual(len, loaded_img.len);
+}
