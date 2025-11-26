@@ -1,6 +1,6 @@
 {
   "name": "playwright-odiff",
-  "version": "0.1.0",
+  "version": "4.2.0",
   "description": "Playwright custom matcher using odiff for screenshot comparison",
   "type": "module",
   "main": "dist/index.js",
