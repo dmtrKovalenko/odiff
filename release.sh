@@ -22,7 +22,7 @@ sed -i '' "s/\.version = \"[^\"]*\"/\.version = \"$VERSION\"/g" build.zig.zon
 zig build
 
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
-npm install
+npm install --ignore-scripts
 
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/odiff-bin/package.json
 
