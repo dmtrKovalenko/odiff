@@ -1,4 +1,4 @@
-import { compare } from "../npm_package/odiff";
+import { compare } from "odiff-bin/odiff";
 
 // allow no options
 compare("path1", "path2", "path3")

@@ -1,0 +1,14 @@
+{
+  // we need this to enable typechecking but not adding test files to the build
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2015"],
+    "types": ["node", "@playwright/test"],
+    "noEmit": true
+  },
+  "include": [
+    "**/*.ts",
+    "../src/index.ts"
+  ],
+  "exclude": []
+}

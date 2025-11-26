@@ -1,5 +1,6 @@
 const std = @import("std");
 const lib = @import("odiff_lib");
+const server = @import("server.zig");
 
 const print = std.debug.print;
 
@@ -31,7 +32,10 @@ pub fn main() !void {
     };
     defer args.deinit();
 
-    // Load images
+    if (args.server_mode) {
+        return try server.runServerMode(allocator);
+    }
+
     var base_img = io.loadImage(allocator, args.base_image) catch |err| switch (err) {
         error.ImageNotLoaded => {
             print("Error: Could not load base image: {s}\n", .{args.base_image});

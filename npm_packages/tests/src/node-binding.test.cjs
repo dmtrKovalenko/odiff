@@ -1,9 +1,9 @@
 const path = require("path");
 const test = require("ava");
-const { compare } = require("../npm_package/odiff");
+const { compare } = require("odiff-bin/odiff");
 
-const IMAGES_PATH = path.resolve(__dirname, "..", "images");
-const BINARY_PATH = path.resolve(__dirname, "..", "zig-out", "bin", "odiff");
+const IMAGES_PATH = path.resolve(__dirname, "..", "..", "..", "images");
+const BINARY_PATH = path.resolve(__dirname, "..", "..", "..", "zig-out", "bin", "odiff");
 
 console.log(`Testing binary ${BINARY_PATH}`);
 
@@ -162,8 +162,8 @@ test("Returns meaningful error if file does not exist and noFailOnFsErrors", asy
 
 test("Correctly calculates and outputs diff percentage", async (t) => {
   const result = await compare(
-    path.join(__dirname, "png", "orange.png"),
-    path.join(__dirname, "png", "orange_diff.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
     path.join(IMAGES_PATH, "diff.png"),
     options,
   );
@@ -186,8 +186,8 @@ test("Correctly calculates and outputs diff percentage", async (t) => {
 
 test("Correctly works with diff-overlay", async (t) => {
   const result = await compare(
-    path.join(__dirname, "png", "orange.png"),
-    path.join(__dirname, "png", "orange_diff.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
     path.join(IMAGES_PATH, "diff_white_mask.png"),
     {
       ...options,
@@ -207,8 +207,8 @@ test("Correctly works with diff-overlay", async (t) => {
 
 test("Works with numeric option to diffOverlay", async (t) => {
   const result = await compare(
-    path.join(__dirname, "png", "orange.png"),
-    path.join(__dirname, "png", "orange_diff.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
     path.join(IMAGES_PATH, "diff_white_mask.png"),
     {
       ...options,

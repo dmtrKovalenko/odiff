@@ -174,20 +174,23 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
           break;
 
         default:
-          reject(
-            new Error(
-              (producedStdError || producedStdout).replace(
-                CMD_BIN_HELPER_MSG,
-                "",
-              ),
-            ),
+          const errorOutput = (producedStdError || producedStdout || "").replace(
+            CMD_BIN_HELPER_MSG,
+            "",
           );
+          const errorMessage = errorOutput.trim()
+            ? errorOutput
+            : `odiff binary exited with unexpected code ${code} (no output)`;
+          reject(new Error(errorMessage));
           break;
       }
     });
   });
 }
 
+const { ODiffServer } = require("./server");
+
 module.exports = {
   compare,
+  ODiffServer,
 };
