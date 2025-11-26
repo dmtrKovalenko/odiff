@@ -319,6 +319,9 @@ jobs:
             exit 1
           fi
 
+      - name: Copy root readme 
+        run: cp README.md npm_packages/odiff-bin/README.md
+
       - name: Publish odiff-bin package
         working-directory: npm_packages/odiff-bin
         run: npm publish
