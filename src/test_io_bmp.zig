@@ -8,7 +8,7 @@ const diff = odiff.diff;
 const testing_allocator = testing.allocator;
 
 fn loadImage(path: []const u8) !io.Image {
-    return io.loadImage(testing_allocator, path) catch |err| {
+    return io.loadImage(testing_allocator, path, .precise) catch |err| {
         std.debug.print("Failed to load image: {s}\nError: {}\n", .{ path, err });
         return err;
     };

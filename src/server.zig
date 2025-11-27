@@ -151,44 +151,71 @@ fn parseIgnoreRegions(
     const ignore_regions = try allocator.alloc(odiff.IgnoreRegion, regions_array.items.len);
     errdefer allocator.free(ignore_regions);
 
+    // Optimization #1: Reuse single error buffer instead of allocating in each error path
+    var error_buf: [256]u8 = undefined;
+
     // Parse each region
     for (regions_array.items, 0..) |region_value, i| {
         if (region_value != .object) {
-            var buf: [256]u8 = undefined;
-            const msg = try std.fmt.bufPrint(&buf, "ignoreRegions[{d}] must be an object", .{i});
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}] must be an object", .{i});
             try response_writer.writeError(request_id, msg);
             return error.InvalidIgnoreRegions;
         }
 
         const region_obj = region_value.object;
 
-        // Helper to get required field
-        const get_coord = struct {
-            fn get(obj: std.json.ObjectMap, field: []const u8, index: usize, writer: *ResponseWriter, rid: std.json.Value) !u32 {
-                const val = obj.get(field) orelse {
-                    var buf: [256]u8 = undefined;
-                    const msg = try std.fmt.bufPrint(&buf, "ignoreRegions[{d}]: missing required field '{s}'", .{ index, field });
-                    try writer.writeError(rid, msg);
-                    return error.MissingField;
-                };
+        // Optimization #2: Batch field lookups to reduce function call overhead
+        // Extract all required fields
+        const x1_val = region_obj.get("x1") orelse {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}]: missing required field 'x1'", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.MissingField;
+        };
+        const y1_val = region_obj.get("y1") orelse {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}]: missing required field 'y1'", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.MissingField;
+        };
+        const x2_val = region_obj.get("x2") orelse {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}]: missing required field 'x2'", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.MissingField;
+        };
+        const y2_val = region_obj.get("y2") orelse {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}]: missing required field 'y2'", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.MissingField;
+        };
 
-                if (val != .integer) {
-                    var buf: [256]u8 = undefined;
-                    const msg = try std.fmt.bufPrint(&buf, "ignoreRegions[{d}].{s} must be a number", .{ index, field });
-                    try writer.writeError(rid, msg);
-                    return error.InvalidType;
-                }
+        // Validate all fields are integers
+        if (x1_val != .integer) {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}].x1 must be a number", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.InvalidType;
+        }
+        if (y1_val != .integer) {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}].y1 must be a number", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.InvalidType;
+        }
+        if (x2_val != .integer) {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}].x2 must be a number", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.InvalidType;
+        }
+        if (y2_val != .integer) {
+            const msg = try std.fmt.bufPrint(&error_buf, "ignoreRegions[{d}].y2 must be a number", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.InvalidType;
+        }
 
-                return @intCast(val.integer);
-            }
-        }.get;
-
-        const x1 = try get_coord(region_obj, "x1", i, response_writer, request_id);
-        const y1 = try get_coord(region_obj, "y1", i, response_writer, request_id);
-        const x2 = try get_coord(region_obj, "x2", i, response_writer, request_id);
-        const y2 = try get_coord(region_obj, "y2", i, response_writer, request_id);
-
-        ignore_regions[i] = .{ .x1 = x1, .y1 = y1, .x2 = x2, .y2 = y2 };
+        // Extract coordinate values
+        ignore_regions[i] = .{
+            .x1 = @intCast(x1_val.integer),
+            .y1 = @intCast(y1_val.integer),
+            .x2 = @intCast(x2_val.integer),
+            .y2 = @intCast(y2_val.integer),
+        };
     }
 
     return ignore_regions;
@@ -277,20 +304,25 @@ pub fn runServerMode(allocator: std.mem.Allocator) !void {
         const ignore_regions = parseIgnoreRegions(options_obj, allocator, &response_writer, request_id) catch continue;
         defer if (ignore_regions.len > 0) allocator.free(ignore_regions);
 
-        var base_img = odiff.io.loadImage(allocator, base_path) catch {
-            var msg_buf: [512]u8 = undefined;
-            const msg = try std.fmt.bufPrint(&msg_buf, "Could not load base image: {s}", .{base_path});
-            try response_writer.writeError(request_id, msg);
-            continue;
+        // Load images with color decoding strategy based on threshold
+        const strategy = odiff.io.ColorDecodingStrategy.fromThreshold(threshold);
+        const load_result = odiff.io.loadTwoImages(allocator, base_path, compare_path, strategy);
+        const images = switch (load_result) {
+            .ok => |imgs| imgs,
+            .err => |load_err| {
+                var msg_buf: [512]u8 = undefined;
+                const msg = switch (load_err) {
+                    .base_failed => try std.fmt.bufPrint(&msg_buf, "Could not load base image: {s}", .{base_path}),
+                    .compare_failed => try std.fmt.bufPrint(&msg_buf, "Could not load comparison image: {s}", .{compare_path}),
+                    .thread_spawn_failed => |err| try std.fmt.bufPrint(&msg_buf, "Failed to spawn thread: {s}", .{@errorName(err)}),
+                };
+                try response_writer.writeError(request_id, msg);
+                continue;
+            },
         };
+        var base_img = images.base;
         defer base_img.deinit(allocator);
-
-        var comp_img = odiff.io.loadImage(allocator, compare_path) catch {
-            var msg_buf: [512]u8 = undefined;
-            const msg = try std.fmt.bufPrint(&msg_buf, "Could not load compare image: {s}", .{compare_path});
-            try response_writer.writeError(request_id, msg);
-            continue;
-        };
+        var comp_img = images.compare;
         defer comp_img.deinit(allocator);
 
         const result = odiff.diff.diff(&base_img, &comp_img, odiff.DiffOptions{

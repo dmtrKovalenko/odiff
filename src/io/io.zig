@@ -111,6 +111,15 @@ pub const Image = extern struct {
     }
 };
 
+pub const ColorDecodingStrategy = enum {
+    fast,
+    precise,
+
+    pub fn fromThreshold(threshold: f32) ColorDecodingStrategy {
+        return if (threshold == 0.0) .precise else .fast;
+    }
+};
+
 pub const ImageFormat = enum(c_int) {
     png,
     jpg,
@@ -132,27 +141,137 @@ pub const ImageFormat = enum(c_int) {
 /// Automatically detects the image format based on the file extension.
 /// Image data is owned by the caller and must be freed using `allocator.free`.
 /// Also checkout `loadImageEx`
-pub fn loadImage(allocator: std.mem.Allocator, file_path: []const u8) !Image {
+pub fn loadImage(allocator: std.mem.Allocator, file_path: []const u8, strategy: ColorDecodingStrategy) !Image {
     const ext = std.fs.path.extension(file_path);
     const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
-    return try loadImageWithFormat(allocator, file_path, format);
+    return try loadImageWithFormat(allocator, file_path, format, strategy);
 }
 
 /// Loads an image from a given file path.
 /// Image data is owned by the caller and must be freed using `allocator.free`.
 ///
 /// Also checkout `loadImage`
-pub fn loadImageWithFormat(allocator: std.mem.Allocator, file_path: []const u8, format: ImageFormat) !Image {
+pub fn loadImageWithFormat(allocator: std.mem.Allocator, file_path: []const u8, format: ImageFormat, strategy: ColorDecodingStrategy) !Image {
     const file = MemoryMappedFile.open(file_path) catch return error.ImageNotLoaded;
     defer file.close();
 
     return switch (format) {
         .png => try png.load(allocator, file.data),
-        .jpg => try jpeg.load(allocator, file.data),
+        .jpg => try jpeg.load(allocator, file.data, strategy),
         .bmp => try bmp.load(allocator, file.data),
         .tiff => try tiff.load(allocator, file.data),
         .webp => try webp.load(allocator, file.data),
     };
+}
+
+fn loadImageWithStrategy(allocator: std.mem.Allocator, file_path: []const u8, strategy: ColorDecodingStrategy) !Image {
+    const ext = std.fs.path.extension(file_path);
+    const format = ImageFormat.fromExtension(ext) orelse return error.UnsupportedFormat;
+
+    const file = MemoryMappedFile.open(file_path) catch return error.ImageNotLoaded;
+    defer file.close();
+
+    return switch (format) {
+        .png => try png.load(allocator, file.data),
+        .jpg => try jpeg.load(allocator, file.data, strategy),
+        .bmp => try bmp.load(allocator, file.data),
+        .tiff => try tiff.load(allocator, file.data),
+        .webp => try webp.load(allocator, file.data),
+    };
+}
+
+pub const TwoImagesResult = struct {
+    base: Image,
+    compare: Image,
+};
+
+pub const ImageLoadError = union(enum) {
+    base_failed: anyerror,
+    compare_failed: anyerror,
+    thread_spawn_failed: anyerror,
+};
+
+pub const LoadTwoImagesResult = union(enum) {
+    ok: TwoImagesResult,
+    err: ImageLoadError,
+};
+
+/// Loads two images concurrently.
+/// Images are loaded in parallel using threads for better performance.
+/// Returns a result type that preserves underlying error information.
+pub fn loadTwoImages(
+    allocator: std.mem.Allocator,
+    base_path: []const u8,
+    comp_path: []const u8,
+    strategy: ColorDecodingStrategy,
+) LoadTwoImagesResult {
+    const Result = struct {
+        image: ?Image = null,
+        err: ?anyerror = null,
+    };
+
+    var base_result = Result{};
+    var comp_result = Result{};
+
+    const LoadContext = struct {
+        allocator: std.mem.Allocator,
+        file_path: []const u8,
+        strategy: ColorDecodingStrategy,
+        result: *Result,
+
+        fn run(self: @This()) void {
+            self.result.image = loadImageWithStrategy(self.allocator, self.file_path, self.strategy) catch |err| {
+                self.result.err = err;
+                return;
+            };
+        }
+    };
+
+    const base_ctx = LoadContext{
+        .allocator = allocator,
+        .file_path = base_path,
+        .strategy = strategy,
+        .result = &base_result,
+    };
+
+    const comp_ctx = LoadContext{
+        .allocator = allocator,
+        .file_path = comp_path,
+        .strategy = strategy,
+        .result = &comp_result,
+    };
+
+    const base_thread = std.Thread.spawn(.{}, LoadContext.run, .{base_ctx}) catch |err| {
+        return .{ .err = .{ .thread_spawn_failed = err } };
+    };
+    const comp_thread = std.Thread.spawn(.{}, LoadContext.run, .{comp_ctx}) catch |err| {
+        return .{ .err = .{ .thread_spawn_failed = err } };
+    };
+
+    base_thread.join();
+    comp_thread.join();
+
+    // Check for errors - return specific errors indicating which image failed
+    if (base_result.err) |err| {
+        if (comp_result.image) |img| {
+            var comp_img = img;
+            comp_img.deinit(allocator);
+        }
+        return .{ .err = .{ .base_failed = err } };
+    }
+
+    if (comp_result.err) |err| {
+        if (base_result.image) |img| {
+            var base_img = img;
+            base_img.deinit(allocator);
+        }
+        return .{ .err = .{ .compare_failed = err } };
+    }
+
+    return .{ .ok = .{
+        .base = base_result.image.?,
+        .compare = comp_result.image.?,
+    } };
 }
 
 /// Saves an image to a given file path.

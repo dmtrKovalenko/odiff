@@ -18,22 +18,22 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
         TIFFClient.map,
         TIFFClient.unmap,
     ) orelse {
-        return error.InvalidData;
+        return error.DecoderFailure;
     };
     defer c.TIFFClose(handle);
 
     var width: u32 = 0;
     var height: u32 = 0;
     if (c.TIFFGetField(handle, c.TIFFTAG_IMAGEWIDTH, &width) != 1)
-        return error.InvalidData;
+        return error.DecoderFailure;
     if (c.TIFFGetField(handle, c.TIFFTAG_IMAGELENGTH, &height) != 1)
-        return error.InvalidData;
+        return error.DecoderFailure;
 
     const result_data = try allocator.alloc(u32, width * height);
     errdefer allocator.free(result_data);
 
     if (c.TIFFReadRGBAImageOriented(handle, width, height, result_data.ptr, c.ORIENTATION_TOPLEFT, 0) != 1)
-        return error.InvalidData;
+        return error.DecoderFailure;
 
     return Image{
         .width = width,
