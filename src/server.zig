@@ -15,12 +15,13 @@ const ResponseWriter = struct {
     }
 
     fn writeResponse(self: *ResponseWriter, request_id: ?std.json.Value, comptime fmt: []const u8, args: anytype) !void {
-        var buf: [1024]u8 = undefined;
-        const content = try std.fmt.bufPrint(&buf, fmt, args);
+        var content_buf: [512]u8 = undefined;
+        var response_buf: [1024]u8 = undefined;
+        const content = try std.fmt.bufPrint(&content_buf, fmt, args);
         const response = if (request_id) |rid|
-            try std.fmt.bufPrint(&buf, "{{\"requestId\":{d},{s}}}\n", .{ rid.integer, content })
+            try std.fmt.bufPrint(&response_buf, "{{\"requestId\":{d},{s}}}\n", .{ rid.integer, content })
         else
-            try std.fmt.bufPrint(&buf, "{{{s}}}\n", .{content});
+            try std.fmt.bufPrint(&response_buf, "{{{s}}}\n", .{content});
         try self.stdout.writeAll(response);
     }
 
@@ -107,6 +108,97 @@ fn parseFloat(options_obj: ?std.json.ObjectMap, key: []const u8, default: f32) f
     return default;
 }
 
+fn parseString(options_obj: ?std.json.ObjectMap, key: []const u8, default: []const u8) []const u8 {
+    if (options_obj) |o| {
+        if (o.get(key)) |v| if (v == .string) return v.string;
+    }
+    return default;
+}
+
+fn parseDiffOverlay(options_obj: ?std.json.ObjectMap, key: []const u8) ?f32 {
+    if (options_obj) |o| {
+        if (o.get(key)) |v| {
+            return switch (v) {
+                .bool => |b| if (b) @as(f32, 0.5) else null,
+                .float => |f| @floatCast(f),
+                .integer => |i| @floatCast(@as(f64, @floatFromInt(i))),
+                else => null,
+            };
+        }
+    }
+    return null;
+}
+
+fn parseIgnoreRegions(
+    options_obj: ?std.json.ObjectMap,
+    allocator: std.mem.Allocator,
+    response_writer: *ResponseWriter,
+    request_id: std.json.Value,
+) ![]odiff.IgnoreRegion {
+    // If ignoreRegions field is not present, return empty slice
+    const regions_value = if (options_obj) |o| o.get("ignoreRegions") else null;
+    if (regions_value == null) {
+        return &[_]odiff.IgnoreRegion{};
+    }
+
+    // Validate it's an array
+    if (regions_value.? != .array) {
+        try response_writer.writeError(request_id, "ignoreRegions must be an array");
+        return error.InvalidIgnoreRegions;
+    }
+
+    const regions_array = regions_value.?.array;
+    if (regions_array.items.len == 0) {
+        return &[_]odiff.IgnoreRegion{};
+    }
+
+    // Allocate array for regions
+    const ignore_regions = try allocator.alloc(odiff.IgnoreRegion, regions_array.items.len);
+    errdefer allocator.free(ignore_regions);
+
+    // Parse each region
+    for (regions_array.items, 0..) |region_value, i| {
+        if (region_value != .object) {
+            var buf: [256]u8 = undefined;
+            const msg = try std.fmt.bufPrint(&buf, "ignoreRegions[{d}] must be an object", .{i});
+            try response_writer.writeError(request_id, msg);
+            return error.InvalidIgnoreRegions;
+        }
+
+        const region_obj = region_value.object;
+
+        // Helper to get required field
+        const get_coord = struct {
+            fn get(obj: std.json.ObjectMap, field: []const u8, index: usize, writer: *ResponseWriter, rid: std.json.Value) !u32 {
+                const val = obj.get(field) orelse {
+                    var buf: [256]u8 = undefined;
+                    const msg = try std.fmt.bufPrint(&buf, "ignoreRegions[{d}]: missing required field '{s}'", .{ index, field });
+                    try writer.writeError(rid, msg);
+                    return error.MissingField;
+                };
+
+                if (val != .integer) {
+                    var buf: [256]u8 = undefined;
+                    const msg = try std.fmt.bufPrint(&buf, "ignoreRegions[{d}].{s} must be a number", .{ index, field });
+                    try writer.writeError(rid, msg);
+                    return error.InvalidType;
+                }
+
+                return @intCast(val.integer);
+            }
+        }.get;
+
+        const x1 = try get_coord(region_obj, "x1", i, response_writer, request_id);
+        const y1 = try get_coord(region_obj, "y1", i, response_writer, request_id);
+        const x2 = try get_coord(region_obj, "x2", i, response_writer, request_id);
+        const y2 = try get_coord(region_obj, "y2", i, response_writer, request_id);
+
+        ignore_regions[i] = .{ .x1 = x1, .y1 = y1, .x2 = x2, .y2 = y2 };
+    }
+
+    return ignore_regions;
+}
+
 fn parsePath(obj: std.json.ObjectMap, key: []const u8, response_writer: *ResponseWriter, request_id: std.json.Value) ![]const u8 {
     const value = obj.get(key) orelse {
         var buf: [128]u8 = undefined;
@@ -179,6 +271,17 @@ pub fn runServerMode(allocator: std.mem.Allocator) !void {
         const capture_diff_lines = parseBool(options_obj, "captureDiffLines", false);
         const output_diff_mask = parseBool(options_obj, "outputDiffMask", false);
 
+        const diff_color_str = parseString(options_obj, "diffColor", "");
+        const diff_pixel = odiff.utils.parseHexColor(diff_color_str) catch {
+            try response_writer.writeError(request_id, "Invalid diffColor hex format");
+            continue;
+        };
+
+        const diff_overlay_factor = parseDiffOverlay(options_obj, "diffOverlay");
+
+        const ignore_regions = parseIgnoreRegions(options_obj, allocator, &response_writer, request_id) catch continue;
+        defer if (ignore_regions.len > 0) allocator.free(ignore_regions);
+
         var base_img = odiff.io.loadImage(allocator, base_path) catch {
             var msg_buf: [512]u8 = undefined;
             const msg = try std.fmt.bufPrint(&msg_buf, "Could not load base image: {s}", .{base_path});
@@ -197,13 +300,13 @@ pub fn runServerMode(allocator: std.mem.Allocator) !void {
 
         const result = odiff.diff.diff(&base_img, &comp_img, odiff.DiffOptions{
             .output_diff_mask = output_diff_mask,
-            .diff_overlay_factor = null,
+            .diff_overlay_factor = diff_overlay_factor,
             .threshold = threshold,
-            .diff_pixel = 0xFF0000FF, // Red
+            .diff_pixel = diff_pixel,
             .fail_on_layout_change = fail_on_layout,
             .antialiasing = antialiasing,
             .diff_lines = capture_diff_lines,
-            .ignore_regions = &[_]odiff.IgnoreRegion{},
+            .ignore_regions = ignore_regions,
             .capture_diff = true,
             .enable_asm = true,
         }, allocator) catch |err| {
