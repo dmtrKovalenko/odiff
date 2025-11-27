@@ -86,6 +86,7 @@ pub fn build(b: *std.Build) !void {
             });
 
             pure_test.root_module.addImport("build_options", build_options_mod);
+            pure_test.linkLibC();
             pure_test.addCSourceFiles(.{
                 .files = &.{"src/rvv.c"},
             });

@@ -123,3 +123,143 @@ test "server: end-to-end different images show pixel diff" {
     try expect(obj.get("diffCount").?.integer > 0);
     try expect(obj.get("diffPercentage").?.float > 0.0);
 }
+
+test "server: ignore regions support" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    const cwd = std.fs.cwd();
+    cwd.access(odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = std.process.Child.init(&[_][]const u8{ odiff_path, "--server" }, allocator);
+    child.stdin_behavior = .Pipe;
+    child.stdout_behavior = .Pipe;
+    child.stderr_behavior = .Pipe;
+
+    try child.spawn();
+    defer _ = child.kill() catch {};
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    // Use the same ignore regions as in test_core.zig that cover all differences
+    const request =
+        \\{"requestId":3,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff3.png","options":{"ignoreRegions":[{"x1":150,"y1":30,"x2":310,"y2":105},{"x1":20,"y1":175,"x2":105,"y2":200}]}}
+        \\
+    ;
+    try stdin.writeAll(request);
+
+    var response_buf: [1024]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 3);
+    try expect(obj.get("match").?.bool == true); // All diffs are in ignored regions
+}
+
+test "server: empty ignore regions array works correctly" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    const cwd = std.fs.cwd();
+    cwd.access(odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = std.process.Child.init(&[_][]const u8{ odiff_path, "--server" }, allocator);
+    child.stdin_behavior = .Pipe;
+    child.stdout_behavior = .Pipe;
+    child.stderr_behavior = .Pipe;
+
+    try child.spawn();
+    defer _ = child.kill() catch {};
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    const request =
+        \\{"requestId":4,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff4.png","options":{"ignoreRegions":[]}}
+        \\
+    ;
+    try stdin.writeAll(request);
+
+    var response_buf: [1024]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 4);
+    try expect(obj.get("match").?.bool == false); // Should behave like normal diff
+    try expect(obj.get("diffCount").?.integer > 0);
+}
+
+test "server: invalid ignore regions return error" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    const cwd = std.fs.cwd();
+    cwd.access(odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = std.process.Child.init(&[_][]const u8{ odiff_path, "--server" }, allocator);
+    child.stdin_behavior = .Pipe;
+    child.stdout_behavior = .Pipe;
+    child.stderr_behavior = .Pipe;
+
+    try child.spawn();
+    defer _ = child.kill() catch {};
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    // Test missing required field (y2)
+    const request =
+        \\{"requestId":5,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff5.png","options":{"ignoreRegions":[{"x1":10,"y1":20,"x2":30}]}}
+        \\
+    ;
+    try stdin.writeAll(request);
+
+    var response_buf: [1024]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 5);
+    try expect(obj.get("error") != null);
+    const error_msg = obj.get("error").?.string;
+    try expect(std.mem.indexOf(u8, error_msg, "missing required field") != null);
+}
