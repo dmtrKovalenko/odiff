@@ -10,7 +10,7 @@ const diff = odiff.diff;
 const color_delta = odiff.color_delta;
 
 fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !image_io.Image {
-    return image_io.loadImage(allocator, path) catch |err| {
+    return image_io.loadImage(allocator, path, .precise) catch |err| {
         std.debug.print("Failed to load image: {s}\nError: {}\n", .{ path, err });
         return err;
     };
