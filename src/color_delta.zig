@@ -112,12 +112,9 @@ inline fn blendChannelSimd(
     const VEC_2X_WHITE_SHIFTED = comptime VEC_2X_255 << VEC_2X_SHIFT;
 
     const alpha_zero = vec_alpha == VEC_2X_0;
-    const alpha_full = vec_alpha == VEC_2X_255;
-
-    const opaque_value = channel_vec << VEC_2X_SHIFT;
     const blended = VEC_2X_WHITE_SHIFTED + @divTrunc((channel_vec - VEC_2X_255) * vec_alpha * VEC_2X_SHIFTED_ONE, VEC_2X_255);
 
-    return @select(i64, alpha_zero, VEC_2X_WHITE_SHIFTED, @select(i64, alpha_full, opaque_value, blended));
+    return @select(i64, alpha_zero, VEC_2X_WHITE_SHIFTED, blended);
 }
 
 pub noinline fn calculatePixelColorDeltaSimd(pixel_a: u32, pixel_b: u32) i64 {
