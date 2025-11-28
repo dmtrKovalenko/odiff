@@ -1,6 +1,7 @@
 const std = @import("std");
 const diff = @import("diff.zig");
 const build_options = @import("build_options");
+const utils = @import("utils.zig");
 
 const print = std.debug.print;
 
@@ -130,22 +131,7 @@ fn parseIgnoreRegions(input: []const u8, list: *std.array_list.Managed(diff.Igno
     }
 }
 
-pub fn parseHexColor(hex_str: []const u8) !u32 {
-    if (hex_str.len == 0) return 0xFF0000FF; // Default red pixel
-
-    var color_str = hex_str;
-    if (hex_str[0] == '#') {
-        color_str = hex_str[1..];
-    }
-
-    if (color_str.len != 6) return error.InvalidHexColor;
-
-    const r = try std.fmt.parseInt(u8, color_str[0..2], 16);
-    const g = try std.fmt.parseInt(u8, color_str[2..4], 16);
-    const b = try std.fmt.parseInt(u8, color_str[4..6], 16);
-
-    return (@as(u32, 255) << 24) | (@as(u32, b) << 16) | (@as(u32, g) << 8) | @as(u32, r);
-}
+pub const parseHexColor = utils.parseHexColor;
 
 pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
     const args = try std.process.argsAlloc(allocator);

@@ -153,6 +153,9 @@ class ODiffServer {
           antialiasing: options.antialiasing,
           captureDiffLines: options.captureDiffLines,
           outputDiffMask: options.outputDiffMask,
+          ignoreRegions: options.ignoreRegions,
+          diffColor: options.diffColor,
+          diffOverlay: options.diffOverlay,
         },
       };
 
