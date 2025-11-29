@@ -70,39 +70,39 @@ inline fn readI32LE(data: []const u8, offset: usize) !i32 {
 }
 
 // Vectorized BGR to ARGB conversion for 24-bit BMP
-inline fn convertBGR24ToARGB_Vec4(bgr_data: []const u8, argb_data: []u32, start_idx: usize) void {
-    if (start_idx + 4 > argb_data.len) return;
+inline fn convertBGR24ToARGB_Vec4(bgr_data: []const u8, data_offset: usize, argb_data: []u32, pixel_idx: usize) void {
+    if (pixel_idx + 4 > argb_data.len or data_offset + 12 > bgr_data.len) return;
 
-    // Load 4 BGR pixels (12 bytes) - not perfectly aligned but we'll handle it
-    const b0 = bgr_data[start_idx * 3 + 0];
-    const g0 = bgr_data[start_idx * 3 + 1];
-    const r0 = bgr_data[start_idx * 3 + 2];
+    // Load 4 BGR pixels (12 bytes)
+    const b0 = bgr_data[data_offset + 0];
+    const g0 = bgr_data[data_offset + 1];
+    const r0 = bgr_data[data_offset + 2];
 
-    const b1 = bgr_data[start_idx * 3 + 3];
-    const g1 = bgr_data[start_idx * 3 + 4];
-    const r1 = bgr_data[start_idx * 3 + 5];
+    const b1 = bgr_data[data_offset + 3];
+    const g1 = bgr_data[data_offset + 4];
+    const r1 = bgr_data[data_offset + 5];
 
-    const b2 = bgr_data[start_idx * 3 + 6];
-    const g2 = bgr_data[start_idx * 3 + 7];
-    const r2 = bgr_data[start_idx * 3 + 8];
+    const b2 = bgr_data[data_offset + 6];
+    const g2 = bgr_data[data_offset + 7];
+    const r2 = bgr_data[data_offset + 8];
 
-    const b3 = bgr_data[start_idx * 3 + 9];
-    const g3 = bgr_data[start_idx * 3 + 10];
-    const r3 = bgr_data[start_idx * 3 + 11];
+    const b3 = bgr_data[data_offset + 9];
+    const g3 = bgr_data[data_offset + 10];
+    const r3 = bgr_data[data_offset + 11];
 
-    // Create RGBA values (A=255, R, G, B) - fixed color order
-    argb_data[start_idx + 0] = (255 << 24) | (@as(u32, r0) << 16) | (@as(u32, g0) << 8) | @as(u32, b0);
-    argb_data[start_idx + 1] = (255 << 24) | (@as(u32, r1) << 16) | (@as(u32, g1) << 8) | @as(u32, b1);
-    argb_data[start_idx + 2] = (255 << 24) | (@as(u32, r2) << 16) | (@as(u32, g2) << 8) | @as(u32, b2);
-    argb_data[start_idx + 3] = (255 << 24) | (@as(u32, r3) << 16) | (@as(u32, g3) << 8) | @as(u32, b3);
+    // Create RGBA values (A=255, R, G, B)
+    argb_data[pixel_idx + 0] = (255 << 24) | (@as(u32, r0) << 16) | (@as(u32, g0) << 8) | @as(u32, b0);
+    argb_data[pixel_idx + 1] = (255 << 24) | (@as(u32, r1) << 16) | (@as(u32, g1) << 8) | @as(u32, b1);
+    argb_data[pixel_idx + 2] = (255 << 24) | (@as(u32, r2) << 16) | (@as(u32, g2) << 8) | @as(u32, b2);
+    argb_data[pixel_idx + 3] = (255 << 24) | (@as(u32, r3) << 16) | (@as(u32, g3) << 8) | @as(u32, b3);
 }
 
 // Vectorized BGRA to ARGB conversion for 32-bit BMP
-inline fn convertBGRA32ToARGB_Vec4(bgra_data: []const u8, argb_data: []u32, start_idx: usize) void {
-    if (start_idx + 4 > argb_data.len or start_idx * 4 + 16 > bgra_data.len) return;
+inline fn convertBGRA32ToARGB_Vec4(bgra_data: []const u8, data_offset: usize, argb_data: []u32, pixel_idx: usize) void {
+    if (pixel_idx + 4 > argb_data.len or data_offset + 16 > bgra_data.len) return;
 
-    // Load 4 BGRA pixels (16 bytes) as vector
-    const bgra_bytes = bgra_data[start_idx * 4 .. start_idx * 4 + 16];
+    // Load 4 BGRA pixels (16 bytes)
+    const bgra_bytes = bgra_data[data_offset .. data_offset + 16];
 
     // Process 4 pixels at once
     var i: usize = 0;
@@ -112,8 +112,8 @@ inline fn convertBGRA32ToARGB_Vec4(bgra_data: []const u8, argb_data: []u32, star
         const r = bgra_bytes[i * 4 + 2];
         const a = bgra_bytes[i * 4 + 3];
 
-        // Convert BGRA to RGBA
-        argb_data[start_idx + i] = (@as(u32, a) << 24) | (@as(u32, r) << 16) | (@as(u32, g) << 8) | @as(u32, b);
+        // Convert BGRA to ARGB
+        argb_data[pixel_idx + i] = (@as(u32, a) << 24) | (@as(u32, r) << 16) | (@as(u32, g) << 8) | @as(u32, b);
     }
 }
 
@@ -134,22 +134,32 @@ fn loadImage24Data(data: []const u8, offset: usize, width: u32, height: u32, all
     var y: i32 = @as(i32, @intCast(height)) - 1;
     while (y >= 0) : (y -= 1) {
         var x: u32 = 0;
-        while (x < width) : (x += 1) {
-            if (data_offset + 3 > data.len) return BmpError.FileCorrupted;
-
-            const b_byte = data[data_offset + 0];
-            const g_byte = data[data_offset + 1];
-            const r_byte = data[data_offset + 2];
-
-            const r = (@as(u32, r_byte) & 255) << 16; // Red to bits 16-23
-            const g = (@as(u32, g_byte) & 255) << 8; // Green to bits 8-15
-            const b = (@as(u32, b_byte) & 255) << 0; // Blue to bits 0-7
-            const a = comptime @as(u32, 255) << 24;
-
+        while (x < width) {
+            const pixels_remaining = width - x;
             const pixel_index = (@as(u32, @intCast(y)) * width) + x;
-            argb_data[pixel_index] = a | b | g | r;
 
-            data_offset += 3;
+            if (pixels_remaining >= 4 and data_offset + 12 <= data.len) {
+                // Use SIMD for 4 pixels at once
+                convertBGR24ToARGB_Vec4(data, data_offset, argb_data, pixel_index);
+                x += 4;
+                data_offset += 12;
+            } else {
+                // Scalar fallback for remaining pixels
+                if (data_offset + 3 > data.len) return BmpError.FileCorrupted;
+
+                const b_byte = data[data_offset + 0];
+                const g_byte = data[data_offset + 1];
+                const r_byte = data[data_offset + 2];
+
+                const r = (@as(u32, r_byte) & 255) << 16;
+                const g = (@as(u32, g_byte) & 255) << 8;
+                const b = (@as(u32, b_byte) & 255) << 0;
+                const a = comptime @as(u32, 255) << 24;
+
+                argb_data[pixel_index] = a | b | g | r;
+                x += 1;
+                data_offset += 3;
+            }
         }
 
         data_offset += row_padding;
@@ -168,23 +178,33 @@ fn loadImage32Data(data: []const u8, offset: usize, width: u32, height: u32, all
     var y: i32 = @as(i32, @intCast(height)) - 1;
     while (y >= 0) : (y -= 1) {
         var x: u32 = 0;
-        while (x < width) : (x += 1) {
-            if (data_offset + 4 > data.len) return BmpError.FileCorrupted;
-
-            const b_byte = data[data_offset + 0];
-            const g_byte = data[data_offset + 1];
-            const r_byte = data[data_offset + 2];
-            const a_byte = data[data_offset + 3];
-
-            const r = (@as(u32, r_byte) & 255) << 16; // Red to bits 16-23
-            const g = (@as(u32, g_byte) & 255) << 8; // Green to bits 8-15
-            const b = (@as(u32, b_byte) & 255) << 0; // Blue to bits 0-7
-            const a = (@as(u32, a_byte) & 255) << 24; // Alpha to bits 24-31
-
+        while (x < width) {
+            const pixels_remaining = width - x;
             const pixel_index = (@as(u32, @intCast(y)) * width) + x;
-            argb_data[pixel_index] = a | b | g | r;
 
-            data_offset += 4;
+            if (pixels_remaining >= 4 and data_offset + 16 <= data.len) {
+                // Use SIMD for 4 pixels at once
+                convertBGRA32ToARGB_Vec4(data, data_offset, argb_data, pixel_index);
+                x += 4;
+                data_offset += 16;
+            } else {
+                // Scalar fallback for remaining pixels
+                if (data_offset + 4 > data.len) return BmpError.FileCorrupted;
+
+                const b_byte = data[data_offset + 0];
+                const g_byte = data[data_offset + 1];
+                const r_byte = data[data_offset + 2];
+                const a_byte = data[data_offset + 3];
+
+                const r = (@as(u32, r_byte) & 255) << 16;
+                const g = (@as(u32, g_byte) & 255) << 8;
+                const b = (@as(u32, b_byte) & 255) << 0;
+                const a = (@as(u32, a_byte) & 255) << 24;
+
+                argb_data[pixel_index] = a | b | g | r;
+                x += 1;
+                data_offset += 4;
+            }
         }
     }
 

@@ -36,36 +36,25 @@ pub fn main() !void {
         return try server.runServerMode(allocator);
     }
 
-    var base_img = io.loadImage(allocator, args.base_image) catch |err| switch (err) {
+    // Load images with color decoding strategy based on threshold
+    const strategy = io.ColorDecodingStrategy.fromThreshold(args.threshold);
+    const images = io.loadTwoImages(allocator, args.base_image, args.comp_image, strategy) catch |err| switch (err) {
         error.ImageNotLoaded => {
-            print("Error: Could not load base image: {s}\n", .{args.base_image});
+            print("Error: Could not load images: {s} or {s}\n", .{ args.base_image, args.comp_image });
             std.process.exit(1);
         },
         error.UnsupportedFormat => {
-            print("Error: Unsupported image format: {s}\n", .{args.base_image});
+            print("Error: Unsupported image format\n", .{});
             std.process.exit(1);
         },
         else => {
-            print("Error: Failed to load base image\n", .{});
+            print("Error: Failed to load images\n", .{});
             std.process.exit(1);
         },
     };
+    var base_img = images.base;
     defer base_img.deinit(allocator);
-
-    var comp_img = io.loadImage(allocator, args.comp_image) catch |err| switch (err) {
-        error.ImageNotLoaded => {
-            print("Error: Could not load comparison image: {s}\n", .{args.comp_image});
-            std.process.exit(1);
-        },
-        error.UnsupportedFormat => {
-            print("Error: Unsupported image format: {s}\n", .{args.comp_image});
-            std.process.exit(1);
-        },
-        else => {
-            print("Error: Failed to load comparison image\n", .{});
-            std.process.exit(1);
-        },
-    };
+    var comp_img = images.compare;
     defer comp_img.deinit(allocator);
 
     const diff_pixel = cli.parseHexColor(args.diff_color) catch {
