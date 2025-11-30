@@ -28,7 +28,7 @@ sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/o
 
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
 
-# force using the one united versino
+# force using the one united version
 sed -i '' "s/\"odiff-bin\": \"[^\"]*\"/\"odiff-bin\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
 
 
