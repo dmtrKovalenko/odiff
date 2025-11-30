@@ -235,6 +235,196 @@ fn parsePath(obj: std.json.ObjectMap, key: []const u8, response_writer: *Respons
     return value.string;
 }
 
+fn parseOptions(
+    obj: std.json.ObjectMap,
+    allocator: std.mem.Allocator,
+    response_writer: *ResponseWriter,
+    request_id: std.json.Value,
+) !odiff.DiffOptions {
+    const options_obj = if (obj.get("options")) |opt| opt.object else null;
+
+    const threshold = parseFloat(options_obj, "threshold", 0.1);
+    const fail_on_layout = parseBool(options_obj, "failOnLayoutDiff", false);
+    const antialiasing = parseBool(options_obj, "antialiasing", false);
+    const capture_diff_lines = parseBool(options_obj, "captureDiffLines", false);
+    const output_diff_mask = parseBool(options_obj, "outputDiffMask", false);
+
+    const diff_color_str = parseString(options_obj, "diffColor", "");
+    const diff_pixel = odiff.utils.parseHexColor(diff_color_str) catch {
+        try response_writer.writeError(request_id, "Invalid diffColor hex format");
+        return error.InvalidDiffColor;
+    };
+
+    const diff_overlay_factor = parseDiffOverlay(options_obj, "diffOverlay");
+
+    const ignore_regions_slice = try parseIgnoreRegions(options_obj, allocator, response_writer, request_id);
+    const ignore_regions: ?[]const odiff.IgnoreRegion = if (ignore_regions_slice.len > 0) ignore_regions_slice else null;
+
+    return odiff.DiffOptions{
+        .threshold = threshold,
+        .fail_on_layout_change = fail_on_layout,
+        .antialiasing = antialiasing,
+        .diff_lines = capture_diff_lines,
+        .output_diff_mask = output_diff_mask,
+        .diff_pixel = diff_pixel,
+        .diff_overlay_factor = diff_overlay_factor,
+        .ignore_regions = ignore_regions,
+        .capture_diff = true,
+        .enable_asm = true,
+    };
+}
+
+/// Loads two images from file paths specified in JSON request
+fn loadImagesFromPaths(
+    obj: std.json.ObjectMap,
+    options: odiff.DiffOptions,
+    response_writer: *ResponseWriter,
+    request_id: std.json.Value,
+    allocator: std.mem.Allocator,
+) !odiff.io.TwoImagesResult {
+    const base_path = parsePath(obj, "base", response_writer, request_id) catch return error.ParseError;
+    const compare_path = parsePath(obj, "compare", response_writer, request_id) catch return error.ParseError;
+
+    const strategy = odiff.io.ColorDecodingStrategy.fromThreshold(@floatCast(options.threshold));
+    const load_result = odiff.io.loadTwoImages(allocator, base_path, compare_path, strategy);
+
+    const images = switch (load_result) {
+        .ok => |imgs| imgs,
+        .err => |load_err| {
+            var msg_buf: [512]u8 = undefined;
+            const msg = switch (load_err) {
+                .base_failed => try std.fmt.bufPrint(&msg_buf, "Could not load base image: {s}", .{base_path}),
+                .compare_failed => try std.fmt.bufPrint(&msg_buf, "Could not load comparison image: {s}", .{compare_path}),
+                .thread_spawn_failed => |err| try std.fmt.bufPrint(&msg_buf, "Failed to spawn thread: {s}", .{@errorName(err)}),
+            };
+            try response_writer.writeError(request_id, msg);
+            return error.LoadError;
+        },
+    };
+
+    return images;
+}
+
+/// Loads two images from buffers received via stdin
+fn loadImagesFromBuffers(
+    obj: std.json.ObjectMap,
+    options: odiff.DiffOptions,
+    response_writer: *ResponseWriter,
+    request_id: std.json.Value,
+    stdin_reader: *std.fs.File.Reader,
+    allocator: std.mem.Allocator,
+) !odiff.io.TwoImagesResult {
+    const base_length = parseBufferLength(obj, "baseLength", response_writer, request_id) catch return error.ParseError;
+    const base_format = parseImageFormat(obj, "baseFormat", response_writer, request_id) catch return error.ParseError;
+    const compare_length = parseBufferLength(obj, "compareLength", response_writer, request_id) catch return error.ParseError;
+    const compare_format = parseImageFormat(obj, "compareFormat", response_writer, request_id) catch return error.ParseError;
+
+    // Read exact number of bytes for each buffer using readSliceAll
+    // This is critical: we MUST read exact byte counts, not until '\n'
+    // because binary image data contains newline bytes
+    const base_buffer = try allocator.alloc(u8, base_length);
+    errdefer allocator.free(base_buffer);
+    try stdin_reader.interface.readSliceAll(base_buffer);
+    defer allocator.free(base_buffer);
+
+    const compare_buffer = try allocator.alloc(u8, compare_length);
+    errdefer allocator.free(compare_buffer);
+    try stdin_reader.interface.readSliceAll(compare_buffer);
+    defer allocator.free(compare_buffer);
+
+    const strategy = odiff.io.ColorDecodingStrategy.fromThreshold(@floatCast(options.threshold));
+    const load_result = odiff.io.loadTwoImagesFromBuffers(
+        allocator,
+        base_buffer,
+        base_format,
+        compare_buffer,
+        compare_format,
+        strategy,
+    );
+
+    const images = switch (load_result) {
+        .ok => |imgs| imgs,
+        .err => |load_err| {
+            switch (load_err) {
+                .base_failed => {
+                    try response_writer.writeError(request_id, "Could not load base image from buffer");
+                },
+                .compare_failed => {
+                    try response_writer.writeError(request_id, "Could not load compare image from buffer");
+                },
+                .thread_spawn_failed => {
+                    try response_writer.writeError(request_id, "Failed to spawn image loading threads");
+                },
+            }
+            return error.LoadError;
+        },
+    };
+
+    return images;
+}
+
+const MAX_BUFFER_SIZE: usize = 100 * 1024 * 1024; // 100MB
+
+fn parseBufferLength(
+    obj: std.json.ObjectMap,
+    key: []const u8,
+    response_writer: *ResponseWriter,
+    request_id: std.json.Value,
+) !usize {
+    const value = obj.get(key) orelse {
+        var buf: [128]u8 = undefined;
+        const msg = try std.fmt.bufPrint(&buf, "Missing {s} field", .{key});
+        try response_writer.writeError(request_id, msg);
+        return error.MissingField;
+    };
+
+    if (value != .integer) {
+        try response_writer.writeError(request_id, "Buffer length must be a positive integer");
+        return error.InvalidLength;
+    }
+
+    const len: i64 = value.integer;
+    if (len <= 0) {
+        try response_writer.writeError(request_id, "Buffer length must be positive");
+        return error.InvalidLength;
+    }
+
+    if (len > MAX_BUFFER_SIZE) {
+        var buf: [128]u8 = undefined;
+        const msg = try std.fmt.bufPrint(&buf, "Buffer length exceeds maximum ({d} bytes)", .{MAX_BUFFER_SIZE});
+        try response_writer.writeError(request_id, msg);
+        return error.BufferTooLarge;
+    }
+
+    return @intCast(len);
+}
+
+fn parseImageFormat(
+    obj: std.json.ObjectMap,
+    key: []const u8,
+    response_writer: *ResponseWriter,
+    request_id: std.json.Value,
+) !odiff.io.ImageFormat {
+    const value = obj.get(key) orelse {
+        var buf: [128]u8 = undefined;
+        const msg = try std.fmt.bufPrint(&buf, "Missing {s} field", .{key});
+        try response_writer.writeError(request_id, msg);
+        return error.MissingField;
+    };
+
+    if (value != .string) {
+        try response_writer.writeError(request_id, "Image format must be a string");
+        return error.InvalidFormat;
+    }
+
+    const format = odiff.io.ImageFormat.fromString(value.string) orelse {
+        try response_writer.writeError(request_id, "Invalid image format: must be one of png, jpeg, jpg, bmp, tiff, webp");
+        return error.InvalidFormat;
+    };
+
+    return format;
+}
+
 // Server mode: Read JSON requests from stdin, output JSON responses to stdout
 pub fn runServerMode(allocator: std.mem.Allocator) !void {
     const stdin = std.fs.File.stdin();
@@ -243,10 +433,10 @@ pub fn runServerMode(allocator: std.mem.Allocator) !void {
     var response_writer = ResponseWriter.init(stdout, allocator);
     try response_writer.writeReady();
 
-    // Use buffered reader for efficient line-by-line reading
-    var stdin_buffer: [8192]u8 = undefined;
-    var file_reader = stdin.reader(&stdin_buffer);
-    const reader = &file_reader.interface;
+    // 16kb buffer
+    var stdin_buffer: [16_384]u8 = undefined;
+    var stdin_reader = stdin.reader(&stdin_buffer);
+    const reader = &stdin_reader.interface;
 
     while (true) {
         const line = try reader.takeDelimiter('\n') orelse return; // EOF
@@ -281,62 +471,31 @@ pub fn runServerMode(allocator: std.mem.Allocator) !void {
             continue;
         }
 
-        const base_path = parsePath(obj, "base", &response_writer, request_id) catch continue;
-        const compare_path = parsePath(obj, "compare", &response_writer, request_id) catch continue;
         const output_path = parsePath(obj, "output", &response_writer, request_id) catch continue;
-
-        const options_obj = if (obj.get("options")) |opt| opt.object else null;
-
-        const threshold = parseFloat(options_obj, "threshold", 0.1);
-        const fail_on_layout = parseBool(options_obj, "failOnLayoutDiff", false);
-        const antialiasing = parseBool(options_obj, "antialiasing", false);
-        const capture_diff_lines = parseBool(options_obj, "captureDiffLines", false);
-        const output_diff_mask = parseBool(options_obj, "outputDiffMask", false);
-
-        const diff_color_str = parseString(options_obj, "diffColor", "");
-        const diff_pixel = odiff.utils.parseHexColor(diff_color_str) catch {
-            try response_writer.writeError(request_id, "Invalid diffColor hex format");
-            continue;
+        const options = parseOptions(obj, allocator, &response_writer, request_id) catch continue;
+        defer if (options.ignore_regions) |regions| {
+            if (regions.len > 0) allocator.free(regions);
         };
 
-        const diff_overlay_factor = parseDiffOverlay(options_obj, "diffOverlay");
-
-        const ignore_regions = parseIgnoreRegions(options_obj, allocator, &response_writer, request_id) catch continue;
-        defer if (ignore_regions.len > 0) allocator.free(ignore_regions);
-
-        // Load images with color decoding strategy based on threshold
-        const strategy = odiff.io.ColorDecodingStrategy.fromThreshold(threshold);
-        const load_result = odiff.io.loadTwoImages(allocator, base_path, compare_path, strategy);
-        const images = switch (load_result) {
-            .ok => |imgs| imgs,
-            .err => |load_err| {
-                var msg_buf: [512]u8 = undefined;
-                const msg = switch (load_err) {
-                    .base_failed => try std.fmt.bufPrint(&msg_buf, "Could not load base image: {s}", .{base_path}),
-                    .compare_failed => try std.fmt.bufPrint(&msg_buf, "Could not load comparison image: {s}", .{compare_path}),
-                    .thread_spawn_failed => |err| try std.fmt.bufPrint(&msg_buf, "Failed to spawn thread: {s}", .{@errorName(err)}),
-                };
-                try response_writer.writeError(request_id, msg);
+        const compare_buffers = if (obj.get("type")) |t|
+            if (t == .string) std.mem.eql(u8, t.string, "buffer") else {
+                try response_writer.writeError(request_id, "Command type must be either 'buffer' or 'file'");
                 continue;
-            },
-        };
+            }
+        else
+            false;
+
+        const images = if (compare_buffers)
+            loadImagesFromBuffers(obj, options, &response_writer, request_id, &stdin_reader, allocator) catch continue
+        else
+            loadImagesFromPaths(obj, options, &response_writer, request_id, allocator) catch continue;
+
         var base_img = images.base;
-        defer base_img.deinit(allocator);
         var comp_img = images.compare;
+        defer base_img.deinit(allocator);
         defer comp_img.deinit(allocator);
 
-        const result = odiff.diff.diff(&base_img, &comp_img, odiff.DiffOptions{
-            .output_diff_mask = output_diff_mask,
-            .diff_overlay_factor = diff_overlay_factor,
-            .threshold = threshold,
-            .diff_pixel = diff_pixel,
-            .fail_on_layout_change = fail_on_layout,
-            .antialiasing = antialiasing,
-            .diff_lines = capture_diff_lines,
-            .ignore_regions = ignore_regions,
-            .capture_diff = true,
-            .enable_asm = true,
-        }, allocator) catch |err| {
+        const result = odiff.diff.diff(&base_img, &comp_img, options, allocator) catch |err| {
             var msg_buf: [256]u8 = undefined;
             const msg = try std.fmt.bufPrint(&msg_buf, "Diff failed: {s}", .{@errorName(err)});
             try response_writer.writeError(request_id, msg);
@@ -371,7 +530,7 @@ pub fn runServerMode(allocator: std.mem.Allocator) !void {
                     };
                 }
 
-                if (capture_diff_lines and pixel_result.diff_lines != null) {
+                if (options.diff_lines and pixel_result.diff_lines != null) {
                     try response_writer.writePixelDiffWithLines(
                         request_id,
                         pixel_result.diff_count,

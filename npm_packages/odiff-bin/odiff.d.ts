@@ -115,6 +115,27 @@ export declare class ODiffServer {
   ): Promise<ODiffResult>;
 
   /**
+   * Compare two images buffers, the buffer data is the actual encoded file bytes.
+   * **Important**: Always prefer file paths compare if you are saving images to disk anyway.
+   *
+   * @param baseBuffer - Buffer containing base image data
+   * @param baseFormat - Format of base image: "png", "jpeg", "jpg", "bmp", "tiff", "webp"
+   * @param compareBuffer - Buffer containing compare image data
+   * @param compareFormat - Format of compare image: "png", "jpeg", "jpg", "bmp", "tiff", "webp"
+   * @param diffOutput - Path to output diff image
+   * @param options - Comparison options with optional timeout for request
+   * @returns Promise resolving to comparison result
+   */
+  compareBuffers(
+    baseBuffer: Buffer,
+    baseFormat: string,
+    compareBuffer: Buffer,
+    compareFormat: string,
+    diffOutput: string,
+    options?: ODiffOptions & { timeout?: number },
+  ): Promise<ODiffResult>;
+
+  /**
    * Stop the odiff server process
    * Should be called when done with all comparisons
    * Safe to call even if server is not running

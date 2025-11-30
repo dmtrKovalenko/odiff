@@ -143,7 +143,7 @@ odiff --help
 
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
-
+<!--inline-interface-start-->
 ```tsx
 export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
@@ -273,6 +273,7 @@ export { compare, ODiffServer };
 ```
 
 <!--inline-interface-end-->
+
 
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.
 

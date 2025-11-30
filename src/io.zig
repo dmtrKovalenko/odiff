@@ -9,5 +9,6 @@ pub const LoadTwoImagesResult = io.LoadTwoImagesResult;
 pub const loadImage = io.loadImage;
 pub const loadImageWithFormat = io.loadImageWithFormat;
 pub const loadTwoImages = io.loadTwoImages;
+pub const loadTwoImagesFromBuffers = io.loadTwoImagesFromBuffers;
 pub const saveImage = io.saveImage;
 pub const saveImageWithFormat = io.saveImageWithFormat;
