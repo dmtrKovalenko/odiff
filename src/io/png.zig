@@ -15,20 +15,20 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
     _ = c.spng_set_chunk_limits(ctx, limit, limit);
 
     if (c.spng_set_png_buffer(ctx, @ptrCast(data.ptr), @intCast(data.len)) != 0)
-        return error.InvalidData;
+        return error.DecoderFailure;
 
     var ihdr: c.spng_ihdr = undefined;
-    if (c.spng_get_ihdr(ctx, &ihdr) != 0) return error.InvalidData;
+    if (c.spng_get_ihdr(ctx, &ihdr) != 0) return error.DecoderFailure;
 
     var out_size: usize = 0;
     if (c.spng_decoded_image_size(ctx, c.SPNG_FMT_RGBA8, &out_size) != 0)
-        return error.InvalidData;
+        return error.DecoderFailure;
 
     const result_data = try allocator.alignedAlloc(u8, .of(u32), out_size);
     errdefer allocator.free(result_data);
 
     if (c.spng_decode_image(ctx, @ptrCast(result_data.ptr), out_size, c.SPNG_FMT_RGBA8, c.SPNG_DECODE_TRNS) != 0)
-        return error.InvalidData;
+        return error.DecoderFailure;
 
     return Image{
         .width = ihdr.width,
@@ -51,9 +51,13 @@ pub fn save(img: Image, file: std.fs.File) !void {
         .filter_method = c.SPNG_FILTER_NONE,
         .interlace_method = c.SPNG_INTERLACE_NONE,
     };
-    if (c.spng_set_ihdr(ctx, &ihdr) != 0) return error.InvalidData;
+    if (c.spng_set_ihdr(ctx, &ihdr) != 0) return error.EncoderFailure;
 
-    if (c.spng_set_option(ctx, c.SPNG_FILTER_CHOICE, c.SPNG_DISABLE_FILTERING) != 0) return error.InvalidData;
+    // Performance optimizations from libspng encode.md:
+    // - Disable filtering (already fast, increases file size but maximizes speed)
+    // - Set compression level to 1 (3x faster with only ~10% file size increase)
+    if (c.spng_set_option(ctx, c.SPNG_FILTER_CHOICE, c.SPNG_DISABLE_FILTERING) != 0) return error.EncoderFailure;
+    if (c.spng_set_option(ctx, c.SPNG_IMG_COMPRESSION_LEVEL, 1) != 0) return error.EncoderFailure;
 
     var buffer: [4096]u8 = undefined;
     var file_writer = file.writer(&buffer);
@@ -71,14 +75,14 @@ pub fn save(img: Image, file: std.fs.File) !void {
             }
         }.writeFn,
         @ptrCast(@alignCast(&file_writer.interface)),
-    ) != 0) return error.InvalidData;
+    ) != 0) return error.EncoderFailure;
 
     const u8_slice: []u8 = @ptrCast(img.slice());
     const res = c.spng_encode_image(ctx, u8_slice.ptr, u8_slice.len, c.SPNG_FMT_PNG, c.SPNG_ENCODE_FINALIZE);
     if (res != 0) {
         const err_msg = std.mem.span(c.spng_strerror(res));
         std.log.err("writePNG: failed to encode image {s}", .{err_msg});
-        return error.InvalidData;
+        return error.EncoderFailure;
     }
     try file_writer.interface.flush();
 }
