@@ -13,7 +13,7 @@ do
   fi
 done
 
-if ! git diff --quiet; then
+if [[ "$DRY_RUN" == "false" ]] && ! git diff --quiet; then
   echo "Error: There are unstaged changes in the repository."
   exit 1
 fi
@@ -27,6 +27,10 @@ npm install --ignore-scripts
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/odiff-bin/package.json
 
 sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
+
+# force using the one united versino
+sed -i '' "s/\"odiff-bin\": \"[^\"]*\"/\"odiff-bin\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
+
 
 if [ "$DRY_RUN" == true ]; then
   echo "Dry run, not committing or tagging"

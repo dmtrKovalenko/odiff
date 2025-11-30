@@ -30,7 +30,7 @@
     "@playwright/test": "^1.56.0"
   },
   "dependencies": {
-    "odiff-bin": "^4.1.2"
+    "odiff-bin": "4.3.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",
