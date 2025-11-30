@@ -16,10 +16,67 @@ class ODiffServer {
     this.pendingRequests = new Map();
     this.requestId = 0;
     this.exiting = false;
+    this.writeLock = Promise.resolve();
 
     // Start server initialization immediately
     /** @type {Promise | null} */
     this._initPromise = this._initialize();
+  }
+
+  /** @returns {Promise<(value?: unknown) => unknown>} */
+  async _acquireWriteLock() {
+    const currentLock = this.writeLock;
+    /** @type {(value?: unknown) => unknown} */
+    let releaseLock;
+    this.writeLock = new Promise((resolve) => {
+      releaseLock = resolve;
+    });
+    await currentLock;
+    return releaseLock;
+  }
+
+  /**
+   * This is internal node js bs handling a separate buffer for stdin
+   * that can be overflown or underflow, so we have to wait for it to 
+   * process the data otherwise the data corruption can happen
+   * @private
+   * @param {string | Buffer} data - Data to write
+   * @returns {Promise<void>}
+   */
+  async _writeWithBackpressure(data) {
+    const noDrainNeeded = this.process?.stdin.write(data);
+    if (!noDrainNeeded) {
+      await new Promise((resolve, reject) => {
+        const stdin = this.process?.stdin;
+        if (!stdin) {
+          reject(new Error("Process stdin not available"));
+          return;
+        }
+
+        let settled = false;
+
+        stdin.once("drain", () => {
+          if (!settled) {
+            settled = true;
+            resolve(undefined);
+          }
+        });
+
+        stdin.once("error", (err) => {
+          if (!settled) {
+            settled = true;
+            reject(err);
+          }
+        });
+
+        stdin.once("close", () => {
+          if (!settled) {
+            settled = true;
+            reject(new Error("Stream closed before drain"));
+          }
+        });
+      });
+    }
   }
 
   /**
@@ -77,7 +134,12 @@ class ODiffServer {
                 clearTimeout(pending.timeoutId);
               }
 
-              pending.resolve(response);
+              // Reject if response contains an error, otherwise resolve
+              if (response.error) {
+                pending.reject(new Error(response.error));
+              } else {
+                pending.resolve(response);
+              }
             } else {
               console.warn(
                 `Received response for unknown request ID: ${response.requestId}`,
@@ -114,7 +176,7 @@ class ODiffServer {
    * @param {string} comparePath - Path to comparison image
    * @param {string} diffOutput - Path to output diff image
    * @param {import("./odiff.d.ts").ODiffOptions & { timeout?: number }} [options] - Comparison options
-   * @returns {Promise<Object>} Comparison result
+   * @returns {Promise<import("./odiff.d.ts").ODiffResult>} Comparison result
    */
   async compare(basePath, comparePath, diffOutput, options = {}) {
     if (this._initPromise && !this.ready) {
@@ -127,9 +189,10 @@ class ODiffServer {
       await this._initPromise;
     }
 
-    return new Promise((resolve, reject) => {
-      const requestId = this.requestId++;
-      let timeoutId;
+    const requestId = this.requestId++;
+    let timeoutId;
+
+    const resultPromise = new Promise((resolve, reject) => {
       if (options.timeout !== undefined) {
         timeoutId = setTimeout(() => {
           if (this.pendingRequests.has(requestId)) {
@@ -142,33 +205,140 @@ class ODiffServer {
       }
 
       this.pendingRequests.set(requestId, { resolve, reject, timeoutId });
-      const request = {
-        requestId: requestId,
-        base: basePath,
-        compare: comparePath,
-        output: diffOutput,
-        options: {
-          threshold: options.threshold,
-          failOnLayoutDiff: options.failOnLayoutDiff,
-          antialiasing: options.antialiasing,
-          captureDiffLines: options.captureDiffLines,
-          outputDiffMask: options.outputDiffMask,
-          ignoreRegions: options.ignoreRegions,
-          diffColor: options.diffColor,
-          diffOverlay: options.diffOverlay,
-        },
-      };
-
-      try {
-        this.process?.stdin.write(JSON.stringify(request) + "\n");
-      } catch (err) {
-        this.pendingRequests.delete(requestId);
-        if (timeoutId !== undefined) {
-          clearTimeout(timeoutId);
-        }
-        reject(new Error(`odiff: Failed to send request: ${err.message}`));
-      }
     });
+
+    const request = {
+      requestId: requestId,
+      base: basePath,
+      compare: comparePath,
+      output: diffOutput,
+      options: {
+        threshold: options.threshold,
+        failOnLayoutDiff: options.failOnLayoutDiff,
+        antialiasing: options.antialiasing,
+        captureDiffLines: options.captureDiffLines,
+        outputDiffMask: options.outputDiffMask,
+        ignoreRegions: options.ignoreRegions,
+        diffColor: options.diffColor,
+        diffOverlay: options.diffOverlay,
+      },
+    };
+
+    // Acquire write lock to prevent concurrent requests from interleaving
+    const release = await this._acquireWriteLock();
+    try {
+      await this._writeWithBackpressure(JSON.stringify(request) + "\n");
+    } catch (err) {
+      this.pendingRequests.delete(requestId);
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      throw new Error(`odiff: Failed to send request: ${err.message}`);
+    } finally {
+      release();
+    }
+
+    return resultPromise;
+  }
+
+  /**
+   * Compare two images buffers, the buffer data is the actual encoded file bytes.
+   * **Important**: Always prefer file paths compare if you are saving images to disk anyway.
+   *
+   * @param {Buffer} baseBuffer - Buffer containing base image data
+   * @param {"png" | "jpeg" | "bmp" | "tiff" | "webp"} baseFormat - Format: "png", "jpeg", "bmp", "tiff", "webp"
+   * @param {Buffer} compareBuffer - Buffer containing compare image data
+   * @param {"png" | "jpeg" | "bmp" | "tiff" | "webp"} compareFormat - Format of compare image
+   * @param {string} diffOutput - Path to output diff image
+   * @param {import("./odiff.d.ts").ODiffOptions & { timeout?: number }} [options] - Comparison options
+   * @returns {Promise<import("./odiff.d.ts").ODiffResult>} Comparison result
+   */
+  async compareBuffers(
+    baseBuffer,
+    baseFormat,
+    compareBuffer,
+    compareFormat,
+    diffOutput,
+    options = {},
+  ) {
+    // Wait for server initialization
+    if (this._initPromise && !this.ready) {
+      await this._initPromise;
+    }
+
+    if (!this._initPromise && !this.ready) {
+      this._initPromise = this._initialize();
+      await this._initPromise;
+    }
+
+    if (!Buffer.isBuffer(baseBuffer) || !Buffer.isBuffer(compareBuffer)) {
+      throw new Error(
+        "Both baseBuffer and compareBuffer must be Buffer instances",
+      );
+    }
+
+    const requestId = this.requestId++;
+    let timeoutId;
+
+    const resultPromise = new Promise((resolve, reject) => {
+      if (options.timeout !== undefined) {
+        timeoutId = setTimeout(() => {
+          if (this.pendingRequests.has(requestId)) {
+            this.pendingRequests.delete(requestId);
+            reject(
+              new Error(`odiff: Request timed out after ${options.timeout}ms`),
+            );
+          }
+        }, options.timeout);
+      }
+
+      this.pendingRequests.set(requestId, { resolve, reject, timeoutId });
+    });
+
+    const request = {
+      type: "buffer",
+      requestId: requestId,
+      baseLength: baseBuffer.length,
+      baseFormat: baseFormat,
+      compareLength: compareBuffer.length,
+      compareFormat: compareFormat,
+      output: diffOutput,
+      options: {
+        threshold: options.threshold,
+        failOnLayoutDiff: options.failOnLayoutDiff,
+        antialiasing: options.antialiasing,
+        captureDiffLines: options.captureDiffLines,
+        outputDiffMask: options.outputDiffMask,
+        ignoreRegions: options.ignoreRegions,
+        diffColor: options.diffColor,
+        diffOverlay: options.diffOverlay,
+      },
+    };
+
+    // Acquire write lock to prevent concurrent requests from interleaving
+    // This is CRITICAL for buffer comparisons since we write:
+    // 1. JSON request line
+    // 2. Base buffer (raw bytes)
+    // 3. Compare buffer (raw bytes)
+    // These three writes must be atomic and ordered to avoid data corruption
+    const release = await this._acquireWriteLock();
+    try {
+      await this._writeWithBackpressure(JSON.stringify(request) + "\n");
+      await this._writeWithBackpressure(baseBuffer);
+      await this._writeWithBackpressure(compareBuffer);
+    } catch (err) {
+      this.pendingRequests.delete(requestId);
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
+      throw new Error(`odiff: Failed to send request: ${err.message}`);
+    } finally {
+      if (release) {
+        release();
+      }
+    }
+
+    return resultPromise;
   }
 
   /**

@@ -1,9 +1,20 @@
 const path = require("path");
+const fs = require("fs");
 const test = require("ava");
-const { compare } = require("odiff-bin/odiff");
+const { compare, ODiffServer } = require("odiff-bin/odiff");
 
+const TEST_PATH = path.resolve(__dirname, "..", "..", "..", "test");
 const IMAGES_PATH = path.resolve(__dirname, "..", "..", "..", "images");
-const BINARY_PATH = path.resolve(__dirname, "..", "..", "..", "zig-out", "bin", "odiff");
+const IMAGES_IGNORED_PATH = path.resolve(IMAGES_PATH, "gen");
+const BINARY_PATH = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "zig-out",
+  "bin",
+  "odiff",
+);
 
 console.log(`Testing binary ${BINARY_PATH}`);
 
@@ -224,4 +235,145 @@ test("Works with numeric option to diffOverlay", async (t) => {
   console.log(
     `White shade mask test: ${result.diffCount} different pixels found`,
   );
+});
+
+test("Buffer comparison - identical images match", async (t) => {
+  const server = new ODiffServer(BINARY_PATH);
+  const baseBuffer = fs.readFileSync(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+  );
+  const compareBuffer = fs.readFileSync(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+  );
+
+  const result = await server.compareBuffers(
+    baseBuffer,
+    "png",
+    compareBuffer,
+    "png",
+    path.join(IMAGES_PATH, "diff_buffer_same.png"),
+  );
+
+  t.is(result.match, true);
+
+  server.stop();
+});
+
+test("Buffer comparison - different images show pixel diff", async (t) => {
+  const server = new ODiffServer(BINARY_PATH);
+  const baseBuffer = fs.readFileSync(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+  );
+  const compareBuffer = fs.readFileSync(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
+  );
+
+  const result = await server.compareBuffers(
+    baseBuffer,
+    "png",
+    compareBuffer,
+    "png",
+    path.join(IMAGES_IGNORED_PATH, "diff_buffer_different.png"),
+    {
+      threshold: 0.1,
+      diffColor: "#FF0000",
+      outputDiffMask: true,
+    },
+  );
+
+  t.is(result.match, false);
+  t.is(result.reason, "pixel-diff");
+  t.true(typeof result.diffCount === "number");
+  t.true(result.diffCount > 0);
+  t.true(typeof result.diffPercentage === "number");
+  t.true(result.diffPercentage > 0);
+
+  server.stop();
+});
+
+test("Buffer comparison - proper error when output directory doesn't exist", async (t) => {
+  const server = new ODiffServer(BINARY_PATH);
+  const baseBuffer = fs.readFileSync(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+  );
+  const compareBuffer = fs.readFileSync(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
+  );
+
+  // Use a path with a random UUID to ensure it doesn't exist
+  const randomPath = path.join(
+    "/tmp",
+    `nonexistent-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    "subdir",
+    "diff.png",
+  );
+
+  const error = await t.throwsAsync(
+    async () => {
+      await server.compareBuffers(
+        baseBuffer,
+        "png",
+        compareBuffer,
+        "png",
+        randomPath,
+        { threshold: 0.1 },
+      );
+    },
+    { instanceOf: Error },
+  );
+
+  t.is(error.message, "Failed to save diff output");
+
+  server.stop();
+});
+
+test("Concurrent buffer comparisons with write mutex", async (t) => {
+  const server = new ODiffServer(BINARY_PATH);
+
+  const testImages = [
+    path.join(TEST_PATH, "png", "orange.png"),
+    path.join(TEST_PATH, "png", "orange_diff.png"),
+    path.join(TEST_PATH, "png", "orange_changed.png"),
+  ];
+
+  const imageBuffers = testImages.map((imgPath) => fs.readFileSync(imgPath));
+  const randomImage = () =>
+    imageBuffers[Math.floor(Math.random() * imageBuffers.length)];
+
+  const concurrentRequests = 15;
+  const promises = [];
+
+  for (let i = 0; i < concurrentRequests; i++) {
+    const baseBuffer = randomImage();
+    const compareBuffer = randomImage();
+
+    promises.push(
+      server.compareBuffers(
+        baseBuffer,
+        "png",
+        compareBuffer,
+        "png",
+        path.join(IMAGES_IGNORED_PATH, `diff_concurrent_${i}.png`),
+      ),
+    );
+  }
+
+  const results = await Promise.all(promises);
+
+  // Verify all comparisons completed successfully
+  t.is(results.length, concurrentRequests);
+  results.forEach((result, i) => {
+    t.true(
+      typeof result.match === "boolean",
+      `Result ${i} should have match field`,
+    );
+    if (!result.match) {
+      t.true(
+        typeof result.diffCount === "number",
+        `Result ${i} should have diffCount`,
+      );
+    }
+  });
+
+  server.stop();
 });

@@ -2,6 +2,8 @@
 node_modules/
 zig-out/
 .benchtree/
+images/gen/*
+!images/gen/.gitkeep
 
 # node js + playwright
 node_modules/

@@ -143,7 +143,7 @@ odiff --help
 
 NodeJS Api is pretty tiny as well. Here is a typescript interface we have:
 
-
+<!--inline-interface-start-->
 ```tsx
 export type ODiffOptions = Partial<{
   /** Color used to highlight different pixels in the output (in hex format e.g. #cd2cc9). */
@@ -220,7 +220,7 @@ declare function compare(
  * server.stop();
  * ```
  *
- * It is absolutely fine to keep odiff server living in the module root
+ * It is absolutely fine to keep odiff sever leaving in the module root
  * even if you have several independent workers, it will automatically spawn
  * a server process per each multiplexed core to work in parallel
  *
@@ -262,6 +262,27 @@ export declare class ODiffServer {
   ): Promise<ODiffResult>;
 
   /**
+   * Compare two images buffers, the buffer data is the actual encoded file bytes.
+   * **Important**: Always prefer file paths compare if you are saving images to disk anyway.
+   *
+   * @param baseBuffer - Buffer containing base image data
+   * @param baseFormat - Format of base image: "png", "jpeg", "jpg", "bmp", "tiff", "webp"
+   * @param compareBuffer - Buffer containing compare image data
+   * @param compareFormat - Format of compare image: "png", "jpeg", "jpg", "bmp", "tiff", "webp"
+   * @param diffOutput - Path to output diff image
+   * @param options - Comparison options with optional timeout for request
+   * @returns Promise resolving to comparison result
+   */
+  compareBuffers(
+    baseBuffer: Buffer,
+    baseFormat: string,
+    compareBuffer: Buffer,
+    compareFormat: string,
+    diffOutput: string,
+    options?: ODiffOptions & { timeout?: number },
+  ): Promise<ODiffResult>;
+
+  /**
    * Stop the odiff server process
    * Should be called when done with all comparisons
    * Safe to call even if server is not running
@@ -271,7 +292,6 @@ export declare class ODiffServer {
 
 export { compare, ODiffServer };
 ```
-
 <!--inline-interface-end-->
 
 Compare option will return `{ match: true }` if images are identical. Otherwise return `{ match: false, reason: "*" }` with a reason why images were different.

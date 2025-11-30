@@ -135,6 +135,15 @@ pub const ImageFormat = enum(c_int) {
         if (std.mem.eql(u8, ext, ".webp")) return .webp;
         return null;
     }
+
+    pub fn fromString(str: []const u8) ?ImageFormat {
+        if (std.mem.eql(u8, str, "png")) return .png;
+        if (std.mem.eql(u8, str, "jpeg") or std.mem.eql(u8, str, "jpg")) return .jpg;
+        if (std.mem.eql(u8, str, "bmp")) return .bmp;
+        if (std.mem.eql(u8, str, "tiff")) return .tiff;
+        if (std.mem.eql(u8, str, "webp")) return .webp;
+        return null;
+    }
 };
 
 /// Loads an image from a given file path.
@@ -177,6 +186,21 @@ fn loadImageWithStrategy(allocator: std.mem.Allocator, file_path: []const u8, st
         .bmp => try bmp.load(allocator, file.data),
         .tiff => try tiff.load(allocator, file.data),
         .webp => try webp.load(allocator, file.data),
+    };
+}
+
+fn loadImageFromBuffer(
+    allocator: std.mem.Allocator,
+    buffer: []const u8,
+    format: ImageFormat,
+    strategy: ColorDecodingStrategy,
+) !Image {
+    return switch (format) {
+        .png => try png.load(allocator, buffer),
+        .jpg => try jpeg.load(allocator, buffer, strategy),
+        .bmp => try bmp.load(allocator, buffer),
+        .tiff => try tiff.load(allocator, buffer),
+        .webp => try webp.load(allocator, buffer),
     };
 }
 
@@ -237,6 +261,89 @@ pub fn loadTwoImages(
     const comp_ctx = LoadContext{
         .allocator = allocator,
         .file_path = comp_path,
+        .strategy = strategy,
+        .result = &comp_result,
+    };
+
+    const base_thread = std.Thread.spawn(.{}, LoadContext.run, .{base_ctx}) catch |err| {
+        return .{ .err = .{ .thread_spawn_failed = err } };
+    };
+    const comp_thread = std.Thread.spawn(.{}, LoadContext.run, .{comp_ctx}) catch |err| {
+        return .{ .err = .{ .thread_spawn_failed = err } };
+    };
+
+    base_thread.join();
+    comp_thread.join();
+
+    // Check for errors - return specific errors indicating which image failed
+    if (base_result.err) |err| {
+        if (comp_result.image) |img| {
+            var comp_img = img;
+            comp_img.deinit(allocator);
+        }
+        return .{ .err = .{ .base_failed = err } };
+    }
+
+    if (comp_result.err) |err| {
+        if (base_result.image) |img| {
+            var base_img = img;
+            base_img.deinit(allocator);
+        }
+        return .{ .err = .{ .compare_failed = err } };
+    }
+
+    return .{ .ok = .{
+        .base = base_result.image.?,
+        .compare = comp_result.image.?,
+    } };
+}
+
+/// Loads two images from buffers concurrently.
+/// Images are loaded in parallel using threads for better performance.
+/// Returns a result type that preserves underlying error information.
+pub fn loadTwoImagesFromBuffers(
+    allocator: std.mem.Allocator,
+    base_buffer: []const u8,
+    base_format: ImageFormat,
+    compare_buffer: []const u8,
+    compare_format: ImageFormat,
+    strategy: ColorDecodingStrategy,
+) LoadTwoImagesResult {
+    const Result = struct {
+        image: ?Image = null,
+        err: ?anyerror = null,
+    };
+
+    var base_result = Result{};
+    var comp_result = Result{};
+
+    const LoadContext = struct {
+        allocator: std.mem.Allocator,
+        buffer: []const u8,
+        format: ImageFormat,
+        strategy: ColorDecodingStrategy,
+        result: *Result,
+
+        fn run(self: @This()) void {
+            self.result.image = loadImageFromBuffer(self.allocator, self.buffer, self.format, self.strategy) catch |err| {
+                self.result.err = err;
+                return;
+            };
+        }
+    };
+
+    const base_ctx = LoadContext{
+        .allocator = allocator,
+        .buffer = base_buffer,
+        .format = base_format,
+        .strategy = strategy,
+        .result = &base_result,
+    };
+
+    const comp_ctx = LoadContext{
+        .allocator = allocator,
+        .buffer = compare_buffer,
+        .format = compare_format,
         .strategy = strategy,
         .result = &comp_result,
     };
