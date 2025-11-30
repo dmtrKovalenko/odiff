@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+console.error(
+  "Error: odiff binary has not been installed correctly.\n" +
+  "The postinstall script needs to run to copy the platform-specific binary.\n\n" +
+  "Please run:\n" +
+  "  npm rebuild odiff-bin\n"
+);
+process.exit(1);

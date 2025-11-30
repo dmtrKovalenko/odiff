@@ -14,4 +14,3 @@ playwright-report/
 *.log
 __screenshots__/
 test-results/
-npm_packages/odiff-bin/bin/odiff.exe
