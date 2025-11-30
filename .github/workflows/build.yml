@@ -295,12 +295,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
-      - name: Download built binaries
+      - name: Download all built binaries
         uses: actions/download-artifact@v4
         with:
           pattern: odiff-*
           merge-multiple: true
-          path: npm_packages/odiff-bin/raw_binaries
+          path: binaries
+
+      - name: Verify that we have 8 binaries
+        run: |
+          ls -la binaries
+          [ $(ls -1 binaries | wc -l) -eq 8 ] || (echo "Expected 8 binaries" && exit 1)
+
+      - name: Copy binaries to npm package (excluding rva23)
+        run: |
+          mkdir -p npm_packages/odiff-bin/raw_binaries
+          find binaries -type f ! -name '*riscv64-linux-rva23*' -exec cp {} npm_packages/odiff-bin/raw_binaries/ \;
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -310,14 +320,6 @@ jobs:
           always-auth: true
           registry-url: "https://registry.npmjs.org"
           cache-dependency-path: "package-lock.json"
-
-      - name: Verify that we have 8 binaries
-        run: |
-          ls -la npm_packages/odiff-bin/raw_binaries
-          if [ $(ls -1 npm_packages/odiff-bin/raw_binaries | wc -l) -ne 8 ]; then
-            echo "Expected 6 binaries, but found $(ls -1 npm_packages/odiff-bin/raw_binaries | wc -l)"
-            exit 1
-          fi
 
       - name: Copy root readme 
         run: cp README.md npm_packages/odiff-bin/README.md
@@ -337,6 +339,6 @@ jobs:
       - name: Create github release
         uses: softprops/action-gh-release@v1
         with:
-          files: "npm_packages/odiff-bin/raw_binaries/*"
+          files: "binaries/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
