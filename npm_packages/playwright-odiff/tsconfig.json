@@ -3,10 +3,10 @@
     // Language and Environment
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "ES2022",
+    "module": "nodenext",
 
     // Module Resolution
-    "moduleResolution": "bundler",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

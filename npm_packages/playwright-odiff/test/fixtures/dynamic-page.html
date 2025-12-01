@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,6 +60,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="label">Performance Now</div>
@@ -69,10 +71,14 @@
     <script>
         function updateNumber() {
             document.getElementById('number').textContent = performance.now().toFixed(0);
+            setInterval(() => {
+                document.getElementById('number').textContent = performance.now().toFixed(0);
+            }, 10)
         }
 
         // Update number once when trigger button is clicked
         document.getElementById('trigger').addEventListener('click', updateNumber);
     </script>
 </body>
+
 </html>
