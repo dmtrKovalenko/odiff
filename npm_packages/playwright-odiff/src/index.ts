@@ -1,6 +1,6 @@
-import type { ODiffScreenshotOptions } from "./types";
+import type { ODiffScreenshotOptions } from "./types.js";
 
-export { toHaveScreenshotOdiff } from "./toHaveScreenshotOdiff";
+export { toHaveScreenshotOdiff } from "./toHaveScreenshotOdiff.js";
 export type { ODiffScreenshotOptions as OdiffScreenshotOptions };
 
 // Type augmentation for Playwright's expect

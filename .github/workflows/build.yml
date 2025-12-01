@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
@@ -127,7 +127,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
@@ -175,7 +175,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
@@ -203,7 +203,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download x86_64-linux artifact
         uses: actions/download-artifact@v4
@@ -238,7 +238,7 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.56.0-noble
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download x86_64-linux artifact
         uses: actions/download-artifact@v4
@@ -274,12 +274,48 @@ jobs:
           path: npm_packages/playwright-odiff/test-results
           retention-days: 7
 
+  valgrind:
+    name: Valgrind Memory Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Install nasm and valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm valgrind
+
+      - name: Build with debug symbols
+        run: |
+          zig build -Doptimize=Debug
+
+      - name: Run valgrind memcheck - normal mode with diff output
+        run: |
+          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 --errors-for-leak-kinds=definite,possible \
+            ./zig-out/bin/odiff test/png/orange.png test/png/orange_changed.png /tmp/diff-output.png
+
+      - name: Run valgrind memcheck - normal mode without diff output
+        run: |
+          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 --errors-for-leak-kinds=definite,possible \
+            ./zig-out/bin/odiff test/png/orange.png test/png/orange_changed.png
+
+      - name: Run valgrind memcheck - server mode
+        run: |
+          timeout 5 valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 --errors-for-leak-kinds=definite,possible \
+            ./zig-out/bin/odiff --server || [ $? -eq 124 ]
+
   spellcheck:
     name: Spell check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run typos
         uses: crate-ci/typos@master
@@ -293,7 +329,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v5
 
       - name: Download all built binaries
         uses: actions/download-artifact@v4
@@ -330,6 +366,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Build playwright-odiff package
+        working-directory: npm_packages/playwright-odiff
+        run: npm run build
+
       - name: Publish playwright-odiff package
         working-directory: npm_packages/playwright-odiff
         run: npm publish
@@ -342,3 +382,24 @@ jobs:
           files: "binaries/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  commit-sanity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Verify binary was not commit in npm package folder 
+        run: |
+          if ! file ./npm_packages/odiff-bin/bin/odiff.exe | grep -q "Node.js script executable"; then 
+            echo "Looks like you commited a local binary to ./npm_packages/odiff-bin/bin/odiff.exe. Please revert"
+            exit 1
+          fi
+
+      - name: Check docs in readme
+        run: |
+          npm run update-readme
+          if ! git diff --quiet; then
+            echo "Please run `npm run update-readme` and commit changes."
+            exit 1
+          fi

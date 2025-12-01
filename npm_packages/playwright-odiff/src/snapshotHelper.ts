@@ -8,7 +8,7 @@
 import fs from "fs";
 import path from "path";
 import type { TestInfo, Locator } from "@playwright/test";
-import type { ODiffScreenshotOptions, MatcherResult } from "./types";
+import type { ODiffScreenshotOptions, MatcherResult } from "./types.js";
 import { ODiffOptions } from "odiff-bin";
 
 type NameOrSegments = string | string[];
@@ -269,7 +269,19 @@ export class SnapshotHelper {
     return this.createMatcherResult(output.join("\n"), false, log);
   }
 
-  handleMatching(): MatcherResult {
+  // because we write screenshots directly to the output path we
+  // have to simply unlink them on success which is a very fast operation
+  async handleMatching(): Promise<MatcherResult> {
+    await Promise.all([
+      fs.promises.unlink(this.actualPath).catch(() => {}),
+      fs.promises.unlink(this.previousPath).catch(() => {}),
+      fs.promises.unlink(this.diffPath).catch(() => {}),
+    ]).catch(() => {});
+
+    // Try to remove the test-results directory if it's empty
+    const testResultsDir = path.dirname(this.actualPath);
+    await fs.promises.rmdir(testResultsDir).catch(() => {});
+
     return this.createMatcherResult("", true);
   }
 

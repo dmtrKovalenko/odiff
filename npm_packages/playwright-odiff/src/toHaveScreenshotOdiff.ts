@@ -2,9 +2,9 @@ import fs from "fs/promises";
 import fssync from "fs";
 import path from "path";
 import type { Page, Locator, TestInfo } from "@playwright/test";
-import type { ODiffScreenshotOptions, MatcherResult } from "./types";
+import type { ODiffScreenshotOptions, MatcherResult } from "./types.js";
 import { test } from "@playwright/test";
-import { SnapshotHelper } from "./snapshotHelper";
+import { SnapshotHelper } from "./snapshotHelper.js";
 import { ODiffServer } from "odiff-bin";
 
 type ODiffServerType = InstanceType<typeof ODiffServer>;
@@ -422,7 +422,7 @@ export async function toHaveScreenshotOdiff(
         true,
       );
     }
-    return helper.handleMatching();
+    return await helper.handleMatching();
   }
 
   if (
@@ -430,7 +430,6 @@ export async function toHaveScreenshotOdiff(
     helper.updateSnapshots === "all"
   ) {
     if (result.hasActual) {
-      // Copy actual to expected (no read/write, just kernel copy)
       await fs.copyFile(helper.actualPath, helper.expectedPath);
       console.log(helper.expectedPath + " is re-generated, writing actual.");
       return helper.createMatcherResult(
