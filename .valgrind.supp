@@ -1,0 +1,26 @@
+{
+   zlib_deflate_uninit_hash
+   Memcheck:Cond
+   fun:slide_hash
+   fun:fill_window
+   fun:deflate_fast
+   fun:deflate
+}
+
+{
+   zlib_deflate_uninit_value
+   Memcheck:Value8
+   fun:slide_hash
+   fun:fill_window
+   fun:deflate_fast
+   fun:deflate
+}
+
+{
+   zlib_deflate_uninit_value_4
+   Memcheck:Value4
+   fun:slide_hash
+   fun:fill_window
+   fun:deflate_fast
+   fun:deflate
+}

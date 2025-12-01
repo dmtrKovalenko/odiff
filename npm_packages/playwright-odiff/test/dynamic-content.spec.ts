@@ -11,13 +11,11 @@ test.describe("toHaveScreenshotOdiff - Dynamic Content", () => {
     await page.goto(dynamicPagePath);
     await page.waitForLoadState("networkidle");
 
-    // Take first screenshot with static content
     await expect(page).toHaveScreenshotOdiff("dynamic-first.png");
 
-    // Click trigger to update the number
     await page.click("#trigger");
+    await page.waitForTimeout(100);
 
-    // Screenshots should be different due to changed number
     await expect(page).not.toHaveScreenshotOdiff("dynamic-first.png");
   });
 
