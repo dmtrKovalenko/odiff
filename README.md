@@ -119,9 +119,9 @@ Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress
 
 ### Visual regression services
 
-[LostPixel](https://github.com/lost-pixel/lost-pixel) – Holistic visual testing for your Frontend that allows very easy integration with storybook and uses odiff for comparison
+[Argos](https://argos-ci.com/) – Argos is the modern visual testing platform for **websites, mobile apps and design systems**. It uses odiff for comparison. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
 
-[Argos CI](https://argos-ci.com/) – Visual regression service powering projects like material-ui. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
+[LostPixel](https://github.com/lost-pixel/lost-pixel) – Holistic visual testing for your Frontend that allows very easy integration with storybook and uses odiff for comparison
 
 [Visual Regression Tracker](https://github.com/Visual-Regression-Tracker/Visual-Regression-Tracker) – Self hosted visual regression service that allows to use odiff as screenshot comparison engine
 
