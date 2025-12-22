@@ -1,14 +1,15 @@
 {
   "name": "playwright-odiff",
-  "version": "4.3.2",
+  "version": "4.4.0-beta.1",
   "description": "Playwright custom matcher using odiff for screenshot comparison",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     }
   },
   "scripts": {

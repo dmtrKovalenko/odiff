@@ -66,10 +66,10 @@ pub fn main() !void {
             },
         },
     };
+
+    // we don't need to free them because we are at the root and we use arena
     var base_img = images.base;
-    defer base_img.deinit(allocator);
     var comp_img = images.compare;
-    defer comp_img.deinit(allocator);
 
     const diff_pixel = cli.parseHexColor(args.diff_color) catch {
         print("Error: Invalid hex color format\n", .{});
