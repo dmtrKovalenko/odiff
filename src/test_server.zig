@@ -216,6 +216,54 @@ test "server: empty ignore regions array works correctly" {
     try expect(obj.get("diffCount").?.integer > 0);
 }
 
+test "server: integer threshold 0 is respected, not treated as default" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    const cwd = std.fs.cwd();
+    cwd.access(odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = std.process.Child.init(&[_][]const u8{ odiff_path, "--server" }, allocator);
+    child.stdin_behavior = .Pipe;
+    child.stdout_behavior = .Pipe;
+    child.stderr_behavior = .Pipe;
+
+    try child.spawn();
+    defer _ = child.kill() catch {};
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    // Send threshold as integer 0 (JSON: "threshold":0, not "threshold":0.0)
+    // Both should behave identically — maximum sensitivity
+    const request =
+        \\{"requestId":10,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff_int_threshold.png","options":{"threshold":0}}
+        \\
+    ;
+    try stdin.writeAll(request);
+
+    var response_buf: [1024]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 10);
+    try expect(obj.get("match").?.bool == false);
+    try expect(obj.get("diffCount").?.integer > 0);
+}
+
 test "server: invalid ignore regions return error" {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();

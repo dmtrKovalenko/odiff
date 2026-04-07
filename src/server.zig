@@ -98,7 +98,11 @@ fn parseBool(options_obj: ?std.json.ObjectMap, key: []const u8, default: bool) b
 
 fn parseFloat(options_obj: ?std.json.ObjectMap, key: []const u8, default: f32) f32 {
     if (options_obj) |o| {
-        if (o.get(key)) |v| if (v == .float) return @floatCast(v.float);
+        if (o.get(key)) |v| switch (v) {
+            .float => |f| return @floatCast(f),
+            .integer => |i| return @floatCast(@as(f64, @floatFromInt(i))),
+            else => {},
+        };
     }
     return default;
 }
