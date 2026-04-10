@@ -38,8 +38,8 @@ test "layoutDifference: diff images with different layouts without capture" {
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
-    try expectEqual(@as(u32, 16), diff_count); // diffPixels
-    try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
+    try expectEqual(@as(u32, 64), diff_count); // diffPixels - includes extra comp pixels
+    try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage - 64/max(4,8)^2
 }
 
 test "PNG: finds difference between 2 images without capture" {

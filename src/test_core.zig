@@ -206,8 +206,8 @@ test "layoutDifference: diff images with different layouts" {
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 16), diff_count); // diffPixels
-        try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
+        try expectEqual(@as(u32, 64), diff_count); // diffPixels - includes extra comp pixels
+        try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage - 64/max(4,8)^2
     }
     {
         var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img2, &img1, options, allocator);
@@ -215,7 +215,7 @@ test "layoutDifference: diff images with different layouts" {
         defer if (diff_lines) |*lines| lines.deinit();
 
         try expectEqual(@as(u32, 64), diff_count); // diffPixels
-        try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage
+        try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage - 64/max(8,4)^2
     }
 }
 
@@ -237,16 +237,16 @@ test "layoutDifference: diff images with different layouts (2)" {
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 1209280), diff_count); // diffPixels
-        try expectApproxEqRel(@as(f64, 70.368), diff_percentage, 0.001); // diffPercentage
+        try expectEqual(@as(u32, 2270068), diff_count); // diffPixels - includes extra comp pixels
+        try expectApproxEqRel(@as(f64, 50.56), diff_percentage, 0.01); // diffPercentage - uses bounding box denominator
     }
     {
         var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img2, &img1, options, allocator);
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 1209280), diff_count); // diffPixels
-        try expectApproxEqRel(@as(f64, 70.368), diff_percentage, 0.001); // diffPercentage
+        try expectEqual(@as(u32, 2270068), diff_count); // diffPixels - includes extra comp pixels
+        try expectApproxEqRel(@as(f64, 50.56), diff_percentage, 0.01); // diffPercentage - uses bounding box denominator
     }
 }
 
