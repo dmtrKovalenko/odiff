@@ -263,3 +263,66 @@ test "server: invalid ignore regions return error" {
     const error_msg = obj.get("error").?.string;
     try expect(std.mem.indexOf(u8, error_msg, "missing required field") != null);
 }
+
+test "server: sequential requests for different images never produce false matches" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    const cwd = std.fs.cwd();
+    cwd.access(odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = std.process.Child.init(&[_][]const u8{ odiff_path, "--server" }, allocator);
+    child.stdin_behavior = .Pipe;
+    child.stdout_behavior = .Pipe;
+    child.stderr_behavior = .Pipe;
+
+    try child.spawn();
+    defer _ = child.kill() catch {};
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    const requests = [_][]const u8{
+        \\{"requestId":10,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq0.png","options":{"threshold":0.1}}
+        \\
+        ,
+        \\{"requestId":11,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq1.png","options":{"threshold":0.1}}
+        \\
+        ,
+        \\{"requestId":12,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq2.png","options":{"threshold":0.1}}
+        \\
+        ,
+        \\{"requestId":13,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq3.png","options":{"threshold":0.1}}
+        \\
+        ,
+        \\{"requestId":14,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq4.png","options":{"threshold":0.1}}
+        \\
+        ,
+    };
+
+    for (requests, 0..) |request, i| {
+        try stdin.writeAll(request);
+
+        var response_buf: [1024]u8 = undefined;
+        const response = try readLineFromPipe(stdout, &response_buf);
+
+        const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+        defer parsed.deinit();
+
+        const obj = parsed.value.object;
+        const request_id = obj.get("requestId").?.integer;
+        try expect(request_id == @as(i64, @intCast(10 + i)));
+        try expect(obj.get("match").?.bool == false);
+        try expect(obj.get("diffCount").?.integer > 0);
+    }
+}
