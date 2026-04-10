@@ -229,6 +229,9 @@ pub fn loadTwoImages(
     comp_path: []const u8,
     strategy: ColorDecodingStrategy,
 ) LoadTwoImagesResult {
+    var thread_safe = std.heap.ThreadSafeAllocator{ .child_allocator = allocator };
+    const safe_allocator = thread_safe.allocator();
+
     const Result = struct {
         image: ?Image = null,
         err: ?anyerror = null,
@@ -252,14 +255,14 @@ pub fn loadTwoImages(
     };
 
     const base_ctx = LoadContext{
-        .allocator = allocator,
+        .allocator = safe_allocator,
         .file_path = base_path,
         .strategy = strategy,
         .result = &base_result,
     };
 
     const comp_ctx = LoadContext{
-        .allocator = allocator,
+        .allocator = safe_allocator,
         .file_path = comp_path,
         .strategy = strategy,
         .result = &comp_result,
@@ -268,8 +271,13 @@ pub fn loadTwoImages(
     const base_thread = std.Thread.spawn(.{}, LoadContext.run, .{base_ctx}) catch |err| {
         return .{ .err = .{ .thread_spawn_failed = err } };
     };
-    const comp_thread = std.Thread.spawn(.{}, LoadContext.run, .{comp_ctx}) catch |err| {
-        return .{ .err = .{ .thread_spawn_failed = err } };
+    const comp_thread = std.Thread.spawn(.{}, LoadContext.run, .{comp_ctx}) catch |spawn_err| {
+        base_thread.join();
+        if (base_result.image) |img| {
+            var base_img = img;
+            base_img.deinit(allocator);
+        }
+        return .{ .err = .{ .thread_spawn_failed = spawn_err } };
     };
 
     base_thread.join();
@@ -309,6 +317,9 @@ pub fn loadTwoImagesFromBuffers(
     compare_format: ImageFormat,
     strategy: ColorDecodingStrategy,
 ) LoadTwoImagesResult {
+    var thread_safe = std.heap.ThreadSafeAllocator{ .child_allocator = allocator };
+    const safe_allocator = thread_safe.allocator();
+
     const Result = struct {
         image: ?Image = null,
         err: ?anyerror = null,
@@ -333,7 +344,7 @@ pub fn loadTwoImagesFromBuffers(
     };
 
     const base_ctx = LoadContext{
-        .allocator = allocator,
+        .allocator = safe_allocator,
         .buffer = base_buffer,
         .format = base_format,
         .strategy = strategy,
@@ -341,7 +352,7 @@ pub fn loadTwoImagesFromBuffers(
     };
 
     const comp_ctx = LoadContext{
-        .allocator = allocator,
+        .allocator = safe_allocator,
         .buffer = compare_buffer,
         .format = compare_format,
         .strategy = strategy,
@@ -351,8 +362,13 @@ pub fn loadTwoImagesFromBuffers(
     const base_thread = std.Thread.spawn(.{}, LoadContext.run, .{base_ctx}) catch |err| {
         return .{ .err = .{ .thread_spawn_failed = err } };
     };
-    const comp_thread = std.Thread.spawn(.{}, LoadContext.run, .{comp_ctx}) catch |err| {
-        return .{ .err = .{ .thread_spawn_failed = err } };
+    const comp_thread = std.Thread.spawn(.{}, LoadContext.run, .{comp_ctx}) catch |spawn_err| {
+        base_thread.join();
+        if (base_result.image) |img| {
+            var base_img = img;
+            base_img.deinit(allocator);
+        }
+        return .{ .err = .{ .thread_spawn_failed = spawn_err } };
     };
 
     base_thread.join();
