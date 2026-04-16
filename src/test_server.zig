@@ -374,3 +374,51 @@ test "server: sequential requests for different images never produce false match
         try expect(obj.get("diffCount").?.integer > 0);
     }
 }
+
+test "server: wider compare image not falsely reported as match" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    const cwd = std.fs.cwd();
+    cwd.access(odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = std.process.Child.init(&[_][]const u8{ odiff_path, "--server" }, allocator);
+    child.stdin_behavior = .Pipe;
+    child.stdout_behavior = .Pipe;
+    child.stderr_behavior = .Pipe;
+
+    try child.spawn();
+    defer _ = child.kill() catch {};
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    // white4x4 (4x4) vs white8x4 (8x4): overlap region is identical,
+    // but comp has 16 extra pixels that must be counted as differences
+    const request =
+        \\{"requestId":20,"base":"test/png/white4x4.png","compare":"test/png/white8x4.png","output":"/tmp/test_layout_diff.png","options":{"threshold":0.1}}
+        \\
+    ;
+    try stdin.writeAll(request);
+
+    var response_buf: [1024]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 20);
+    try expect(obj.get("match").?.bool == false);
+    try expect(obj.get("diffCount").?.integer > 0);
+}

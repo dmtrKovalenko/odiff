@@ -209,8 +209,10 @@ pub noinline fn compare(
         try compareSameLayouts(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_i64, options);
     }
 
+    const max_width = @max(base.width, comp.width);
+    const max_height = @max(base.height, comp.height);
     const diff_percentage = 100.0 * @as(f64, @floatFromInt(diff_count)) /
-        (@as(f64, @floatFromInt(base.width)) * @as(f64, @floatFromInt(base.height)));
+        (@as(f64, @floatFromInt(max_width)) * @as(f64, @floatFromInt(max_height)));
 
     return .{ diff_output, diff_count, diff_percentage, diff_lines };
 }
@@ -437,12 +439,27 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                 );
             }
         }
+
+        if (comp.width > base.width) {
+            for (base.width..comp.width) |cx_usize| {
+                const cx: u32 = @intCast(cx_usize);
+                const comp_color = comp.readRawPixel(cx, y);
+                const alpha = (comp_color >> 24) & 0xFF;
+                if (alpha != 0) {
+                    diff_count.* += 1;
+                    if (diff_lines) |lines| {
+                        lines.addLine(y);
+                    }
+                }
+            }
+        }
+
         y += 1;
         base_offset += base_delta;
         comp_offset += comp_delta;
     }
 
-    // Handle remaining pixels
+    // Handle remaining base pixels when base is taller
     var x: u32 = 0;
     while (base_offset < base_size) : (base_offset += 1) {
         const base_color = base_data[base_offset];
@@ -458,6 +475,23 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
             }
         }
         increment_coords(&x, &y, base.width);
+    }
+
+    // Handle remaining comp pixels when comp is taller
+    const comp_size: usize = @as(usize, comp.height) * @as(usize, comp.width);
+    var comp_tail: usize = @as(usize, min_height) * @as(usize, comp.width);
+    var comp_x: u32 = 0;
+    var comp_y: u32 = min_height;
+    while (comp_tail < comp_size) : (comp_tail += 1) {
+        const comp_color = comp_data[comp_tail];
+        const alpha = (comp_color >> 24) & 0xFF;
+        if (alpha != 0) {
+            diff_count.* += 1;
+            if (diff_lines) |lines| {
+                lines.addLine(comp_y);
+            }
+        }
+        increment_coords(&comp_x, &comp_y, comp.width);
     }
 }
 
