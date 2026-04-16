@@ -12,6 +12,10 @@
   },
   "types": "odiff.d.ts",
   "main": "odiff.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dmtrKovalenko/odiff"
+  },
   "keywords": [
     "visual-regression",
     "pixelmatch",
