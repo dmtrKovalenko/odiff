@@ -46,6 +46,7 @@ Originally written in OCaml, currently in Zig with SIMD optimizations for SSE2, 
 ### Basic comparison
 
 Run the simple comparison. Image paths can be one of supported formats, diff output is optional and can only be `.png`.
+When diff output is omitted, odiff displays the generated diff directly in terminals that support the kitty graphics protocol (Ghostty, iTerm2, kitty, WezTerm, Warp, wayst, xterm.js, and Konsole).
 
 ```
 odiff <IMG1 path> <IMG2 path> [DIFF output path]

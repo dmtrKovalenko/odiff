@@ -7,6 +7,7 @@ const print = std.debug.print;
 const cli = lib.cli;
 const io = lib.io;
 const diff = lib.diff;
+const terminal_graphics = lib.terminal_graphics;
 
 // we need a large stdout for the lines parsable output
 var stdout_buffer: [4096]u8 = undefined;
@@ -76,6 +77,10 @@ pub fn main() !void {
         std.process.exit(1);
     };
 
+    const display_in_terminal = args.diff_output == null and
+        !args.parsable_stdout and
+        terminal_graphics.isSupported();
+
     const diff_options = diff.DiffOptions{
         .output_diff_mask = args.diff_mask,
         .diff_overlay_factor = args.diff_overlay_factor,
@@ -85,7 +90,7 @@ pub fn main() !void {
         .antialiasing = args.antialiasing,
         .diff_lines = args.diff_lines,
         .ignore_regions = args.ignore_regions.items,
-        .capture_diff = args.diff_output != null,
+        .capture_diff = args.diff_output != null or display_in_terminal,
         .enable_asm = args.enable_asm,
     };
 
@@ -132,6 +137,15 @@ pub fn main() !void {
                     if (pixel_result.diff_output) |output_img| {
                         io.saveImage(output_img, output_path) catch {
                             print("Error: Failed to save diff output\n", .{});
+                            try stdout.flush();
+
+                            std.process.exit(1);
+                        };
+                    }
+                } else if (display_in_terminal) {
+                    if (pixel_result.diff_output) |output_img| {
+                        terminal_graphics.displayImage(stdout, allocator, output_img) catch {
+                            print("Error: Failed to display diff output in terminal\n", .{});
                             try stdout.flush();
 
                             std.process.exit(1);
