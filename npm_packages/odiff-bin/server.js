@@ -55,26 +55,36 @@ class ODiffServer {
 
         let settled = false;
 
-        stdin.once("drain", () => {
+        const onDrain = () => {
           if (!settled) {
             settled = true;
+            stdin.removeListener("error", onError);
+            stdin.removeListener("close", onClose);
             resolve(undefined);
           }
-        });
+        };
 
-        stdin.once("error", (err) => {
+        const onError = (err) => {
           if (!settled) {
             settled = true;
+            stdin.removeListener("drain", onDrain);
+            stdin.removeListener("close", onClose);
             reject(err);
           }
-        });
+        };
 
-        stdin.once("close", () => {
+        const onClose = () => {
           if (!settled) {
             settled = true;
+            stdin.removeListener("drain", onDrain);
+            stdin.removeListener("error", onError);
             reject(new Error("Stream closed before drain"));
           }
-        });
+        };
+
+        stdin.once("drain", onDrain);
+        stdin.once("error", onError);
+        stdin.once("close", onClose);
       });
     }
   }
