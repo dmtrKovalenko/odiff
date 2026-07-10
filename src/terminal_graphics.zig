@@ -164,7 +164,7 @@ fn stdoutIsTty() bool {
 }
 
 fn hasEnv(name: [:0]const u8) bool {
-    return envValue(name) != null;
+    return std.c.getenv(name.ptr) != null;
 }
 
 fn envContainsAny(name: [:0]const u8, needles: []const []const u8) bool {
