@@ -2,6 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const io = @import("io.zig");
 
+// 3072 bytes of binary will encode to 4096 bytes of base64, which is the maximum for kitty
 const raw_chunk_size = 3072;
 const reserved_text_rows = 3;
 
