@@ -18,7 +18,7 @@ fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
 }
 
 test "JPG: finds difference between 2 images" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -38,7 +38,7 @@ test "JPG: finds difference between 2 images" {
 }
 
 test "JPG: Diff of mask and no mask are equal" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -77,7 +77,7 @@ test "JPG: Diff of mask and no mask are equal" {
 }
 
 test "JPG: Creates correct diff output image" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

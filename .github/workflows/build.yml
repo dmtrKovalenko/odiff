@@ -17,7 +17,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.2
+          version: 0.16.0
 
       - name: Install nasm
         run: |
@@ -132,7 +132,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.2
+          version: 0.16.0
 
       - name: Install nasm for x86 targets (Linux)
         if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'
@@ -180,7 +180,7 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.2
+          version: 0.16.0
 
       - name: Install nasm for x86 targets (Linux)
         if: contains(matrix.target, 'x86_64') && runner.os == 'Linux'

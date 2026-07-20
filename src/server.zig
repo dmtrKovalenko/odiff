@@ -4,18 +4,24 @@ const odiff = @import("odiff_lib");
 /// Buffered JSON response writer for server mode
 /// Ensures all responses are written with minimal syscalls
 const ResponseWriter = struct {
-    stdout: std.fs.File,
+    stdout: std.Io.File,
+    io: std.Io,
     allocator: std.mem.Allocator,
 
-    pub fn init(stdout: std.fs.File, allocator: std.mem.Allocator) ResponseWriter {
+    pub fn init(stdout: std.Io.File, io: std.Io, allocator: std.mem.Allocator) ResponseWriter {
         return .{
             .stdout = stdout,
+            .io = io,
             .allocator = allocator,
         };
     }
 
+    fn writeAll(self: *ResponseWriter, bytes: []const u8) !void {
+        try self.stdout.writeStreamingAll(self.io, bytes);
+    }
+
     pub fn writeReady(self: *ResponseWriter) !void {
-        try self.stdout.writeAll("{\"ready\":true}\n");
+        try self.writeAll("{\"ready\":true}\n");
     }
 
     pub fn writeError(
@@ -29,19 +35,19 @@ const ResponseWriter = struct {
             try std.fmt.bufPrint(&buf, "{{\"requestId\":{d},\"error\":\"{s}\"}}\n", .{ rid.integer, error_message })
         else
             try std.fmt.bufPrint(&buf, "{{\"error\":\"{s}\"}}\n", .{error_message});
-        try self.stdout.writeAll(response);
+        try self.writeAll(response);
     }
 
     pub fn writeMatch(self: *ResponseWriter, request_id: std.json.Value) !void {
         var buf: [256]u8 = undefined;
         const response = try std.fmt.bufPrint(&buf, "{{\"requestId\":{d},\"match\":true}}\n", .{request_id.integer});
-        try self.stdout.writeAll(response);
+        try self.writeAll(response);
     }
 
     pub fn writeLayoutDiff(self: *ResponseWriter, request_id: std.json.Value) !void {
         var buf: [256]u8 = undefined;
         const response = try std.fmt.bufPrint(&buf, "{{\"requestId\":{d},\"match\":false,\"reason\":\"layout-diff\"}}\n", .{request_id.integer});
-        try self.stdout.writeAll(response);
+        try self.writeAll(response);
     }
 
     pub fn writePixelDiff(
@@ -56,7 +62,7 @@ const ResponseWriter = struct {
             "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2}}}\n",
             .{ request_id.integer, diff_count, diff_percentage },
         );
-        try self.stdout.writeAll(response);
+        try self.writeAll(response);
     }
 
     /// A complicated path for a buffer because it requires unknown length of array allocation
@@ -67,16 +73,16 @@ const ResponseWriter = struct {
         diff_percentage: f64,
         diff_lines: odiff.DiffLines,
     ) !void {
-        var response = try std.array_list.Managed(u8).initCapacity(self.allocator, diff_lines.count * 2);
+        var response: std.Io.Writer.Allocating = try .initCapacity(self.allocator, diff_lines.count * 2);
         defer response.deinit();
-        const writer = response.writer();
+        const writer = &response.writer;
 
         try writer.print(
             "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2},\"diffLines\":[",
             .{ request_id.integer, diff_count, diff_percentage },
         );
 
-        for (diff_lines.lines, 0..) |line, i| {
+        for (diff_lines.getItems(), 0..) |line, i| {
             if (i > 0) try writer.writeByte(',');
             try writer.print("{d}", .{line});
         }
@@ -84,7 +90,7 @@ const ResponseWriter = struct {
         try writer.writeByte('\n');
 
         // Single write to stdout
-        try self.stdout.writeAll(response.items);
+        try self.writeAll(response.written());
     }
 };
 
@@ -315,7 +321,7 @@ fn loadImagesFromBuffers(
     options: odiff.DiffOptions,
     response_writer: *ResponseWriter,
     request_id: std.json.Value,
-    stdin_reader: *std.fs.File.Reader,
+    stdin_reader: *std.Io.File.Reader,
     allocator: std.mem.Allocator,
 ) !odiff.io.TwoImagesResult {
     const base_length = parseBufferLength(obj, "baseLength", response_writer, request_id) catch return error.ParseError;
@@ -430,16 +436,16 @@ fn parseImageFormat(
 }
 
 // Server mode: Read JSON requests from stdin, output JSON responses to stdout
-pub fn runServerMode(allocator: std.mem.Allocator) !void {
-    const stdin = std.fs.File.stdin();
-    const stdout = std.fs.File.stdout();
+pub fn runServerMode(allocator: std.mem.Allocator, io: std.Io) !void {
+    const stdin = std.Io.File.stdin();
+    const stdout = std.Io.File.stdout();
 
-    var response_writer = ResponseWriter.init(stdout, allocator);
+    var response_writer = ResponseWriter.init(stdout, io, allocator);
     try response_writer.writeReady();
 
     // 16kb buffer
     var stdin_buffer: [16_384]u8 = undefined;
-    var stdin_reader = stdin.reader(&stdin_buffer);
+    var stdin_reader = stdin.readerStreaming(io, &stdin_buffer);
     const reader = &stdin_reader.interface;
 
     while (true) {

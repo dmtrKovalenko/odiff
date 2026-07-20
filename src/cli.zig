@@ -72,7 +72,7 @@ fn printVersion() void {
 
 /// Parse float argument that supports both --option=value and --option value formats
 /// Updates the index pointer and returns the parsed f32 value or null if not matched
-fn parseFloatArg(args: [][:0]u8, index: *usize, option_name: []const u8) ?f32 {
+fn parseFloatArg(args: []const [:0]const u8, index: *usize, option_name: []const u8) ?f32 {
     if (index.* >= args.len) return null;
     const arg = args[index.*];
 
@@ -133,9 +133,10 @@ fn parseIgnoreRegions(input: []const u8, list: *std.array_list.Managed(diff.Igno
 
 pub const parseHexColor = utils.parseHexColor;
 
-pub fn parseArgs(allocator: std.mem.Allocator) !CliArgs {
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
+pub fn parseArgs(allocator: std.mem.Allocator, process_args: std.process.Args) !CliArgs {
+    // `allocator` is expected to be arena-backed (see main.zig), so the
+    // argument slice does not need to be freed explicitly.
+    const args = try process_args.toSlice(allocator);
 
     if (args.len < 2) {
         printUsage(args[0]);

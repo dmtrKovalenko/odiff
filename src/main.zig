@@ -11,8 +11,9 @@ const diff = lib.diff;
 // we need a large stdout for the lines parsable output
 var stdout_buffer: [4096]u8 = undefined;
 
-pub fn main() !void {
-    var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
+pub fn main(init: std.process.Init) !void {
+    const io_backend = init.io;
+    var stdout_writer = std.Io.File.stdout().writerStreaming(io_backend, &stdout_buffer);
     const stdout = &stdout_writer.interface;
 
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -20,7 +21,7 @@ pub fn main() !void {
 
     const allocator = arena.allocator();
 
-    var args = cli.parseArgs(allocator) catch |err| switch (err) {
+    var args = cli.parseArgs(allocator, init.minimal.args) catch |err| switch (err) {
         error.OutOfMemory => {
             print("Error: Out of memory\n", .{});
             std.process.exit(1);
@@ -33,7 +34,7 @@ pub fn main() !void {
     defer args.deinit();
 
     if (args.server_mode) {
-        return try server.runServerMode(allocator);
+        return try server.runServerMode(allocator, io_backend);
     }
 
     // Load images with color decoding strategy based on threshold

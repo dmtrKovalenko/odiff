@@ -38,7 +38,7 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
     };
 }
 
-pub fn save(img: Image, file: std.fs.File) !void {
+pub fn save(img: Image, file: std.Io.File, io: std.Io) !void {
     const ctx = c.spng_ctx_new(c.SPNG_CTX_ENCODER) orelse return error.OutOfMemory;
     defer c.spng_ctx_free(ctx);
 
@@ -60,7 +60,7 @@ pub fn save(img: Image, file: std.fs.File) !void {
     if (c.spng_set_option(ctx, c.SPNG_IMG_COMPRESSION_LEVEL, 1) != 0) return error.EncoderFailure;
 
     var buffer: [4096]u8 = undefined;
-    var file_writer = file.writer(&buffer);
+    var file_writer = file.writer(io, &buffer);
     if (c.spng_set_png_stream(
         ctx,
         struct {
