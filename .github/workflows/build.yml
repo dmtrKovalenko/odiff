@@ -235,7 +235,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.56.0-noble
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -325,6 +325,21 @@ jobs:
 
       - name: Copy root readme
         run: cp README.md npm_packages/odiff-bin/README.md
+
+      - name: Install workspace dependencies
+        run: npm install --ignore-scripts
+
+      - name: Build playwright-odiff package
+        working-directory: npm_packages/playwright-odiff
+        run: npm run build
+
+      - name: Verify playwright-odiff package contents before publishing
+        working-directory: npm_packages/playwright-odiff
+        run: |
+          # had a regression that the build that didn't write dist/ got released as empty artifact
+          npm pack --dry-run 2>&1 | tee /tmp/pack-output.txt
+          grep -q "dist/index.js" /tmp/pack-output.txt || (echo "ERROR: dist/index.js missing from tarball" && exit 1)
+          grep -q "dist/toHaveScreenshotOdiff.js" /tmp/pack-output.txt || (echo "ERROR: dist/toHaveScreenshotOdiff.js missing from tarball" && exit 1)
 
       - name: Publish odiff-bin package
         working-directory: npm_packages/odiff-bin

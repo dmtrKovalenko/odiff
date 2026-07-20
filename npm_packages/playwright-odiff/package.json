@@ -7,12 +7,18 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
     "test": "playwright test",
     "debug": "playwright test --debug"
   },
@@ -37,7 +43,7 @@
     "odiff-bin": "4.3.8"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.0",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^22.0.0",
     "typescript": "^5.0.0"
   }

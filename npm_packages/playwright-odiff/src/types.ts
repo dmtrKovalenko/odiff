@@ -33,6 +33,12 @@ export type ODiffScreenshotOptions = ODiffOptions & {
   stylePath?: string | string[];
 };
 
+export type MatcherResultAttachment = {
+  name: string;
+  contentType: string;
+  path: string;
+};
+
 export type MatcherResult = {
   pass: boolean;
   message: () => string;
@@ -41,4 +47,6 @@ export type MatcherResult = {
   actual?: string;
   diff?: string;
   log?: string[];
+  /** Consumed by Playwright >= 1.60 to attach files to the expect step */
+  attachments?: MatcherResultAttachment[];
 };
