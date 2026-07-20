@@ -482,3 +482,7 @@ pub fn saveImageWithFormat(img: Image, file_path: []const u8, format: ImageForma
         else => return error.UnsupportedFormat,
     }
 }
+
+pub fn encodePngAlloc(allocator: std.mem.Allocator, img: Image) ![]u8 {
+    return png.encodeAlloc(allocator, img);
+}
