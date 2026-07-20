@@ -2,9 +2,9 @@ import fs from "fs/promises";
 import fssync from "fs";
 import path from "path";
 import type { Page, Locator, TestInfo } from "@playwright/test";
-import type { ODiffScreenshotOptions, MatcherResult } from "./types";
+import type { ODiffScreenshotOptions, MatcherResult } from "./types.js";
 import { test } from "@playwright/test";
-import { SnapshotHelper } from "./snapshotHelper";
+import { SnapshotHelper } from "./snapshotHelper.js";
 import { ODiffServer } from "odiff-bin";
 
 type ODiffServerType = InstanceType<typeof ODiffServer>;
@@ -99,6 +99,37 @@ async function expectScreenshotWithRetry(
   expectedPath: string | undefined,
   timeout: number,
 ): Promise<ScreenshotStabilizationResult> {
+  // Hide Playwright overlays (e.g. UI mode / debug highlights) while taking
+  // screenshots, matching the built-in toHaveScreenshot behavior.
+  // `page.screencast` is only available on newer Playwright versions, so guard it.
+  const screencast = (page as any).screencast;
+  if (typeof screencast?.hideOverlays === "function") {
+    await screencast.hideOverlays().catch(() => {});
+  }
+  try {
+    return await expectScreenshotWithRetryImpl(
+      page,
+      locator,
+      screenshotOptions,
+      helper,
+      expectedPath,
+      timeout,
+    );
+  } finally {
+    if (typeof screencast?.showOverlays === "function") {
+      await screencast.showOverlays().catch(() => {});
+    }
+  }
+}
+
+async function expectScreenshotWithRetryImpl(
+  page: Page,
+  locator: Locator | undefined,
+  screenshotOptions: any,
+  helper: SnapshotHelper,
+  expectedPath: string | undefined,
+  timeout: number,
+): Promise<ScreenshotStabilizationResult> {
   const pollIntervals = [0, 100, 250, 500];
   const startTime = Date.now();
   const deadline = startTime + timeout;
@@ -145,7 +176,7 @@ async function expectScreenshotWithRetry(
       );
       hasActual = true;
     } catch (error: any) {
-      log.push(`Failed to take screesnhot ${error.message}`);
+      log.push(`Failed to take screenshot ${error.message}`);
       return {
         log,
         hasActual,
@@ -278,8 +309,12 @@ export async function toHaveScreenshotOdiff(
     );
   }
 
-  // Check ignoreSnapshots flag
-  if ((testInfo as any)._projectInternal?.ignoreSnapshots) {
+  // Check ignoreSnapshots flag (lives on the resolved project config)
+  const projectInternal = (testInfo as any)._projectInternal;
+  if (
+    projectInternal?.project?.ignoreSnapshots ??
+    projectInternal?.ignoreSnapshots
+  ) {
     return {
       pass: !this.isNot,
       message: () => "",
@@ -287,8 +322,11 @@ export async function toHaveScreenshotOdiff(
     };
   }
 
-  // Determine if we're working with a Page or Locator
-  const isPage = pageOrLocator.constructor.name === "Page";
+  // Determine if we're working with a Page or Locator.
+  // NOTE: do not rely on `constructor.name` - since Playwright 1.60 the bundled
+  // classes are renamed (e.g. `_Page`). A Locator always exposes a `.page()`
+  // method while a Page never does, so duck-type on that instead.
+  const isPage = typeof (pageOrLocator as Locator).page !== "function";
   const page = isPage
     ? (pageOrLocator as Page)
     : (pageOrLocator as Locator).page();
@@ -312,10 +350,10 @@ export async function toHaveScreenshotOdiff(
     );
   }
 
-  const styles = await loadScreenshotStyles(helper.options.stylePath);
-  if (styles) {
-    await page.addStyleTag({ content: styles });
-  }
+  // Styles are applied only for the duration of the screenshot via the public
+  // `style` screenshot option (same semantics as the built-in toHaveScreenshot),
+  // instead of permanently mutating the page with addStyleTag.
+  const style = await loadScreenshotStyles(helper.options.stylePath);
 
   const timeout = helper.options.timeout ?? this.timeout;
 
@@ -329,6 +367,7 @@ export async function toHaveScreenshotOdiff(
     mask: helper.options.mask,
     maskColor: helper.options.maskColor,
     omitBackground: helper.options.omitBackground,
+    style,
   };
 
   const hasSnapshot = await fs
@@ -422,7 +461,7 @@ export async function toHaveScreenshotOdiff(
         true,
       );
     }
-    return helper.handleMatching();
+    return await helper.handleMatching();
   }
 
   if (

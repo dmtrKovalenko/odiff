@@ -8,7 +8,11 @@
 import fs from "fs";
 import path from "path";
 import type { TestInfo, Locator } from "@playwright/test";
-import type { ODiffScreenshotOptions, MatcherResult } from "./types";
+import type {
+  ODiffScreenshotOptions,
+  MatcherResult,
+  MatcherResultAttachment,
+} from "./types.js";
 import { ODiffOptions } from "odiff-bin";
 
 type NameOrSegments = string | string[];
@@ -133,6 +137,7 @@ export class SnapshotHelper {
     message: string,
     pass: boolean,
     log?: string[],
+    attachments?: MatcherResultAttachment[],
   ): MatcherResult {
     const unfiltered: MatcherResult = {
       pass,
@@ -142,10 +147,34 @@ export class SnapshotHelper {
       actual: this.actualPath,
       diff: this.diffPath,
       log,
+      attachments,
     };
     return Object.fromEntries(
       Object.entries(unfiltered).filter(([_, v]) => v !== undefined),
     ) as MatcherResult;
+  }
+
+  // Attach a file to the expect step in a way that works across Playwright versions:
+  // - Playwright <= 1.59 passes `_stepInfo` into the matcher context and supports
+  //   `step._attachToStep(...)`.
+  // - Playwright >= 1.60 removed both; instead it consumes an `attachments` array
+  //   returned on the matcher result (see `createMatcherResult`).
+  private attach(
+    attachments: MatcherResultAttachment[],
+    step: any | undefined,
+    suffix: string,
+    filePath: string,
+  ) {
+    const attachment: MatcherResultAttachment = {
+      name: addSuffixToFilePath(this.attachmentBaseName, suffix),
+      contentType: this.mimeType,
+      path: filePath,
+    };
+    if (typeof step?._attachToStep === "function") {
+      step._attachToStep(attachment);
+    } else {
+      attachments.push(attachment);
+    }
   }
 
   handleMissingNegated(): MatcherResult {
@@ -172,38 +201,30 @@ export class SnapshotHelper {
 
   handleMissing(actual: Buffer, step: any | undefined): MatcherResult {
     const isWriteMissingMode = this.updateSnapshots !== "none";
+    const attachments: MatcherResultAttachment[] = [];
 
     if (isWriteMissingMode) {
       this.writeFileSync(this.expectedPath, actual);
     }
 
-    step?._attachToStep({
-      name: addSuffixToFilePath(this.attachmentBaseName, "-expected"),
-      contentType: this.mimeType,
-      path: this.expectedPath,
-    });
-
+    this.attach(attachments, step, "-expected", this.expectedPath);
     // actualPath already written by screenshot() - just attach it
-    step?._attachToStep({
-      name: addSuffixToFilePath(this.attachmentBaseName, "-actual"),
-      contentType: this.mimeType,
-      path: this.actualPath,
-    });
+    this.attach(attachments, step, "-actual", this.actualPath);
 
     const message = `A snapshot doesn't exist at ${this.expectedPath}${isWriteMissingMode ? ", writing actual." : "."}`;
 
     if (this.updateSnapshots === "all" || this.updateSnapshots === "changed") {
       console.log(message);
-      return this.createMatcherResult(message, true);
+      return this.createMatcherResult(message, true, undefined, attachments);
     }
 
     if (this.updateSnapshots === "missing") {
       (this.testInfo as any)._hasNonRetriableError = true;
       (this.testInfo as any)._failWithError(new Error(message));
-      return this.createMatcherResult("", true);
+      return this.createMatcherResult("", true, undefined, attachments);
     }
 
-    return this.createMatcherResult(message, false);
+    return this.createMatcherResult(message, false, undefined, attachments);
   }
 
   handleDifferent(
@@ -217,6 +238,7 @@ export class SnapshotHelper {
     step: any | undefined,
   ): MatcherResult {
     const output = [`${header}  ${diffError}`];
+    const attachments: MatcherResultAttachment[] = [];
 
     if (this.name) {
       output.push("");
@@ -227,35 +249,19 @@ export class SnapshotHelper {
     if (hasExpected && fs.existsSync(this.expectedPath)) {
       // Copy the expectation inside the test-results folder for backwards compatibility (kernel copy, no Buffer)
       fs.copyFileSync(this.expectedPath, this.legacyExpectedPath);
-      step?._attachToStep({
-        name: addSuffixToFilePath(this.attachmentBaseName, "-expected"),
-        contentType: this.mimeType,
-        path: this.expectedPath,
-      });
+      this.attach(attachments, step, "-expected", this.expectedPath);
     }
 
     if (hasPrevious && fs.existsSync(this.previousPath)) {
-      step?._attachToStep({
-        name: addSuffixToFilePath(this.attachmentBaseName, "-previous"),
-        contentType: this.mimeType,
-        path: this.previousPath,
-      });
+      this.attach(attachments, step, "-previous", this.previousPath);
     }
 
     if (hasActual && fs.existsSync(this.actualPath)) {
-      step?._attachToStep({
-        name: addSuffixToFilePath(this.attachmentBaseName, "-actual"),
-        contentType: this.mimeType,
-        path: this.actualPath,
-      });
+      this.attach(attachments, step, "-actual", this.actualPath);
     }
 
     if (hasDiff && fs.existsSync(this.diffPath)) {
-      step?._attachToStep({
-        name: addSuffixToFilePath(this.attachmentBaseName, "-diff"),
-        contentType: this.mimeType,
-        path: this.diffPath,
-      });
+      this.attach(attachments, step, "-diff", this.diffPath);
     }
 
     if (log?.length) {
@@ -266,10 +272,21 @@ export class SnapshotHelper {
 
     output.push("");
 
-    return this.createMatcherResult(output.join("\n"), false, log);
+    return this.createMatcherResult(output.join("\n"), false, log, attachments);
   }
 
-  handleMatching(): MatcherResult {
+  // on matching remove all the existing output we might have written (very fast)
+  async handleMatching(): Promise<MatcherResult> {
+    await Promise.all([
+      fs.promises.unlink(this.actualPath).catch(() => {}),
+      fs.promises.unlink(this.previousPath).catch(() => {}),
+      fs.promises.unlink(this.diffPath).catch(() => {}),
+    ]).catch(() => {});
+
+    // try to remove the test-results directory if it's empty
+    const testResultsDir = path.dirname(this.actualPath);
+    await fs.promises.rmdir(testResultsDir).catch(() => {});
+
     return this.createMatcherResult("", true);
   }
 
