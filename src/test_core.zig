@@ -17,7 +17,7 @@ fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !image_io.Image
 }
 
 test "antialiasing: does not count anti-aliased pixels as different" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -41,7 +41,7 @@ test "antialiasing: does not count anti-aliased pixels as different" {
 }
 
 test "antialiasing: tests different sized AA images" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -65,7 +65,7 @@ test "antialiasing: tests different sized AA images" {
 }
 
 test "threshold: uses provided threshold" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -88,7 +88,7 @@ test "threshold: uses provided threshold" {
 }
 
 test "ignore regions: uses provided ignore regions" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -116,7 +116,7 @@ test "ignore regions: uses provided ignore regions" {
 }
 
 test "diff color: creates diff output image with custom green diff color" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -186,7 +186,7 @@ test "blendSemiTransparentColor: blend semi-transparent colors" {
 }
 
 test "layoutDifference: diff images with different layouts" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -220,7 +220,7 @@ test "layoutDifference: diff images with different layouts" {
 }
 
 test "layoutDifference: diff images with different layouts (2)" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -252,7 +252,7 @@ test "layoutDifference: diff images with different layouts (2)" {
 
 // Bug pinning https://github.com/dmtrKovalenko/odiff/issues/149
 test "unrollIgnoreRegions: should only mark rectangular region pixels, not entire linear range (bug #149)" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

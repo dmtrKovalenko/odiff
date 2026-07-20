@@ -17,7 +17,7 @@ fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
 }
 
 test "PNG: finds difference between 2 images" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -37,7 +37,7 @@ test "PNG: finds difference between 2 images" {
 }
 
 test "PNG: Diff of mask and no mask are equal" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -74,7 +74,7 @@ test "PNG: Diff of mask and no mask are equal" {
 }
 
 test "PNG: Creates correct diff output image" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -123,7 +123,7 @@ test "PNG: Creates correct diff output image" {
 }
 
 test "PNG: Correctly handles different encodings of transparency" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -150,7 +150,7 @@ test "PNG: Correctly handles different encodings of transparency" {
 
 // Bug pinning test https://github.com/dmtrKovalenko/odiff/issues/153
 test "PNG: Correctly writes and reads large images without truncation" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -180,7 +180,7 @@ test "PNG: Correctly writes and reads large images without truncation" {
 
     const temp_path = "test_large_output.png";
     try io.saveImage(img, temp_path);
-    defer std.fs.cwd().deleteFile(temp_path) catch {};
+    defer std.Io.Dir.cwd().deleteFile(std.testing.io, temp_path) catch {};
 
     var loaded_img = try io.loadImage(allocator, temp_path, .precise);
     defer loaded_img.deinit(allocator);
@@ -196,7 +196,7 @@ test "PNG: Correctly writes and reads large images without truncation" {
 
 // Bug pinning test https://github.com/dmtrKovalenko/odiff/issues/153
 test "PNG: Large image with diff overlay writes completely" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -221,7 +221,7 @@ test "PNG: Large image with diff overlay writes completely" {
 
     const temp_path = "test_large_overlay_output.png";
     try io.saveImage(overlay_img, temp_path);
-    defer std.fs.cwd().deleteFile(temp_path) catch {};
+    defer std.Io.Dir.cwd().deleteFile(std.testing.io, temp_path) catch {};
 
     var loaded_img = try io.loadImage(allocator, temp_path, .precise);
     defer loaded_img.deinit(allocator);

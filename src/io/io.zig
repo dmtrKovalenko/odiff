@@ -6,6 +6,65 @@ const jpeg = @import("jpeg.zig");
 const tiff = @import("tiff.zig");
 const webp = @import("webp.zig");
 
+/// Thread-safe allocator wrapper (std.heap.ThreadSafeAllocator was removed in Zig 0.16).
+/// Uses a simple spinlock since std.Thread.Mutex no longer exists and
+/// std.Io.Mutex requires an `Io` instance; contention here is minimal
+/// (two image-decoding threads performing a handful of allocations).
+const ThreadSafeAllocator = struct {
+    child_allocator: std.mem.Allocator,
+    lock_state: std.atomic.Value(bool) = .init(false),
+
+    fn lock(self: *ThreadSafeAllocator) void {
+        while (self.lock_state.swap(true, .acquire)) {
+            std.Thread.yield() catch {};
+        }
+    }
+
+    fn unlock(self: *ThreadSafeAllocator) void {
+        self.lock_state.store(false, .release);
+    }
+
+    pub fn allocator(self: *ThreadSafeAllocator) std.mem.Allocator {
+        return .{
+            .ptr = self,
+            .vtable = &.{
+                .alloc = alloc,
+                .resize = resize,
+                .remap = remap,
+                .free = free,
+            },
+        };
+    }
+
+    fn alloc(ctx: *anyopaque, n: usize, alignment: std.mem.Alignment, ra: usize) ?[*]u8 {
+        const self: *ThreadSafeAllocator = @ptrCast(@alignCast(ctx));
+        self.lock();
+        defer self.unlock();
+        return self.child_allocator.rawAlloc(n, alignment, ra);
+    }
+
+    fn resize(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, new_len: usize, ret_addr: usize) bool {
+        const self: *ThreadSafeAllocator = @ptrCast(@alignCast(ctx));
+        self.lock();
+        defer self.unlock();
+        return self.child_allocator.rawResize(buf, alignment, new_len, ret_addr);
+    }
+
+    fn remap(ctx: *anyopaque, memory: []u8, alignment: std.mem.Alignment, new_len: usize, ret_addr: usize) ?[*]u8 {
+        const self: *ThreadSafeAllocator = @ptrCast(@alignCast(ctx));
+        self.lock();
+        defer self.unlock();
+        return self.child_allocator.rawRemap(memory, alignment, new_len, ret_addr);
+    }
+
+    fn free(ctx: *anyopaque, buf: []u8, alignment: std.mem.Alignment, ret_addr: usize) void {
+        const self: *ThreadSafeAllocator = @ptrCast(@alignCast(ctx));
+        self.lock();
+        defer self.unlock();
+        return self.child_allocator.rawFree(buf, alignment, ret_addr);
+    }
+};
+
 pub const Image = extern struct {
     data: [*]u32,
     len: usize,
@@ -229,7 +288,7 @@ pub fn loadTwoImages(
     comp_path: []const u8,
     strategy: ColorDecodingStrategy,
 ) LoadTwoImagesResult {
-    var thread_safe = std.heap.ThreadSafeAllocator{ .child_allocator = allocator };
+    var thread_safe = ThreadSafeAllocator{ .child_allocator = allocator };
     const safe_allocator = thread_safe.allocator();
 
     const Result = struct {
@@ -317,7 +376,7 @@ pub fn loadTwoImagesFromBuffers(
     compare_format: ImageFormat,
     strategy: ColorDecodingStrategy,
 ) LoadTwoImagesResult {
-    var thread_safe = std.heap.ThreadSafeAllocator{ .child_allocator = allocator };
+    var thread_safe = ThreadSafeAllocator{ .child_allocator = allocator };
     const safe_allocator = thread_safe.allocator();
 
     const Result = struct {
@@ -412,13 +471,14 @@ pub fn saveImage(img: Image, file_path: []const u8) !void {
 ///
 /// Also checkout `saveImage`
 pub fn saveImageWithFormat(img: Image, file_path: []const u8, format: ImageFormat) !void {
-    var file = try std.fs.cwd().createFile(file_path, .{
+    const io = std.Io.Threaded.global_single_threaded.io();
+    var file = try std.Io.Dir.cwd().createFile(io, file_path, .{
         .truncate = true,
     });
-    defer file.close();
+    defer file.close(io);
 
     switch (format) {
-        .png => try png.save(img, file),
+        .png => try png.save(img, file, io),
         else => return error.UnsupportedFormat,
     }
 }

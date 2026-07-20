@@ -26,9 +26,9 @@ jobs:
             export TERM=dumb
             export NO_COLOR=1
 
-            wget https://ziglang.org/download/0.15.1/zig-riscv64-linux-0.15.1.tar.xz
-            tar -xf zig-riscv64-linux-0.15.1.tar.xz
-            export PATH="$PWD/zig-riscv64-linux-0.15.1:$PATH"
+            wget https://ziglang.org/download/0.16.0/zig-riscv64-linux-0.16.0.tar.xz
+            tar -xf zig-riscv64-linux-0.16.0.tar.xz
+            export PATH="$PWD/zig-riscv64-linux-0.16.0:$PATH"
 
             cd /opt/odiff
             zig build test-all -Dtarget=riscv64-linux -Dcpu=generic_rv64+rva23u64 -Doptimize=ReleaseFast

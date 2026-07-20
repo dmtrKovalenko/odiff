@@ -16,7 +16,7 @@ fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
 }
 
 test "webp: loads webp image correctly" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -28,7 +28,7 @@ test "webp: loads webp image correctly" {
 }
 
 test "webp: compares webp with png correctly" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -49,7 +49,7 @@ test "webp: compares webp with png correctly" {
 }
 
 test "webp: identical WebP images have no differences" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
