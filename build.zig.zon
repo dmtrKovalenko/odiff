@@ -2,11 +2,11 @@
     .name = .odiff,
     .version = "4.3.8",
     .fingerprint = 0xb9748f3661c8366c,
-    .minimum_zig_version = "0.15.1",
+    .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .imgz = .{
-            .url = "git+https://github.com/shreyassanthu77/imgz.git#0ab36f0649772a5dd93d9eab9e7a8a22082a9256",
-            .hash = "imgz-0.2.0-BqHzkKdnCwCNWVkntlBIrAD-_DByuc4fQQN7xy0pB-D6",
+            .url = "git+https://github.com/shreyassanthu77/imgz.git#4d77943fa6a3ace131a946df508f9bb31c1c3fdb",
+            .hash = "imgz-0.4.0-BqHzkLVpCwD6qPhu_pv4aKELkDqH5sX2Z6DcZDp9r4oK",
         },
     },
 

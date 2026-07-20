@@ -193,10 +193,13 @@ pub noinline fn compare(
 
     const layout_difference = base.width != comp.width or base.height != comp.height;
 
-    // AVX diff only supports default options
+    // AVX diff only supports default options.
+    // Layout differences are excluded because the vxdiff asm kernel only
+    // counts overflow pixels of the base image, it does not count extra comp image
+    // pixels when the comp image is larger (required since #170).
     const threshold_ok = @abs(options.threshold - 0.1) < 0.0000001;
     const no_ignore_regions = options.ignore_regions == null or options.ignore_regions.?.len == 0;
-    const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and threshold_ok;
+    const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and threshold_ok and !layout_difference;
 
     if (options.enable_asm and HAS_AVX512bwvl and avx_compatible) {
         try compareAVX(base, comp, &diff_count);
@@ -298,11 +301,15 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
 
         const diff_mask = base_vec != comp_vec;
         if (@reduce(.Or, diff_mask)) {
+            // Zig 0.16 requires comptime-known vector indices; copy to arrays first.
+            const mask_arr: [SIMD_SIZE]bool = diff_mask;
+            const base_arr: [SIMD_SIZE]u32 = base_vec;
+            const comp_arr: [SIMD_SIZE]u32 = comp_vec;
             for (0..SIMD_SIZE) |i| {
-                if (diff_mask[i]) {
+                if (mask_arr[i]) {
                     const pixel_offset = offset + i;
-                    const base_color = base_vec[i];
-                    const comp_color = comp_vec[i];
+                    const base_color = base_arr[i];
+                    const comp_color = comp_arr[i];
 
                     try processPixelDifference(
                         pixel_offset,
@@ -375,12 +382,16 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
 
             const diff_mask = base_vec != comp_vec;
             if (@reduce(.Or, diff_mask)) {
+                // Zig 0.16 requires comptime-known vector indices; copy to arrays first.
+                const mask_arr: [SIMD_SIZE]bool = diff_mask;
+                const base_arr: [SIMD_SIZE]u32 = base_vec;
+                const comp_arr: [SIMD_SIZE]u32 = comp_vec;
                 for (0..SIMD_SIZE) |i| {
-                    if (diff_mask[i]) {
+                    if (mask_arr[i]) {
                         const base_pixel_offset = base_offset + i;
                         const comp_pixel_offset = comp_offset + i;
-                        const base_color = base_vec[i];
-                        const comp_color = comp_vec[i];
+                        const base_color = base_arr[i];
+                        const comp_color = comp_arr[i];
 
                         try processPixelDifference(
                             base_pixel_offset,

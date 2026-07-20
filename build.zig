@@ -65,11 +65,11 @@ pub fn build(b: *std.Build) !void {
                     .root_source_file = b.path(test_path),
                     .target = target,
                     .optimize = optimize,
+                    .link_libc = true,
                 }),
             });
             integration_test.root_module.addImport("build_options", build_options_mod);
-            integration_test.linkLibC();
-            integration_test.linkLibrary(root_lib);
+            integration_test.root_module.linkLibrary(root_lib);
             linkDeps(b, target, optimize, dynamic, integration_test.root_module);
 
             const run_integration_test = b.addRunArtifact(integration_test);
@@ -82,12 +82,12 @@ pub fn build(b: *std.Build) !void {
                     .root_source_file = b.path(test_path),
                     .target = target,
                     .optimize = optimize,
+                    .link_libc = true,
                 }),
             });
 
             pure_test.root_module.addImport("build_options", build_options_mod);
-            pure_test.linkLibC();
-            pure_test.addCSourceFiles(.{
+            pure_test.root_module.addCSourceFiles(.{
                 .files = &.{"src/rvv.c"},
             });
 

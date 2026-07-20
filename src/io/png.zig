@@ -38,12 +38,12 @@ pub fn load(allocator: std.mem.Allocator, data: []const u8) !Image {
     };
 }
 
-pub fn save(img: Image, file: std.fs.File) !void {
+pub fn save(img: Image, file: std.Io.File, io: std.Io) !void {
     const ctx = try encoderContext(img);
     defer c.spng_ctx_free(ctx);
 
     var buffer: [4096]u8 = undefined;
-    var file_writer = file.writer(&buffer);
+    var file_writer = file.writer(io, &buffer);
     if (c.spng_set_png_stream(
         ctx,
         struct {

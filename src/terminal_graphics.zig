@@ -142,7 +142,7 @@ fn readTerminalSize() ?TerminalSize {
                 .ypixel = 0,
             };
 
-            const err = std.posix.system.ioctl(std.fs.File.stdout().handle, std.posix.T.IOCGWINSZ, @intFromPtr(&winsize));
+            const err = std.posix.system.ioctl(std.Io.File.stdout().handle, std.posix.T.IOCGWINSZ, @intFromPtr(&winsize));
             if (std.posix.errno(err) != .SUCCESS) return null;
             if (winsize.row == 0 or winsize.col == 0 or winsize.xpixel == 0 or winsize.ypixel == 0) return null;
 
@@ -159,7 +159,7 @@ fn readTerminalSize() ?TerminalSize {
 fn stdoutIsTty() bool {
     return switch (builtin.os.tag) {
         .windows => true,
-        else => std.c.isatty(std.fs.File.stdout().handle) == 1,
+        else => std.c.isatty(std.Io.File.stdout().handle) == 1,
     };
 }
 

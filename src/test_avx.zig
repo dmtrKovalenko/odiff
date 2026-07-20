@@ -17,7 +17,7 @@ fn loadTestImage(path: []const u8, allocator: std.mem.Allocator) !io.Image {
 }
 
 test "layoutDifference: diff images with different layouts without capture" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -43,7 +43,7 @@ test "layoutDifference: diff images with different layouts without capture" {
 }
 
 test "PNG: finds difference between 2 images without capture" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
