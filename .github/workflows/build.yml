@@ -344,7 +344,7 @@ jobs:
           cache-dependency-path: "package-lock.json"
 
       - name: Set version on all packages
-        run: node scripts/set-npm-version.js "${{ steps.version.outputs.version }}"
+        run: node scripts/set-npm-version.js "${{ steps.version.outputs.version }}" --platform-pins
 
       - name: Copy root readme
         run: cp README.md npm_packages/odiff-bin/README.md

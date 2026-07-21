@@ -1,20 +1,13 @@
-// Stamps the given version on every published npm package: the @odiff/*
-// platform packages, odiff-bin and playwright-odiff (including their
-// cross-package dependency pins), plus the private monorepo root.
-//
-// The @odiff/* optionalDependencies of odiff-bin are injected here rather
-// than committed to its package.json: they must be pinned to the exact
-// version published in the same CI run, and any committed pin would point
-// to a version that does not exist on npm, breaking `npm ci` (the platform
-// packages can not be part of the root lockfile).
-//
-// Usage: node scripts/set-npm-version.js <version>
+// Bumps the version in the local package.json and build.zig.zon files
 const fs = require("fs");
 const path = require("path");
 
 const version = process.argv[2];
+const withPlatformPins = process.argv.includes("--platform-pins");
 if (!version) {
-  console.error("Usage: node scripts/set-npm-version.js <version>");
+  console.error(
+    "Usage: node scripts/set-npm-version.js <version> [--platform-pins]",
+  );
   process.exit(1);
 }
 
@@ -37,7 +30,7 @@ for (const packageJsonPath of packageJsonPaths) {
   const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   pkg.version = version;
 
-  if (pkg.name === "odiff-bin") {
+  if (pkg.name === "odiff-bin" && withPlatformPins) {
     pkg.optionalDependencies = Object.fromEntries(
       platformPackageJsonPaths
         .map((p) => JSON.parse(fs.readFileSync(p, "utf8")).name)
@@ -57,3 +50,8 @@ for (const packageJsonPath of packageJsonPaths) {
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + "\n");
   console.log(`${path.relative(root, packageJsonPath)} -> ${version}`);
 }
+
+const zonPath = path.join(root, "build.zig.zon");
+const zon = fs.readFileSync(zonPath, "utf8");
+fs.writeFileSync(zonPath, zon.replace(/\.version = "[^"]*"/, `.version = "${version}"`));
+console.log(`build.zig.zon -> ${version}`);

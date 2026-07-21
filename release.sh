@@ -18,11 +18,9 @@ if [[ "$DRY_RUN" == "false" ]] && ! git diff --quiet; then
   exit 1
 fi
 
-sed -i '' "s/\.version = \"[^\"]*\"/\.version = \"$VERSION\"/g" build.zig.zon
-zig build
-
-# stamps the version on every npm package and cross-package dependency pin
+# stamps the version on build.zig.zon and every npm package + cross-package dependency pin
 node scripts/set-npm-version.js "$VERSION"
+zig build --release=fast
 npm install --ignore-scripts
 
 
