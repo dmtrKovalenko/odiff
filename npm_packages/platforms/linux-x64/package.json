@@ -1,6 +1,6 @@
 {
   "name": "@odiff/linux-x64",
-  "version": "4.4.0",
+  "version": "4.4.1",
   "description": "The odiff prebuilt binary for Linux x64",
   "os": [
     "linux"
