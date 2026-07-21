@@ -1,0 +1,26 @@
+{
+  "name": "@odiff/win32-arm64",
+  "version": "0.0.0",
+  "description": "The odiff prebuilt binary for Windows ARM64",
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "odiff.exe",
+    "index.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "odiff contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmtrKovalenko/odiff.git",
+    "directory": "npm_packages/platforms/win32-arm64"
+  },
+  "main": "index.js"
+}

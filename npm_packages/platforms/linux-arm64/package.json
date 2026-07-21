@@ -1,0 +1,26 @@
+{
+  "name": "@odiff/linux-arm64",
+  "version": "0.0.0",
+  "description": "The odiff prebuilt binary for Linux ARM64",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "odiff",
+    "index.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "odiff contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmtrKovalenko/odiff.git",
+    "directory": "npm_packages/platforms/linux-arm64"
+  },
+  "main": "index.js"
+}
