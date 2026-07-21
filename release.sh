@@ -21,15 +21,9 @@ fi
 sed -i '' "s/\.version = \"[^\"]*\"/\.version = \"$VERSION\"/g" build.zig.zon
 zig build
 
-sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
+# stamps the version on every npm package and cross-package dependency pin
+node scripts/set-npm-version.js "$VERSION"
 npm install --ignore-scripts
-
-sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/odiff-bin/package.json
-
-sed -i '' "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
-
-# force using the one united version
-sed -i '' "s/\"odiff-bin\": \"[^\"]*\"/\"odiff-bin\": \"$VERSION\"/g" npm_packages/playwright-odiff/package.json
 
 
 if [ "$DRY_RUN" == true ]; then

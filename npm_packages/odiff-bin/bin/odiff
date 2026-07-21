@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+const { spawnSync } = require("child_process");
+const { findBinary } = require("../binary");
+
+const result = spawnSync(findBinary(), process.argv.slice(2), {
+  stdio: "inherit",
+});
+
+if (result.error) {
+  console.error(result.error.message);
+  process.exit(1);
+}
+
+process.exit(result.status === null ? 1 : result.status);

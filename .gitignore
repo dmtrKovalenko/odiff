@@ -1,6 +1,9 @@
 .zig-cache/
 node_modules/
 zig-out/
+npm_packages/odiff-bin/bin/odiff.exe
+npm_packages/platforms/*/odiff
+npm_packages/platforms/*/odiff.exe
 .benchtree/
 images/gen/*
 !images/gen/.gitkeep

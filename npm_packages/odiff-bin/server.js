@@ -1,16 +1,16 @@
 // @ts-check
 const { spawn } = require("child_process");
-const path = require("path");
 const readline = require("readline");
+const { findBinary } = require("./binary");
 
 class ODiffServer {
   /**
    * Create an ODiffServer instance
    * Server initialization starts immediately and is awaited automatically in compare()
-   * @param {string | undefined} [binaryPath] - Optional path to odiff binary (defaults to bin/odiff.exe)
+   * @param {string | undefined} [binaryPath] - Optional path to odiff binary (defaults to the platform-specific @odiff/* package)
    */
   constructor(binaryPath) {
-    this.binaryPath = binaryPath || path.join(__dirname, "bin", "odiff.exe");
+    this.binaryPath = binaryPath || findBinary();
     this.process = null;
     this.ready = false;
     this.pendingRequests = new Map();

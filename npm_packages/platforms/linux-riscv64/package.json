@@ -1,0 +1,26 @@
+{
+  "name": "@odiff/linux-riscv64",
+  "version": "0.0.0",
+  "description": "The odiff prebuilt binary for Linux RISC-V 64",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "riscv64"
+  ],
+  "files": [
+    "odiff",
+    "index.js"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "odiff contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmtrKovalenko/odiff.git",
+    "directory": "npm_packages/platforms/linux-riscv64"
+  },
+  "main": "index.js"
+}

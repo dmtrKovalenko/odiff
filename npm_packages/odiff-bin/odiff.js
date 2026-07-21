@@ -1,6 +1,6 @@
 // @ts-check
-const path = require("path");
 const { execFile } = require("child_process");
+const { findBinary } = require("./binary");
 
 function optionsToArgs(options) {
   let argArray = ["--parsable-stdout"];
@@ -126,9 +126,7 @@ async function compare(basePath, comparePath, diffOutput, options = {}) {
     let producedStdout, producedStdError;
 
     const binaryPath =
-      options && options.__binaryPath
-        ? options.__binaryPath
-        : path.join(__dirname, "bin", "odiff.exe");
+      options && options.__binaryPath ? options.__binaryPath : findBinary();
 
     execFile(
       binaryPath,

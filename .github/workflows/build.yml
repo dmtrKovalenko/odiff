@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/prebuilt-binaries
     tags:
       - "v*.*.*"
 
@@ -289,7 +290,7 @@ jobs:
   publish:
     name: Publish release
     needs: [build, test, e2e-tests]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/feat/prebuilt-binaries')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -310,10 +311,29 @@ jobs:
           ls -la binaries
           [ $(ls -1 binaries | wc -l) -eq 8 ] || (echo "Expected 8 binaries" && exit 1)
 
-      - name: Copy binaries to npm package (excluding rva23)
+      - name: Determine version and npm tag
+        id: version
         run: |
-          mkdir -p npm_packages/odiff-bin/raw_binaries
-          find binaries -type f ! -name '*riscv64-linux-rva23*' -exec cp {} npm_packages/odiff-bin/raw_binaries/ \;
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=latest" >> "$GITHUB_OUTPUT"
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=4.4.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            echo "npm_tag=dev" >> "$GITHUB_OUTPUT"
+            echo "is_release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Copy binaries to platform packages
+        run: |
+          cp binaries/odiff-linux-x64 npm_packages/platforms/linux-x64/odiff
+          cp binaries/odiff-linux-arm64 npm_packages/platforms/linux-arm64/odiff
+          cp binaries/odiff-linux-riscv64 npm_packages/platforms/linux-riscv64/odiff
+          cp binaries/odiff-macos-x64 npm_packages/platforms/darwin-x64/odiff
+          cp binaries/odiff-macos-arm64 npm_packages/platforms/darwin-arm64/odiff
+          cp binaries/odiff-windows-x64.exe npm_packages/platforms/win32-x64/odiff.exe
+          cp binaries/odiff-windows-arm64.exe npm_packages/platforms/win32-arm64/odiff.exe
+          chmod +x npm_packages/platforms/*/odiff npm_packages/platforms/*/odiff.exe
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -322,6 +342,9 @@ jobs:
           cache: "npm"
           registry-url: "https://registry.npmjs.org"
           cache-dependency-path: "package-lock.json"
+
+      - name: Set version on all packages
+        run: node scripts/set-npm-version.js "${{ steps.version.outputs.version }}"
 
       - name: Copy root readme
         run: cp README.md npm_packages/odiff-bin/README.md
@@ -341,15 +364,28 @@ jobs:
           grep -q "dist/index.js" /tmp/pack-output.txt || (echo "ERROR: dist/index.js missing from tarball" && exit 1)
           grep -q "dist/toHaveScreenshotOdiff.js" /tmp/pack-output.txt || (echo "ERROR: dist/toHaveScreenshotOdiff.js missing from tarball" && exit 1)
 
+      - name: Publish platform packages
+        run: |
+          for pkg_dir in npm_packages/platforms/*/; do
+            pkg_name=$(node -p "require('./${pkg_dir}package.json').name")
+            if npm view "${pkg_name}@${{ steps.version.outputs.version }}" version > /dev/null 2>&1; then
+              echo "${pkg_name}@${{ steps.version.outputs.version }} is already published, skipping"
+              continue
+            fi
+            echo "Publishing ${pkg_name}@${{ steps.version.outputs.version }}"
+            (cd "$pkg_dir" && npm publish --access public --tag "${{ steps.version.outputs.npm_tag }}")
+          done
+
       - name: Publish odiff-bin package
         working-directory: npm_packages/odiff-bin
-        run: npm publish --access public
+        run: npm publish --access public --tag "${{ steps.version.outputs.npm_tag }}"
 
       - name: Publish playwright-odiff package
         working-directory: npm_packages/playwright-odiff
-        run: npm publish --access public
+        run: npm publish --access public --tag "${{ steps.version.outputs.npm_tag }}"
 
       - name: Create github release
+        if: steps.version.outputs.is_release == 'true'
         uses: softprops/action-gh-release@v1
         with:
           files: "binaries/*"
