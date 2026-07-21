@@ -386,7 +386,7 @@ jobs:
 
       - name: Create github release
         if: steps.version.outputs.is_release == 'true'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           files: "binaries/*"
         env:
