@@ -1,6 +1,6 @@
 {
   "name": "@odiff/darwin-x64",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "The odiff prebuilt binary for macOS x64",
   "os": [
     "darwin"

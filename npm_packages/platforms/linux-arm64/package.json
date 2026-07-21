@@ -1,6 +1,6 @@
 {
   "name": "@odiff/linux-arm64",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "The odiff prebuilt binary for Linux ARM64",
   "os": [
     "linux"
