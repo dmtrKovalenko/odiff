@@ -1,6 +1,6 @@
 {
   "name": "@odiff/win32-x64",
-  "version": "4.4.3-dev.1",
+  "version": "4.4.3-dev.2",
   "description": "The odiff prebuilt binary for Windows x64",
   "os": [
     "win32"
