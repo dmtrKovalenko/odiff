@@ -1,6 +1,6 @@
 {
   "name": "@odiff/linux-riscv64",
-  "version": "4.4.3-dev.2",
+  "version": "4.4.3",
   "description": "The odiff prebuilt binary for Linux RISC-V 64",
   "os": [
     "linux"
