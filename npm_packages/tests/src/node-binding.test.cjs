@@ -155,6 +155,66 @@ test("Correctly outputs diff lines", async (t) => {
   }
 });
 
+test("Correctly outputs diff cols", async (t) => {
+  const result = await compare(
+    path.join(IMAGES_PATH, "donkey.png"),
+    path.join(IMAGES_PATH, "donkey-2.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      captureDiffCols: true,
+      ...options,
+    },
+  );
+
+  t.is(result.match, false);
+  if (result.diffCols) {
+    t.true(Array.isArray(result.diffCols));
+    // ordered and distinct
+    const sorted = [...new Set(result.diffCols)].sort((a, b) => a - b);
+    t.deepEqual(result.diffCols, sorted);
+  }
+});
+
+test("Derives the bounding rectangle of changes from diff lines & cols", async (t) => {
+  const result = await compare(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      captureDiffLines: true,
+      captureDiffCols: true,
+      ...options,
+    },
+  );
+
+  t.is(result.match, false);
+  t.is(result.reason, "pixel-diff");
+  t.true(Array.isArray(result.diffLines));
+  t.true(Array.isArray(result.diffCols));
+
+  const rect = {
+    x1: result.diffCols[0],
+    y1: result.diffLines[0],
+    x2: result.diffCols[result.diffCols.length - 1],
+    y2: result.diffLines[result.diffLines.length - 1],
+  };
+
+  t.deepEqual(rect, { x1: 28, y1: 37, x2: 294, y2: 191 });
+
+  // Sanity: ignoring exactly that rectangle must remove every diff pixel
+  const ignored = await compare(
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
+    path.join(__dirname, "..", "..", "..", "test", "png", "orange_diff.png"),
+    path.join(IMAGES_PATH, "diff.png"),
+    {
+      ignoreRegions: [rect],
+      ...options,
+    },
+  );
+
+  t.is(ignored.match, true);
+});
+
 test("Returns meaningful error if file does not exist and noFailOnFsErrors", async (t) => {
   const result = await compare(
     path.join(IMAGES_PATH, "not-existing.png"),
@@ -237,8 +297,85 @@ test("Works with numeric option to diffOverlay", async (t) => {
   );
 });
 
-test("Buffer comparison - identical images match", async (t) => {
+test("Server mode - derives the bounding rectangle of changes from diff lines & cols", async (t) => {
   const server = new ODiffServer(BINARY_PATH);
+  const basePath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "test",
+    "png",
+    "orange.png",
+  );
+  const comparePath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "test",
+    "png",
+    "orange_diff.png",
+  );
+
+  const expectedRect = { x1: 28, y1: 37, x2: 294, y2: 191 };
+  const getRect = (result) => ({
+    x1: result.diffCols[0],
+    y1: result.diffLines[0],
+    x2: result.diffCols[result.diffCols.length - 1],
+    y2: result.diffLines[result.diffLines.length - 1],
+  });
+
+  // File path based comparison
+  const result = await server.compare(
+    basePath,
+    comparePath,
+    path.join(IMAGES_IGNORED_PATH, "diff_server_rect.png"),
+    {
+      captureDiffLines: true,
+      captureDiffCols: true,
+    },
+  );
+
+  t.is(result.match, false);
+  t.is(result.reason, "pixel-diff");
+  t.true(Array.isArray(result.diffLines));
+  t.true(Array.isArray(result.diffCols));
+  t.deepEqual(getRect(result), expectedRect);
+
+  // Buffer based comparison must produce the same rectangle
+  const bufferResult = await server.compareBuffers(
+    fs.readFileSync(basePath),
+    "png",
+    fs.readFileSync(comparePath),
+    "png",
+    path.join(IMAGES_IGNORED_PATH, "diff_server_rect_buffer.png"),
+    {
+      captureDiffLines: true,
+      captureDiffCols: true,
+    },
+  );
+
+  t.is(bufferResult.match, false);
+  t.is(bufferResult.reason, "pixel-diff");
+  t.deepEqual(getRect(bufferResult), expectedRect);
+
+  // Sanity: ignoring exactly that rectangle must remove every diff pixel
+  const ignored = await server.compare(
+    basePath,
+    comparePath,
+    path.join(IMAGES_IGNORED_PATH, "diff_server_rect_ignored.png"),
+    {
+      ignoreRegions: [getRect(result)],
+    },
+  );
+
+  t.is(ignored.match, true);
+
+  server.stop();
+});
+
+test("Buffer comparison - identical images match", async (t) => {  const server = new ODiffServer(BINARY_PATH);
   const baseBuffer = fs.readFileSync(
     path.join(__dirname, "..", "..", "..", "test", "png", "orange.png"),
   );

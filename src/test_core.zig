@@ -32,7 +32,7 @@ test "antialiasing: does not count anti-aliased pixels as different" {
         .output_diff_mask = false,
     };
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -56,7 +56,7 @@ test "antialiasing: tests different sized AA images" {
         .output_diff_mask = true,
     };
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -79,7 +79,7 @@ test "threshold: uses provided threshold" {
         .threshold = 0.5,
     };
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -107,7 +107,7 @@ test "ignore regions: uses provided ignore regions" {
         .ignore_regions = &ignore_regions,
     };
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -132,7 +132,7 @@ test "diff color: creates diff output image with custom green diff color" {
         .diff_pixel = green_pixel,
     };
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     _ = diff_count;
     _ = diff_percentage;
 
@@ -146,7 +146,7 @@ test "diff color: creates diff output image with custom green diff color" {
         defer original_diff.deinit(allocator);
 
         const compare_options = diff.DiffOptions{};
-        var nested_diff_output, const nested_diff_count, const nested_diff_percentage, var nested_diff_lines = try diff.compare(&original_diff, &diff_output_img, compare_options, allocator);
+        var nested_diff_output, const nested_diff_count, const nested_diff_percentage, var nested_diff_lines, _ = try diff.compare(&original_diff, &diff_output_img, compare_options, allocator);
         defer if (nested_diff_output) |*img| img.deinit(allocator);
         defer if (nested_diff_lines) |*lines| lines.deinit();
 
@@ -202,7 +202,7 @@ test "layoutDifference: diff images with different layouts" {
     };
 
     {
-        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+        var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
@@ -210,7 +210,7 @@ test "layoutDifference: diff images with different layouts" {
         try expectApproxEqRel(@as(f64, 100.0), diff_percentage, 0.001); // diffPercentage - 64/max(4,8)^2
     }
     {
-        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img2, &img1, options, allocator);
+        var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img2, &img1, options, allocator);
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
@@ -233,7 +233,7 @@ test "layoutDifference: diff images with different layouts (2)" {
     const options = diff.DiffOptions{};
 
     {
-        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+        var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
@@ -241,7 +241,7 @@ test "layoutDifference: diff images with different layouts (2)" {
         try expectApproxEqRel(@as(f64, 50.56), diff_percentage, 0.01); // diffPercentage - uses bounding box denominator
     }
     {
-        var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img2, &img1, options, allocator);
+        var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img2, &img1, options, allocator);
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
@@ -281,4 +281,99 @@ test "unrollIgnoreRegions: should only mark rectangular region pixels, not entir
     try expect(!diff.isInIgnoreRegion(pixel_outside_left_row50, unrolled));
     try expect(!diff.isInIgnoreRegion(pixel_outside_left_row51, unrolled));
     try expect(!diff.isInIgnoreRegion(pixel_outside_left_row52, unrolled));
+}
+
+test "diff_cols: captures ordered distinct column indexes with different pixels" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var img1 = try loadTestImage("test/png/orange.png", allocator);
+    defer img1.deinit(allocator);
+
+    var img2 = try loadTestImage("test/png/orange_diff.png", allocator);
+    defer img2.deinit(allocator);
+
+    const options = diff.DiffOptions{
+        .capture_diff = false,
+        .diff_lines = true,
+        .diff_cols = true,
+    };
+
+    var diff_output, const diff_count, _, var diff_lines, var diff_cols = try diff.compare(&img1, &img2, options, allocator);
+    defer if (diff_output) |*img| img.deinit(allocator);
+    defer if (diff_lines) |*lines| lines.deinit();
+    defer if (diff_cols) |*cols| cols.deinit();
+
+    try expect(diff_count > 0);
+    try expect(diff_cols != null);
+    try expect(diff_cols.?.count > 0);
+
+    // Column indexes must be ordered and distinct
+    const cols = diff_cols.?.getItems();
+    var i: usize = 1;
+    while (i < cols.len) : (i += 1) {
+        try expect(cols[i - 1] < cols[i]);
+    }
+
+    // All columns must be within image bounds
+    try expect(cols[cols.len - 1] < @max(img1.width, img2.width));
+
+    // Combined with diff_lines this gives the rectangle of the changes
+    try expect(diff_lines.?.count > 0);
+}
+
+test "diff_cols + diff_lines: derives the bounding rectangle of the changes" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var img1 = try loadTestImage("test/png/orange.png", allocator);
+    defer img1.deinit(allocator);
+
+    var img2 = try loadTestImage("test/png/orange_diff.png", allocator);
+    defer img2.deinit(allocator);
+
+    const options = diff.DiffOptions{
+        .capture_diff = false,
+        .diff_lines = true,
+        .diff_cols = true,
+    };
+
+    var diff_output, const diff_count, _, var diff_lines, var diff_cols = try diff.compare(&img1, &img2, options, allocator);
+    defer if (diff_output) |*img| img.deinit(allocator);
+    defer if (diff_lines) |*lines| lines.deinit();
+    defer if (diff_cols) |*cols| cols.deinit();
+
+    try expect(diff_count > 0);
+
+    const lines = diff_lines.?.getItems();
+    const cols = diff_cols.?.getItems();
+    try expect(lines.len > 0);
+    try expect(cols.len > 0);
+
+    // Rectangle of the changes: first/last captured column and line
+    const rect = diff.IgnoreRegion{
+        .x1 = cols[0],
+        .y1 = lines[0],
+        .x2 = cols[cols.len - 1],
+        .y2 = lines[lines.len - 1],
+    };
+
+    try expectEqual(@as(u32, 28), rect.x1);
+    try expectEqual(@as(u32, 37), rect.y1);
+    try expectEqual(@as(u32, 294), rect.x2);
+    try expectEqual(@as(u32, 191), rect.y2);
+
+    // Sanity: ignoring exactly that rectangle must remove every diff pixel
+    const ignore_options = diff.DiffOptions{
+        .capture_diff = false,
+        .ignore_regions = &[_]diff.IgnoreRegion{rect},
+    };
+    var ignored_output, const ignored_count, _, var ignored_lines, var ignored_cols = try diff.compare(&img1, &img2, ignore_options, allocator);
+    defer if (ignored_output) |*img| img.deinit(allocator);
+    defer if (ignored_lines) |*lines| lines.deinit();
+    defer if (ignored_cols) |*cols| cols.deinit();
+
+    try expectEqual(@as(u32, 0), ignored_count);
 }

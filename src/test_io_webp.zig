@@ -39,7 +39,7 @@ test "webp: compares webp with png correctly" {
     defer png_img.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    const diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&webp_img, &png_img, options, allocator);
+    const diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&webp_img, &png_img, options, allocator);
     defer if (diff_output) |img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -60,7 +60,7 @@ test "webp: identical WebP images have no differences" {
     defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    const diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    const diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 

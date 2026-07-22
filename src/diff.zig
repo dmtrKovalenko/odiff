@@ -53,6 +53,64 @@ pub const DiffLines = struct {
     }
 };
 
+// collector for individual diff columns that we seen, within ~10% of overhead
+pub const DiffCols = struct {
+    /// Bitset of seen column indexes, one bit per column
+    words: []u64,
+    cols: []u32,
+    count: u32,
+    allocator: std.mem.Allocator,
+
+    pub fn init(allocator: std.mem.Allocator, max_width: u32) !DiffCols {
+        const words = try allocator.alloc(u64, (max_width + 63) / 64);
+        @memset(words, 0);
+        return DiffCols{
+            .words = words,
+            .cols = &.{},
+            .count = 0,
+            .allocator = allocator,
+        };
+    }
+
+    pub fn deinit(self: *DiffCols) void {
+        self.allocator.free(self.words);
+        self.allocator.free(self.cols);
+    }
+
+    pub fn addCol(self: *DiffCols, col: u32) void {
+        const word_idx = col >> 6;
+        if (word_idx < self.words.len) {
+            const mask = @as(u64, 1) << @intCast(col & 63);
+
+            if (self.words[word_idx] & mask == 0) {
+                self.words[word_idx] |= mask;
+            }
+        }
+    }
+
+    pub fn finalize(self: *DiffCols) !void {
+        var total: u32 = 0;
+        for (self.words) |word| total += @popCount(word);
+
+        self.cols = try self.allocator.alloc(u32, total);
+        var count: u32 = 0;
+        for (self.words, 0..) |word_const, word_idx| {
+            var word = word_const;
+            while (word != 0) {
+                const bit: u32 = @intCast(@ctz(word));
+                self.cols[count] = @as(u32, @intCast(word_idx)) * 64 + bit;
+                count += 1;
+                word &= word - 1;
+            }
+        }
+        self.count = total;
+    }
+
+    pub fn getItems(self: *const DiffCols) []const u32 {
+        return self.cols[0..self.count];
+    }
+};
+
 pub const DiffVariant = union(enum) {
     layout,
     pixel: struct {
@@ -60,6 +118,7 @@ pub const DiffVariant = union(enum) {
         diff_count: u32,
         diff_percentage: f64,
         diff_lines: ?DiffLines,
+        diff_cols: ?DiffCols,
     },
 };
 
@@ -75,6 +134,7 @@ pub const DiffOptions = struct {
     output_diff_mask: bool = false,
     diff_overlay_factor: ?f32 = null,
     diff_lines: bool = false,
+    diff_cols: bool = false,
     diff_pixel: u32 = RED_PIXEL,
     threshold: f64 = 0.1,
     ignore_regions: ?[]const IgnoreRegion = null,
@@ -160,7 +220,7 @@ pub noinline fn compare(
     comp: *const Image,
     options: DiffOptions,
     allocator: std.mem.Allocator,
-) !struct { ?Image, u32, f64, ?DiffLines } {
+) !struct { ?Image, u32, f64, ?DiffLines, ?DiffCols } {
     const max_delta_f64 = MAX_YIQ_POSSIBLE_DELTA * (options.threshold * options.threshold);
     const max_delta_i64: i64 = @intFromFloat(max_delta_f64 * @as(f64, @floatFromInt(1 << color_delta.COLOR_DELTA_SIMD_SHIFT)));
 
@@ -188,6 +248,12 @@ pub noinline fn compare(
         diff_lines = try DiffLines.init(allocator, max_height);
     }
 
+    var diff_cols: ?DiffCols = null;
+    if (options.diff_cols) {
+        const max_width = @max(base.width, comp.width);
+        diff_cols = try DiffCols.init(allocator, max_width);
+    }
+
     const ignore_regions = try unrollIgnoreRegions(base.width, options.ignore_regions, allocator);
     defer if (ignore_regions) |regions| allocator.free(regions);
 
@@ -199,17 +265,21 @@ pub noinline fn compare(
     // pixels when the comp image is larger (required since #170).
     const threshold_ok = @abs(options.threshold - 0.1) < 0.0000001;
     const no_ignore_regions = options.ignore_regions == null or options.ignore_regions.?.len == 0;
-    const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and threshold_ok and !layout_difference;
+    const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and !options.diff_cols and threshold_ok and !layout_difference;
 
     if (options.enable_asm and HAS_AVX512bwvl and avx_compatible) {
         try compareAVX(base, comp, &diff_count);
-    } else if (HAS_RVV and !options.antialiasing and (options.ignore_regions == null or options.ignore_regions.?.len == 0)) {
+    } else if (HAS_RVV and !options.antialiasing and !options.diff_cols and (options.ignore_regions == null or options.ignore_regions.?.len == 0)) {
         try compareRVV(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_f64, options);
     } else if (layout_difference) {
         // slow path for different layout or weird widths
-        try compareDifferentLayouts(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_i64, options);
+        try compareDifferentLayouts(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, if (diff_cols != null) &diff_cols.? else null, ignore_regions, max_delta_i64, options);
     } else {
-        try compareSameLayouts(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_i64, options);
+        try compareSameLayouts(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, if (diff_cols != null) &diff_cols.? else null, ignore_regions, max_delta_i64, options);
+    }
+
+    if (diff_cols) |*cols| {
+        try cols.finalize();
     }
 
     const max_width = @max(base.width, comp.width);
@@ -217,7 +287,7 @@ pub noinline fn compare(
     const diff_percentage = 100.0 * @as(f64, @floatFromInt(diff_count)) /
         (@as(f64, @floatFromInt(max_width)) * @as(f64, @floatFromInt(max_height)));
 
-    return .{ diff_output, diff_count, diff_percentage, diff_lines };
+    return .{ diff_output, diff_count, diff_percentage, diff_lines, diff_cols };
 }
 
 inline fn processPixelDifference(
@@ -233,6 +303,7 @@ inline fn processPixelDifference(
     diff_output: *?Image,
     diff_count: *u32,
     diff_lines: ?*DiffLines,
+    diff_cols: ?*DiffCols,
     ignore_regions: ?[]u64,
     max_delta: i64,
     options: DiffOptions,
@@ -258,6 +329,10 @@ inline fn processPixelDifference(
 
             if (diff_lines) |lines| {
                 lines.addLine(@intCast(base_pixel_offset / base.width));
+            }
+
+            if (diff_cols) |cols| {
+                cols.addCol(@intCast(base_pixel_offset % base.width));
             }
         }
     }
@@ -286,7 +361,7 @@ inline fn increment_coords_by(x: *u32, y: *u32, step: u32, width: u32) void {
     }
 }
 
-pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
+pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, diff_cols: ?*DiffCols, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     const size = (base.height * base.width);
     const base_data = base.data;
     const comp_data = comp.data;
@@ -321,6 +396,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
                         diff_output,
                         diff_count,
                         diff_lines,
+                        diff_cols,
                         ignore_regions,
                         max_delta,
                         options,
@@ -350,6 +426,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
                 diff_output,
                 diff_count,
                 diff_lines,
+                diff_cols,
                 ignore_regions,
                 max_delta,
                 options,
@@ -359,7 +436,7 @@ pub noinline fn compareSameLayouts(base: *const Image, comp: *const Image, diff_
     }
 }
 
-pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
+pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_output: *?Image, diff_count: *u32, diff_lines: ?*DiffLines, diff_cols: ?*DiffCols, ignore_regions: ?[]u64, max_delta: i64, options: DiffOptions) !void {
     const base_size = (base.height * base.width);
     const base_data = base.data;
     const comp_data = comp.data;
@@ -403,6 +480,7 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                             diff_output,
                             diff_count,
                             diff_lines,
+                            diff_cols,
                             ignore_regions,
                             max_delta,
                             options,
@@ -431,6 +509,10 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                     if (diff_lines) |lines| {
                         lines.addLine(y);
                     }
+
+                    if (diff_cols) |cols| {
+                        cols.addCol(x);
+                    }
                 }
             } else {
                 const comp_color = comp.readRawPixel(x, y);
@@ -444,6 +526,7 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                     diff_output,
                     diff_count,
                     diff_lines,
+                    diff_cols,
                     ignore_regions,
                     max_delta,
                     options,
@@ -460,6 +543,9 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
                     diff_count.* += 1;
                     if (diff_lines) |lines| {
                         lines.addLine(y);
+                    }
+                    if (diff_cols) |cols| {
+                        cols.addCol(cx);
                     }
                 }
             }
@@ -484,6 +570,9 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
             if (diff_lines) |lines| {
                 lines.addLine(y);
             }
+            if (diff_cols) |cols| {
+                cols.addCol(x);
+            }
         }
         increment_coords(&x, &y, base.width);
     }
@@ -500,6 +589,9 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
             diff_count.* += 1;
             if (diff_lines) |lines| {
                 lines.addLine(comp_y);
+            }
+            if (diff_cols) |cols| {
+                cols.addCol(comp_x);
             }
         }
         increment_coords(&comp_x, &comp_y, comp.width);
@@ -594,11 +686,12 @@ pub fn diff(
         return DiffVariant.layout;
     }
 
-    const diff_output, const diff_count, const diff_percentage, const diff_lines = try compare(base, comp, options, allocator);
+    const diff_output, const diff_count, const diff_percentage, const diff_lines, const diff_cols = try compare(base, comp, options, allocator);
     return DiffVariant{ .pixel = .{
         .diff_output = diff_output,
         .diff_count = diff_count,
         .diff_percentage = diff_percentage,
         .diff_lines = diff_lines,
+        .diff_cols = diff_cols,
     } };
 }

@@ -90,6 +90,7 @@ pub fn main(init: std.process.Init) !void {
         .fail_on_layout_change = args.fail_on_layout,
         .antialiasing = args.antialiasing,
         .diff_lines = args.diff_lines,
+        .diff_cols = args.diff_cols,
         .ignore_regions = args.ignore_regions.items,
         .capture_diff = args.diff_output != null or display_in_terminal,
         .enable_asm = args.enable_asm,
@@ -120,6 +121,10 @@ pub fn main(init: std.process.Init) !void {
                 if (pixel_result.diff_lines) |lines| {
                     var mutable_lines = lines;
                     mutable_lines.deinit();
+                }
+                if (pixel_result.diff_cols) |cols| {
+                    var mutable_cols = cols;
+                    mutable_cols.deinit();
                 }
             }
 
@@ -156,13 +161,25 @@ pub fn main(init: std.process.Init) !void {
 
                 if (args.parsable_stdout) {
                     stdout.print("{d};{:.2}", .{ pixel_result.diff_count, pixel_result.diff_percentage }) catch {};
-                    if (pixel_result.diff_lines) |diff_lines| {
-                        if (diff_lines.count > 0) {
-                            stdout.print(";", .{}) catch {};
+                    // Output format: count;percentage[;lines][;cols]
+                    // When cols are captured the lines segment is always present
+                    // (possibly empty) to keep the output unambiguous.
+                    const has_cols = pixel_result.diff_cols != null and pixel_result.diff_cols.?.count > 0;
+                    const has_lines = pixel_result.diff_lines != null and pixel_result.diff_lines.?.count > 0;
+                    if (has_lines or has_cols) {
+                        stdout.print(";", .{}) catch {};
+                        if (pixel_result.diff_lines) |diff_lines| {
                             for (diff_lines.getItems(), 0..) |line, i| {
                                 if (i > 0) stdout.print(",", .{}) catch {};
                                 stdout.print("{d}", .{line}) catch {};
                             }
+                        }
+                    }
+                    if (has_cols) {
+                        stdout.print(";", .{}) catch {};
+                        for (pixel_result.diff_cols.?.getItems(), 0..) |col, i| {
+                            if (i > 0) stdout.print(",", .{}) catch {};
+                            stdout.print("{d}", .{col}) catch {};
                         }
                     }
                     stdout.print("\n", .{}) catch {};
@@ -175,6 +192,18 @@ pub fn main(init: std.process.Init) !void {
                                 for (diff_lines.getItems(), 0..) |line, i| {
                                     if (i > 0) print(", ", .{});
                                     print("{d}", .{line});
+                                }
+                                print("\n", .{});
+                            }
+                        }
+                    }
+                    if (args.diff_cols) {
+                        if (pixel_result.diff_cols) |diff_cols| {
+                            if (diff_cols.count > 0) {
+                                print("Different columns: ", .{});
+                                for (diff_cols.getItems(), 0..) |col, i| {
+                                    if (i > 0) print(", ", .{});
+                                    print("{d}", .{col});
                                 }
                                 print("\n", .{});
                             }

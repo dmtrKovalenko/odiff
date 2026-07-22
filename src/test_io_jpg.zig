@@ -29,7 +29,7 @@ test "JPG: finds difference between 2 images" {
     defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -52,7 +52,7 @@ test "JPG: Diff of mask and no mask are equal" {
     const options_no_mask = diff.DiffOptions{
         .output_diff_mask = false,
     };
-    var diff_output_no_mask, const diff_count_no_mask, const diff_percentage_no_mask, var diff_lines_no_mask =
+    var diff_output_no_mask, const diff_count_no_mask, const diff_percentage_no_mask, var diff_lines_no_mask, _ =
         try diff.compare(&img1, &img2, options_no_mask, allocator);
     defer if (diff_output_no_mask) |*img| img.deinit(allocator);
     defer if (diff_lines_no_mask) |*lines| lines.deinit();
@@ -67,7 +67,7 @@ test "JPG: Diff of mask and no mask are equal" {
     const options_with_mask = diff.DiffOptions{
         .output_diff_mask = true,
     };
-    var diff_output_with_mask, const diff_count_with_mask, const diff_percentage_with_mask, var diff_lines_with_mask =
+    var diff_output_with_mask, const diff_count_with_mask, const diff_percentage_with_mask, var diff_lines_with_mask, _ =
         try diff.compare(&img1_copy, &img2_copy, options_with_mask, allocator);
     defer if (diff_output_with_mask) |*img| img.deinit(allocator);
     defer if (diff_lines_with_mask) |*lines| lines.deinit();
@@ -88,7 +88,7 @@ test "JPG: Creates correct diff output image" {
     defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    var diff_output, const diff_count, const diff_percentage, var diff_lines =
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ =
         try diff.compare(&img1, &img2, options, allocator);
 
     _ = diff_count;
@@ -103,7 +103,7 @@ test "JPG: Creates correct diff output image" {
         defer original_diff.deinit(allocator);
 
         const compare_options = diff.DiffOptions{};
-        var diff_result_output, const diff_result_count, const diff_result_percentage, var diff_result_lines =
+        var diff_result_output, const diff_result_count, const diff_result_percentage, var diff_result_lines, _ =
             try diff.compare(&original_diff, &diff_output_img, compare_options, allocator);
         defer if (diff_result_output) |*img| img.deinit(allocator);
         defer if (diff_result_lines) |*lines| lines.deinit();

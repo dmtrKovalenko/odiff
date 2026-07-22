@@ -59,6 +59,10 @@ function optionsToArgs(options) {
         setFlag("output-diff-lines", value);
         break;
 
+      case "captureDiffCols":
+        setFlag("output-diff-cols", value);
+        break;
+
       case "reduceRamUsage":
         setFlag("reduce-ram-usage", value);
         break;
@@ -79,10 +83,17 @@ function optionsToArgs(options) {
   return argArray;
 }
 
-/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number, diffLines: number[] }>} */
+/** @type {(stdout: string) => Partial<{ diffCount: number, diffPercentage: number, diffLines: number[], diffCols: number[] }>} */
 function parsePixelDiffStdout(stdout) {
   try {
     const parts = stdout.trim().split(";");
+
+    const parseIndexes = (part) =>
+      part.split(",").flatMap((value) => {
+        let parsedInt = parseInt(value);
+
+        return isNaN(parsedInt) ? [] : parsedInt;
+      });
 
     if (parts.length === 2) {
       const [diffCount, diffPercentage] = parts;
@@ -97,11 +108,18 @@ function parsePixelDiffStdout(stdout) {
       return {
         diffCount: parseInt(diffCount),
         diffPercentage: parseFloat(diffPercentage),
-        diffLines: linesPart.split(",").flatMap((line) => {
-          let parsedInt = parseInt(line);
+        diffLines: parseIndexes(linesPart),
+      };
+    } else if (parts.length === 4) {
+      // format: count;percentage;lines(possibly empty);cols
+      const [diffCount, diffPercentage, linesPart, colsPart] = parts;
+      const diffLines = parseIndexes(linesPart);
 
-          return isNaN(parsedInt) ? [] : parsedInt;
-        }),
+      return {
+        diffCount: parseInt(diffCount),
+        diffPercentage: parseFloat(diffPercentage),
+        ...(diffLines.length > 0 ? { diffLines } : {}),
+        diffCols: parseIndexes(colsPart),
       };
     } else {
       throw new Error(`Unparsable stdout from odiff binary: ${stdout}`);
