@@ -3,13 +3,31 @@
   "version": "4.4.2",
   "description": "Playwright custom matcher using odiff for screenshot comparison",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "types": "dist/cjs/index.d.ts",
+  "module": "dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      },
       "default": "./dist/index.js"
+    },
+    "./setup": {
+      "import": {
+        "types": "./dist/setup.d.ts",
+        "default": "./dist/setup.js"
+      },
+      "require": {
+        "types": "./dist/cjs/setup.d.ts",
+        "default": "./dist/cjs/setup.js"
+      },
+      "default": "./dist/setup.js"
     }
   },
   "files": [
@@ -17,9 +35,9 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('dist/cjs/package.json', JSON.stringify({type:'commonjs'})+'\\n')\"",
     "prepack": "npm run build",
-    "test": "playwright test",
+    "test": "node test/dual-build-smoke.cjs && playwright test",
     "debug": "playwright test --debug"
   },
   "keywords": [
