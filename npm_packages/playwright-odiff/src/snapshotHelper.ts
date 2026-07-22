@@ -36,6 +36,13 @@ const NonConfigProperties: (keyof ODiffScreenshotOptions)[] = [
 const DEFAULT_ODIFF_OPTIONS: ODiffOptions = {
   failOnLayoutDiff: true,
   noFailOnFsErrors: true,
+  // Match Playwright's built-in toHaveScreenshot comparator defaults:
+  // pixelmatch runs with YIQ color threshold 0.2 and ignores antialiased
+  // pixels. Without these, odiff (threshold 0.1, no antialiasing detection)
+  // reports 2-4x more differing pixels than the native matcher, breaking
+  // drop-in compatibility with existing baselines and tolerances.
+  threshold: 0.2,
+  antialiasing: true,
 };
 
 export class SnapshotHelper {
