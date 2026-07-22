@@ -1,12 +1,12 @@
 import { expect } from "@playwright/test";
-// Import via index.js so setup.d.ts pulls in the global Matchers augmentation
-// declared there — consumers importing only "playwright-odiff/setup" get typings.
+// this is done to keep esm & cjs compatibility at the same time, ts consumers importing types 
+// but cjs consumers after build getting the index .js directly
 import { toHaveScreenshotOdiff } from "./index.js";
 
 expect.extend({
   toHaveScreenshotOdiff,
 });
 
-// Re-export so setup.d.ts references index.d.ts (tsc would otherwise elide the
-// import above), keeping the global Matchers augmentation for /setup consumers.
+// re-export so setup.d.ts references index.d.ts (tsc would otherwise elide the
+// import above), keeping the global Matchers augmentation for /setup consumers
 export type { OdiffScreenshotOptions } from "./index.js";
