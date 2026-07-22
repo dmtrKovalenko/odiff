@@ -1,15 +1,33 @@
 {
   "name": "playwright-odiff",
-  "version": "4.4.2",
+  "version": "4.4.3-dev.2",
   "description": "Playwright custom matcher using odiff for screenshot comparison",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
+  "module": "dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
       "default": "./dist/index.js"
+    },
+    "./setup": {
+      "import": {
+        "types": "./dist/setup.d.ts",
+        "default": "./dist/setup.js"
+      },
+      "require": {
+        "types": "./dist/setup.d.cts",
+        "default": "./dist/setup.cjs"
+      },
+      "default": "./dist/setup.js"
     }
   },
   "files": [
@@ -17,9 +35,9 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "prepack": "npm run build",
-    "test": "playwright test",
+    "test": "node test/dual-build-smoke.cjs && playwright test",
     "debug": "playwright test --debug"
   },
   "keywords": [
@@ -40,11 +58,12 @@
     "@playwright/test": "^1.56.0"
   },
   "dependencies": {
-    "odiff-bin": "4.4.2"
+    "odiff-bin": "4.4.3-dev.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   }
 }

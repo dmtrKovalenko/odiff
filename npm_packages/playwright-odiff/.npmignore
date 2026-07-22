@@ -2,6 +2,7 @@ src/
 test/
 playwright.config.ts
 tsconfig.json
+tsup.config.ts
 *.spec.ts
 test-results/
 playwright-report/

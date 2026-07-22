@@ -33,9 +33,12 @@ const NonConfigProperties: (keyof ODiffScreenshotOptions)[] = [
   "timeout",
 ];
 
+// this matches the default playwright options
 const DEFAULT_ODIFF_OPTIONS: ODiffOptions = {
   failOnLayoutDiff: true,
   noFailOnFsErrors: true,
+  threshold: 0.2,
+  antialiasing: true,
 };
 
 export class SnapshotHelper {
