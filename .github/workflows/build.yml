@@ -360,8 +360,12 @@ jobs:
         run: |
           # had a regression that the build that didn't write dist/ got released as empty artifact
           npm pack --dry-run 2>&1 | tee /tmp/pack-output.txt
-          grep -q "dist/index.js" /tmp/pack-output.txt || (echo "ERROR: dist/index.js missing from tarball" && exit 1)
-          grep -q "dist/toHaveScreenshotOdiff.js" /tmp/pack-output.txt || (echo "ERROR: dist/toHaveScreenshotOdiff.js missing from tarball" && exit 1)
+          for f in \
+            dist/index.js dist/index.cjs \
+            dist/setup.js dist/setup.cjs \
+            dist/index.d.ts dist/index.d.cts; do
+            grep -q "$f" /tmp/pack-output.txt || (echo "ERROR: $f missing from tarball" && exit 1)
+          done
 
       - name: Publish platform packages
         run: |

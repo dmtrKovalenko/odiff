@@ -11,6 +11,10 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
+  // Keep each entry self-contained (no shared chunk-*.js). ESM splitting is on
+  // by default in tsup; the CJS format can't split anyway, so disabling this
+  // makes both formats symmetric and avoids the hashed chunk filename.
+  splitting: false,
   // @playwright/test (peer) and odiff-bin (dependency) are externalized by
   // default; keep node built-ins external too (tsup does this automatically).
 });
