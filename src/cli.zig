@@ -17,6 +17,7 @@ pub const CliArgs = struct {
     diff_color: []const u8 = "",
     antialiasing: bool = false,
     diff_lines: bool = false,
+    diff_cols: bool = false,
     reduce_ram_usage: bool = false,
     enable_asm: bool = false,
     server_mode: bool = false,
@@ -54,6 +55,7 @@ fn printUsage(program_name: []const u8) void {
     print("  --diff-color <hex string>   Color for highlighting differences (e.g., #cd2cc9)\n", .{});
     print("  --aa, --antialiasing        Ignore antialiased pixels in diff\n", .{});
     print("  --output-diff-lines         Output line numbers with differences\n", .{});
+    print("  --output-diff-cols          Output column numbers with differences\n", .{});
     print("  --reduce-ram-usage          Use less memory (slower)\n", .{});
     print("  --enable-asm                Enable AVX-512 optimized asm path when supported (x86_64 only)\n", .{});
     print("  --server                    Run in server mode (reads JSON from stdin)\n", .{});
@@ -181,6 +183,8 @@ pub fn parseArgs(allocator: std.mem.Allocator, process_args: std.process.Args) !
             parsed_args.antialiasing = true;
         } else if (std.mem.eql(u8, arg, "--output-diff-lines")) {
             parsed_args.diff_lines = true;
+        } else if (std.mem.eql(u8, arg, "--output-diff-cols")) {
+            parsed_args.diff_cols = true;
         } else if (std.mem.eql(u8, arg, "--reduce-ram-usage")) {
             parsed_args.reduce_ram_usage = true;
         } else if (std.mem.eql(u8, arg, "--enable-asm")) {

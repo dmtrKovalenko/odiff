@@ -28,7 +28,7 @@ test "PNG: finds difference between 2 images" {
     defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     defer if (diff_output) |*img| img.deinit(allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -51,7 +51,7 @@ test "PNG: Diff of mask and no mask are equal" {
     const options_no_mask = diff.DiffOptions{
         .output_diff_mask = false,
     };
-    var diff_output_no_mask, const diff_count_no_mask, const diff_percentage_no_mask, var diff_lines_no_mask = try diff.compare(&img1, &img2, options_no_mask, allocator);
+    var diff_output_no_mask, const diff_count_no_mask, const diff_percentage_no_mask, var diff_lines_no_mask, _ = try diff.compare(&img1, &img2, options_no_mask, allocator);
     defer if (diff_output_no_mask) |*img| img.deinit(allocator);
     defer if (diff_lines_no_mask) |*lines| lines.deinit();
 
@@ -65,7 +65,7 @@ test "PNG: Diff of mask and no mask are equal" {
     const options_with_mask = diff.DiffOptions{
         .output_diff_mask = true,
     };
-    var diff_output_with_mask, const diff_count_with_mask, const diff_percentage_with_mask, var diff_lines_with_mask = try diff.compare(&img1_copy, &img2_copy, options_with_mask, allocator);
+    var diff_output_with_mask, const diff_count_with_mask, const diff_percentage_with_mask, var diff_lines_with_mask, _ = try diff.compare(&img1_copy, &img2_copy, options_with_mask, allocator);
     defer if (diff_output_with_mask) |*img| img.deinit(allocator);
     defer if (diff_lines_with_mask) |*lines| lines.deinit();
 
@@ -84,7 +84,7 @@ test "PNG: Creates correct diff output image" {
     defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    const diff_output, const diff_count, const diff_percentage, const diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    const diff_output, const diff_count, const diff_percentage, const diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     _ = diff_count;
     _ = diff_percentage;
     defer if (diff_output) |img| {
@@ -103,7 +103,7 @@ test "PNG: Creates correct diff output image" {
         defer original_diff.deinit(allocator);
 
         const compare_options = diff.DiffOptions{};
-        var nested_diff_output, const nested_diff_count, const nested_diff_percentage, var nested_diff_lines = try diff.compare(&original_diff, &diff_output_img, compare_options, allocator);
+        var nested_diff_output, const nested_diff_count, const nested_diff_percentage, var nested_diff_lines, _ = try diff.compare(&original_diff, &diff_output_img, compare_options, allocator);
         defer if (nested_diff_output) |*img| img.deinit(allocator);
         defer if (nested_diff_lines) |*lines| lines.deinit();
 
@@ -134,7 +134,7 @@ test "PNG: Correctly handles different encodings of transparency" {
     defer img2.deinit(allocator);
 
     const options = diff.DiffOptions{};
-    const diff_output, const diff_count, const diff_percentage, const diff_lines = try diff.compare(&img1, &img2, options, allocator);
+    const diff_output, const diff_count, const diff_percentage, const diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
     _ = diff_percentage;
     defer if (diff_output) |img| {
         var mut_img = img;

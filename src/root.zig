@@ -10,5 +10,6 @@ pub const utils = @import("utils.zig");
 
 pub const DiffOptions = diff.DiffOptions;
 pub const DiffLines = diff.DiffLines;
+pub const DiffCols = diff.DiffCols;
 pub const IgnoreRegion = diff.IgnoreRegion;
 pub const DiffVariant = diff.DiffVariant;

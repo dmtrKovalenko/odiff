@@ -20,7 +20,7 @@ test "BMP: finds difference between 2 images" {
     var img2 = try loadImage("test/bmp/clouds-2.bmp");
     defer img2.deinit(testing_allocator);
 
-    var diff_output, const diff_count, const diff_percentage, var diff_lines = try diff.compare(&img1, &img2, .{}, testing_allocator);
+    var diff_output, const diff_count, const diff_percentage, var diff_lines, _ = try diff.compare(&img1, &img2, .{}, testing_allocator);
     defer if (diff_output) |*img| img.deinit(testing_allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
@@ -35,7 +35,7 @@ test "BMP: diff of mask and no mask are equal" {
     defer img2.deinit(testing_allocator);
 
     // Compare without diff mask
-    var no_mask_diff_output, const no_mask_diff_count, const no_mask_diff_percentage, var no_mask_diff_lines = try diff.compare(&img1, &img2, .{ .output_diff_mask = false }, testing_allocator);
+    var no_mask_diff_output, const no_mask_diff_count, const no_mask_diff_percentage, var no_mask_diff_lines, _ = try diff.compare(&img1, &img2, .{ .output_diff_mask = false }, testing_allocator);
     defer if (no_mask_diff_output) |*img| img.deinit(testing_allocator);
     defer if (no_mask_diff_lines) |*lines| lines.deinit();
 
@@ -45,7 +45,7 @@ test "BMP: diff of mask and no mask are equal" {
     var img2_mask = try loadImage("test/bmp/clouds-2.bmp");
     defer img2_mask.deinit(testing_allocator);
 
-    var with_mask_diff_output, const with_mask_diff_count, const with_mask_diff_percentage, var with_mask_diff_lines = try diff.compare(&img1_mask, &img2_mask, .{ .output_diff_mask = true }, testing_allocator);
+    var with_mask_diff_output, const with_mask_diff_count, const with_mask_diff_percentage, var with_mask_diff_lines, _ = try diff.compare(&img1_mask, &img2_mask, .{ .output_diff_mask = true }, testing_allocator);
     defer if (with_mask_diff_output) |*img| img.deinit(testing_allocator);
     defer if (with_mask_diff_lines) |*lines| lines.deinit();
 

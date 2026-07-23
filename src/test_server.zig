@@ -59,7 +59,7 @@ test "server: end-to-end identical images match" {
     try expect(std.mem.indexOf(u8, ready_msg, "\"ready\":true") != null);
 
     const request =
-        \\{"requestId":1,"base":"test/png/orange.png","compare":"test/png/orange.png","output":"/tmp/test_diff.png"}
+        \\{"requestId":1,"base":"test/png/orange.png","compare":"test/png/orange.png","output":"images/gen/test_diff.png"}
         \\
     ;
     try stdin.writeStreamingAll(io, request);
@@ -103,7 +103,7 @@ test "server: end-to-end different images show pixel diff" {
     _ = try readLineFromPipe(stdout, &ready_buf);
 
     const request =
-        \\{"requestId":2,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff2.png","options":{"threshold":0.1}}
+        \\{"requestId":2,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff2.png","options":{"threshold":0.1}}
         \\
     ;
     try stdin.writeStreamingAll(io, request);
@@ -152,7 +152,7 @@ test "server: ignore regions support" {
 
     // Use the same ignore regions as in test_core.zig that cover all differences
     const request =
-        \\{"requestId":3,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff3.png","options":{"ignoreRegions":[{"x1":150,"y1":30,"x2":310,"y2":105},{"x1":20,"y1":175,"x2":105,"y2":200}]}}
+        \\{"requestId":3,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff3.png","options":{"ignoreRegions":[{"x1":150,"y1":30,"x2":310,"y2":105},{"x1":20,"y1":175,"x2":105,"y2":200}]}}
         \\
     ;
     try stdin.writeStreamingAll(io, request);
@@ -196,7 +196,7 @@ test "server: empty ignore regions array works correctly" {
     _ = try readLineFromPipe(stdout, &ready_buf);
 
     const request =
-        \\{"requestId":4,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff4.png","options":{"ignoreRegions":[]}}
+        \\{"requestId":4,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff4.png","options":{"ignoreRegions":[]}}
         \\
     ;
     try stdin.writeStreamingAll(io, request);
@@ -243,7 +243,7 @@ test "server: integer threshold 0 is respected, not treated as default" {
     // Send threshold as integer 0 (JSON: "threshold":0, not "threshold":0.0)
     // Both should behave identically — maximum sensitivity
     const request =
-        \\{"requestId":10,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff_int_threshold.png","options":{"threshold":0}}
+        \\{"requestId":10,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff_int_threshold.png","options":{"threshold":0}}
         \\
     ;
     try stdin.writeStreamingAll(io, request);
@@ -289,7 +289,7 @@ test "server: invalid ignore regions return error" {
 
     // Test missing required field (y2)
     const request =
-        \\{"requestId":5,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_diff5.png","options":{"ignoreRegions":[{"x1":10,"y1":20,"x2":30}]}}
+        \\{"requestId":5,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff5.png","options":{"ignoreRegions":[{"x1":10,"y1":20,"x2":30}]}}
         \\
     ;
     try stdin.writeStreamingAll(io, request);
@@ -335,19 +335,19 @@ test "server: sequential requests for different images never produce false match
     _ = try readLineFromPipe(stdout, &ready_buf);
 
     const requests = [_][]const u8{
-        \\{"requestId":10,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq0.png","options":{"threshold":0.1}}
+        \\{"requestId":10,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_seq0.png","options":{"threshold":0.1}}
         \\
         ,
-        \\{"requestId":11,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq1.png","options":{"threshold":0.1}}
+        \\{"requestId":11,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_seq1.png","options":{"threshold":0.1}}
         \\
         ,
-        \\{"requestId":12,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq2.png","options":{"threshold":0.1}}
+        \\{"requestId":12,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_seq2.png","options":{"threshold":0.1}}
         \\
         ,
-        \\{"requestId":13,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq3.png","options":{"threshold":0.1}}
+        \\{"requestId":13,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_seq3.png","options":{"threshold":0.1}}
         \\
         ,
-        \\{"requestId":14,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"/tmp/test_seq4.png","options":{"threshold":0.1}}
+        \\{"requestId":14,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_seq4.png","options":{"threshold":0.1}}
         \\
         ,
     };
@@ -399,7 +399,7 @@ test "server: wider compare image not falsely reported as match" {
     // white4x4 (4x4) vs white8x4 (8x4): overlap region is identical,
     // but comp has 16 extra pixels that must be counted as differences
     const request =
-        \\{"requestId":20,"base":"test/png/white4x4.png","compare":"test/png/white8x4.png","output":"/tmp/test_layout_diff.png","options":{"threshold":0.1}}
+        \\{"requestId":20,"base":"test/png/white4x4.png","compare":"test/png/white8x4.png","output":"images/gen/test_layout_diff.png","options":{"threshold":0.1}}
         \\
     ;
     try stdin.writeStreamingAll(io, request);

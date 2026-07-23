@@ -71,22 +71,39 @@ const ResponseWriter = struct {
         request_id: std.json.Value,
         diff_count: u64,
         diff_percentage: f64,
-        diff_lines: odiff.DiffLines,
+        diff_lines: ?odiff.DiffLines,
+        diff_cols: ?odiff.DiffCols,
     ) !void {
-        var response: std.Io.Writer.Allocating = try .initCapacity(self.allocator, diff_lines.count * 2);
+        const lines_count: usize = if (diff_lines) |lines| lines.count else 0;
+        const cols_count: usize = if (diff_cols) |cols| cols.count else 0;
+        var response: std.Io.Writer.Allocating = try .initCapacity(self.allocator, (lines_count + cols_count) * 2);
         defer response.deinit();
         const writer = &response.writer;
 
         try writer.print(
-            "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2},\"diffLines\":[",
+            "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2}",
             .{ request_id.integer, diff_count, diff_percentage },
         );
 
-        for (diff_lines.getItems(), 0..) |line, i| {
-            if (i > 0) try writer.writeByte(',');
-            try writer.print("{d}", .{line});
+        if (diff_lines) |lines| {
+            try writer.writeAll(",\"diffLines\":[");
+            for (lines.getItems(), 0..) |line, i| {
+                if (i > 0) try writer.writeByte(',');
+                try writer.print("{d}", .{line});
+            }
+            try writer.writeByte(']');
         }
-        try writer.writeAll("]}");
+
+        if (diff_cols) |cols| {
+            try writer.writeAll(",\"diffCols\":[");
+            for (cols.getItems(), 0..) |col, i| {
+                if (i > 0) try writer.writeByte(',');
+                try writer.print("{d}", .{col});
+            }
+            try writer.writeByte(']');
+        }
+
+        try writer.writeAll("}");
         try writer.writeByte('\n');
 
         // Single write to stdout
@@ -257,6 +274,7 @@ fn parseOptions(
     const fail_on_layout = parseBool(options_obj, "failOnLayoutDiff", false);
     const antialiasing = parseBool(options_obj, "antialiasing", false);
     const capture_diff_lines = parseBool(options_obj, "captureDiffLines", false);
+    const capture_diff_cols = parseBool(options_obj, "captureDiffCols", false);
     const output_diff_mask = parseBool(options_obj, "outputDiffMask", false);
 
     const diff_color_str = parseString(options_obj, "diffColor", "");
@@ -275,6 +293,7 @@ fn parseOptions(
         .fail_on_layout_change = fail_on_layout,
         .antialiasing = antialiasing,
         .diff_lines = capture_diff_lines,
+        .diff_cols = capture_diff_cols,
         .output_diff_mask = output_diff_mask,
         .diff_pixel = diff_pixel,
         .diff_overlay_factor = diff_overlay_factor,
@@ -526,6 +545,10 @@ pub fn runServerMode(allocator: std.mem.Allocator, io: std.Io) !void {
                         var mutable_lines = lines;
                         mutable_lines.deinit();
                     }
+                    if (pixel_result.diff_cols) |cols| {
+                        var mutable_cols = cols;
+                        mutable_cols.deinit();
+                    }
                 }
 
                 if (pixel_result.diff_count == 0) {
@@ -540,12 +563,15 @@ pub fn runServerMode(allocator: std.mem.Allocator, io: std.Io) !void {
                     };
                 }
 
-                if (options.diff_lines and pixel_result.diff_lines != null) {
+                const has_lines = options.diff_lines and pixel_result.diff_lines != null;
+                const has_cols = options.diff_cols and pixel_result.diff_cols != null;
+                if (has_lines or has_cols) {
                     try response_writer.writePixelDiffWithLines(
                         request_id,
                         pixel_result.diff_count,
                         pixel_result.diff_percentage,
-                        pixel_result.diff_lines.?,
+                        if (has_lines) pixel_result.diff_lines.? else null,
+                        if (has_cols) pixel_result.diff_cols.? else null,
                     );
                 } else {
                     try response_writer.writePixelDiff(

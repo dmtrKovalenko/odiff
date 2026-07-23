@@ -15,6 +15,11 @@ export type ODiffOptions = Partial<{
   antialiasing: boolean;
   /** If `true` reason: "pixel-diff" output will contain the set of line indexes containing different pixels */
   captureDiffLines: boolean;
+  /**
+   * If `true` reason: "pixel-diff" output will contain the set of column indexes containing different pixels.
+   * Combine with `captureDiffLines` to get the bounding rectangle of the changes.
+   */
+  captureDiffCols: boolean;
   /** If `true` odiff will use less memory but will be slower with larger images */
   reduceRamUsage: boolean;
   /** An array of regions to ignore in the diff. */
@@ -38,6 +43,8 @@ export type ODiffResult =
       diffPercentage: number;
       /** Individual line indexes containing different pixels. Guaranteed to be ordered and distinct.  */
       diffLines?: number[];
+      /** Individual column indexes containing different pixels. Guaranteed to be ordered and distinct.  */
+      diffCols?: number[];
     }
   | {
       match: false;
