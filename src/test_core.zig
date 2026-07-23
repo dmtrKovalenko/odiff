@@ -372,8 +372,8 @@ test "diff_cols + diff_lines: derives the bounding rectangle of the changes" {
     };
     var ignored_output, const ignored_count, _, var ignored_lines, var ignored_cols = try diff.compare(&img1, &img2, ignore_options, allocator);
     defer if (ignored_output) |*img| img.deinit(allocator);
-    defer if (ignored_lines) |*lines| lines.deinit();
-    defer if (ignored_cols) |*cols| cols.deinit();
+    defer if (ignored_lines) |*l| l.deinit();
+    defer if (ignored_cols) |*c| c.deinit();
 
     try expectEqual(@as(u32, 0), ignored_count);
 }
