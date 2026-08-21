@@ -151,22 +151,22 @@ vxdiff:
 	kxor k6, k6, k6
 	kxor k7, k7, k7
 	vpcmpequb k6 {k4}, xmm1, xmm0
-	kshiftlb k6, k6, 1
+	kshiftrw k6, k6, 1
 	kor k7, k7, k6
-	kshiftlb k6, k6, 1
+	kshiftrw k6, k6, 1
 	kor k7, k7, k6
-	kshiftlb k6, k6, 1
+	kshiftrw k6, k6, 1
 	kor k7, k7, k6
 	vmovdqu8 xmm1 {k7}, xmm31
 	;
 	kxor k6, k6, k6
 	kxor k7, k7, k7
 	vpcmpequb k6 {k4}, xmm2, xmm0
-	kshiftlb k6, k6, 1
+	kshiftrw k6, k6, 1
 	kor k7, k7, k6
-	kshiftlb k6, k6, 1
+	kshiftrw k6, k6, 1
 	kor k7, k7, k6
-	kshiftlb k6, k6, 1
+	kshiftrw k6, k6, 1
 	kor k7, k7, k6
 	vmovdqu8 xmm2 {k7}, xmm31
 

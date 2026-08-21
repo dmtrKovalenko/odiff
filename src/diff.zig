@@ -13,6 +13,12 @@ const HAS_AVX512bwvl =
     HAS_AVX512f and
     std.Target.x86.featureSetHas(builtin.cpu.features, .avx512bw) and
     std.Target.x86.featureSetHas(builtin.cpu.features, .avx512vl);
+
+// vxdiff.asm is x86_64 SysV only
+pub const HAS_VXDIFF_ASM = builtin.cpu.arch == .x86_64 and HAS_AVX512bwvl and switch (builtin.os.tag) {
+    .linux, .macos => true,
+    else => false,
+};
 const HAS_NEON = builtin.cpu.arch == .aarch64 and std.Target.aarch64.featureSetHas(builtin.cpu.features, .neon);
 const HAS_RVV = builtin.cpu.arch == .riscv64 and std.Target.riscv.featureSetHas(builtin.cpu.features, .v);
 
@@ -267,7 +273,7 @@ pub noinline fn compare(
     const no_ignore_regions = options.ignore_regions == null or options.ignore_regions.?.len == 0;
     const avx_compatible = !options.antialiasing and no_ignore_regions and !options.capture_diff and !options.diff_lines and !options.diff_cols and threshold_ok and !layout_difference;
 
-    if (options.enable_asm and HAS_AVX512bwvl and avx_compatible) {
+    if (options.enable_asm and HAS_VXDIFF_ASM and avx_compatible) {
         try compareAVX(base, comp, &diff_count);
     } else if (HAS_RVV and !options.antialiasing and !options.diff_cols and (options.ignore_regions == null or options.ignore_regions.?.len == 0)) {
         try compareRVV(base, comp, &diff_output, &diff_count, if (diff_lines != null) &diff_lines.? else null, ignore_regions, max_delta_f64, options);
@@ -599,7 +605,7 @@ pub fn compareDifferentLayouts(base: *const Image, comp: *const Image, diff_outp
 }
 
 pub fn compareAVX(base: *const Image, comp: *const Image, diff_count: *u32) !void {
-    if (!HAS_AVX512bwvl) return error.Invalid;
+    if (!HAS_VXDIFF_ASM) return error.Invalid;
 
     const base_ptr: [*]const u8 = @ptrCast(@alignCast(base.data));
     const comp_ptr: [*]const u8 = @ptrCast(@alignCast(comp.data));
