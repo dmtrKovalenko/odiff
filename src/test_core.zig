@@ -237,7 +237,7 @@ test "layoutDifference: diff images with different layouts (2)" {
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 2270068), diff_count); // diffPixels - includes extra comp pixels
+        try expectEqual(@as(u32, 2270071), diff_count); // diffPixels - includes extra comp pixels
         try expectApproxEqRel(@as(f64, 50.56), diff_percentage, 0.01); // diffPercentage - uses bounding box denominator
     }
     {
@@ -245,7 +245,7 @@ test "layoutDifference: diff images with different layouts (2)" {
         defer if (diff_output) |*img| img.deinit(allocator);
         defer if (diff_lines) |*lines| lines.deinit();
 
-        try expectEqual(@as(u32, 2270068), diff_count); // diffPixels - includes extra comp pixels
+        try expectEqual(@as(u32, 2270071), diff_count); // diffPixels - includes extra comp pixels
         try expectApproxEqRel(@as(f64, 50.56), diff_percentage, 0.01); // diffPercentage - uses bounding box denominator
     }
 }

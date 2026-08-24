@@ -91,17 +91,17 @@ const SHIFTED_1 = 1 << COLOR_DELTA_SIMD_SHIFT;
 const VEC_2X_SHIFT: @Vector(2, i64) = @splat(COLOR_DELTA_SIMD_SHIFT);
 const VEC_2X_SHIFTED_ONE: @Vector(2, i64) = @splat(SHIFTED_1);
 
-const VEC_YIQ_Y_R_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_Y_R_COEFF * SHIFTED_1)));
-const VEC_YIQ_Y_G_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_Y_G_COEFF * SHIFTED_1)));
-const VEC_YIQ_Y_B_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_Y_B_COEFF * SHIFTED_1)));
+const VEC_YIQ_Y_R_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_Y_R_COEFF * SHIFTED_1))));
+const VEC_YIQ_Y_G_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_Y_G_COEFF * SHIFTED_1))));
+const VEC_YIQ_Y_B_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_Y_B_COEFF * SHIFTED_1))));
 
-const VEC_YIQ_I_R_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_I_R_COEFF * SHIFTED_1)));
-const VEC_YIQ_I_G_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_I_G_COEFF * SHIFTED_1)));
-const VEC_YIQ_I_B_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_I_B_COEFF * SHIFTED_1)));
+const VEC_YIQ_I_R_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_I_R_COEFF * SHIFTED_1))));
+const VEC_YIQ_I_G_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_I_G_COEFF * SHIFTED_1))));
+const VEC_YIQ_I_B_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_I_B_COEFF * SHIFTED_1))));
 
-const VEC_YIQ_Q_R_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_Q_R_COEFF * SHIFTED_1)));
-const VEC_YIQ_Q_G_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_Q_G_COEFF * SHIFTED_1)));
-const VEC_YIQ_Q_B_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(YIQ_Q_B_COEFF * SHIFTED_1)));
+const VEC_YIQ_Q_R_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_Q_R_COEFF * SHIFTED_1))));
+const VEC_YIQ_Q_G_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_Q_G_COEFF * SHIFTED_1))));
+const VEC_YIQ_Q_B_COEFF: @Vector(2, i64) = @splat(@as(i64, @intFromFloat(@round(YIQ_Q_B_COEFF * SHIFTED_1))));
 
 inline fn blendChannelSimd(
     channel_vec: @Vector(2, i64),
@@ -143,9 +143,9 @@ pub noinline fn calculatePixelColorDeltaSimd(pixel_a: u32, pixel_b: u32) i64 {
     const i_diff = vec_i[0] - vec_i[1];
     const q_diff = vec_q[0] - vec_q[1];
 
-    const Y_WEIGHT = comptime @as(i64, @intFromFloat(YIQ_Y_WEIGHT * SHIFTED_1));
-    const I_WEIGHT = comptime @as(i64, @intFromFloat(YIQ_I_WEIGHT * SHIFTED_1));
-    const Q_WEIGHT = comptime @as(i64, @intFromFloat(YIQ_Q_WEIGHT * SHIFTED_1));
+    const Y_WEIGHT = comptime @as(i64, @intFromFloat(@round(YIQ_Y_WEIGHT * SHIFTED_1)));
+    const I_WEIGHT = comptime @as(i64, @intFromFloat(@round(YIQ_I_WEIGHT * SHIFTED_1)));
+    const Q_WEIGHT = comptime @as(i64, @intFromFloat(@round(YIQ_Q_WEIGHT * SHIFTED_1)));
 
     return (y_diff * y_diff * Y_WEIGHT + i_diff * i_diff * I_WEIGHT + q_diff * q_diff * Q_WEIGHT) >> (2 * COLOR_DELTA_SIMD_SHIFT);
 }

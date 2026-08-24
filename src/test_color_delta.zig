@@ -15,6 +15,103 @@ fn calculatePixelColorDeltaUnderTest(pixel_a: u32, pixel_b: u32,) f64 {
     }
 }
 
+// The fixed-point kernel is only ever an approximation of calculatePixelColorDelta,
+// so the sweeps below bound how far it may drift. The current constants measure
+// 9.72 max absolute error and 0.00056 max relative error over this sweep, so the
+// bounds sit at roughly 2x headroom.
+//
+// The absolute bound catches precision loss. The direction bound catches a *biased*
+// quantisation, which is the more dangerous failure: because the delta is compared
+// against a fixed threshold, a one-signed error becomes one-signed miscounts, so
+// odiff would silently drop differences sitting just above the cutoff while never
+// inventing one. Bounding magnitude alone does not catch that.
+const SWEEP_SAMPLES: usize = 200_000;
+const SWEEP_SEED: u64 = 0x0D1FF;
+const MAX_ABS_ERROR: f64 = 20.0;
+const MAX_REL_ERROR: f64 = 0.001;
+// Minimum delta at which relative error is still measured: dividing by a near-zero
+// delta blows the ratio up. Kept low so low -t runs still count (threshold = 35215*t^2).
+const REL_ERROR_FLOOR: f64 = 1.0;
+// Each direction of rounding error must show up in at least this share of samples.
+const MIN_DIRECTION_SHARE: f64 = 0.01;
+
+/// Deterministic pixel pairs covering the cases the kernel has to get right.
+fn genPixelPair(rand: std.Random, i: usize) [2]u32 {
+    const a = rand.int(u32);
+    return switch (i % 4) {
+        // arbitrary pixels, including exotic alpha combinations
+        0 => .{ a, rand.int(u32) },
+        // fully opaque, the common case for screenshot comparison
+        1 => .{ a | 0xFF000000, rand.int(u32) | 0xFF000000 },
+        // near-identical, where threshold decisions actually live
+        2 => .{ a | 0xFF000000, (a +% rand.uintLessThan(u32, 0x040404)) | 0xFF000000 },
+        // semi-transparent, exercising the white-blend path
+        else => .{
+            (a & 0x00FFFFFF) | (@as(u32, rand.int(u8)) << 24),
+            (rand.int(u32) & 0x00FFFFFF) | (@as(u32, rand.int(u8)) << 24),
+        },
+    };
+}
+
+test "color delta: fixed-point tracks the f64 reference across a deterministic sweep" {
+    var prng = std.Random.DefaultPrng.init(SWEEP_SEED);
+    const rand = prng.random();
+
+    var max_abs_error: f64 = 0.0;
+    var max_rel_error: f64 = 0.0;
+
+    for (0..SWEEP_SAMPLES) |i| {
+        const pair = genPixelPair(rand, i);
+        if (pair[0] == pair[1]) continue;
+
+        const reference_delta = color_delta.calculatePixelColorDelta(pair[0], pair[1]);
+        const fixed_delta = @as(f64, @floatFromInt(color_delta.calculatePixelColorDeltaSimd(pair[0], pair[1]))) / 4096.0;
+        const abs_error = @abs(fixed_delta - reference_delta);
+
+        max_abs_error = @max(max_abs_error, abs_error);
+        if (reference_delta > REL_ERROR_FLOOR) {
+            max_rel_error = @max(max_rel_error, abs_error / reference_delta);
+        }
+    }
+
+    std.debug.print("\nsweep: max abs error {d:.4}, max rel error {d:.6}\n", .{ max_abs_error, max_rel_error });
+
+    try testing.expect(max_abs_error < MAX_ABS_ERROR);
+    try testing.expect(max_rel_error < MAX_REL_ERROR);
+}
+
+test "color delta: fixed-point quantisation is unbiased" {
+    var prng = std.Random.DefaultPrng.init(SWEEP_SEED);
+    const rand = prng.random();
+
+    var over: usize = 0;
+    var under: usize = 0;
+    var counted: usize = 0;
+
+    for (0..SWEEP_SAMPLES) |i| {
+        const pair = genPixelPair(rand, i);
+        if (pair[0] == pair[1]) continue;
+
+        const reference_delta = color_delta.calculatePixelColorDelta(pair[0], pair[1]);
+        const fixed_delta = @as(f64, @floatFromInt(color_delta.calculatePixelColorDeltaSimd(pair[0], pair[1]))) / 4096.0;
+
+        counted += 1;
+        // Which side of the true delta the fixed-point kernel landed on.
+        if (fixed_delta > reference_delta) over += 1 else if (fixed_delta < reference_delta) under += 1;
+    }
+
+    const total: f64 = @floatFromInt(counted);
+    const over_share = @as(f64, @floatFromInt(over)) / total;
+    const under_share = @as(f64, @floatFromInt(under)) / total;
+
+    std.debug.print("sweep: {d:.1}% overestimate, {d:.1}% underestimate\n", .{ over_share * 100.0, under_share * 100.0 });
+
+    // Neither direction may vanish: that would mean the constants are quantised
+    // with a systematic bias rather than rounded to nearest.
+    try testing.expect(over_share > MIN_DIRECTION_SHARE);
+    try testing.expect(under_share > MIN_DIRECTION_SHARE);
+}
+
 test "color delta: compare fixed-point vs floating-point precision" {
     const test_cases = [_]struct { u32, u32, []const u8 }{
         .{ 0xFF000000, 0xFF010101, "slight RGB difference" },
