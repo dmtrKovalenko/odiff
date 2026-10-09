@@ -118,6 +118,17 @@ More details at [playwright-odiff doc](https://github.com/dmtrKovalenko/odiff/tr
 
 Checkout [cypress-odiff](https://github.com/odai-alali/cypress-odiff), a cypress plugin to add visual regression tests using `odiff-bin`.
 
+### R
+
+[odiffr](https://github.com/BenWolst/odiffr) brings odiff to R ([on CRAN](https://CRAN.R-project.org/package=odiffr)). Compare images, plots and PDF pages, with testthat snapshot tests, shinytest2 screenshots, batch reports and CI workflows.
+
+```r
+install.packages("odiffr")
+odiffr::install_odiff()   # downloads the odiff binary, no Node.js needed
+
+odiffr::compare_images("baseline.png", "current.png", diff_output = "diff.png")
+```
+
 ### Visual regression services
 
 [Argos](https://argos-ci.com/) – Argos is the modern visual testing platform for **websites, mobile apps and design systems**. It uses odiff for comparison. ([It became 8x faster with odiff](https://twitter.com/argos_ci/status/1601873725019807744))
