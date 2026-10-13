@@ -56,11 +56,12 @@ const ResponseWriter = struct {
         diff_count: u64,
         diff_percentage: f64,
     ) !void {
-        var buf: [512]u8 = undefined;
+        // Full f64 decimal form can be up to 347 bytes; keep headroom for the rest of the object.
+        var buf: [1024]u8 = undefined;
         const response = try std.fmt.bufPrint(
             &buf,
-            "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2}}}\n",
-            .{ request_id.integer, diff_count, diff_percentage },
+            "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2},\"diffPercentageExact\":{d}}}\n",
+            .{ request_id.integer, diff_count, diff_percentage, diff_percentage },
         );
         try self.writeAll(response);
     }
@@ -81,8 +82,8 @@ const ResponseWriter = struct {
         const writer = &response.writer;
 
         try writer.print(
-            "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2}",
-            .{ request_id.integer, diff_count, diff_percentage },
+            "{{\"requestId\":{d},\"match\":false,\"reason\":\"pixel-diff\",\"diffCount\":{d},\"diffPercentage\":{d:.2},\"diffPercentageExact\":{d}",
+            .{ request_id.integer, diff_count, diff_percentage, diff_percentage },
         );
 
         if (diff_lines) |lines| {
