@@ -120,7 +120,137 @@ test "server: end-to-end different images show pixel diff" {
     try expect(obj.get("reason") != null);
     try expect(std.mem.eql(u8, "pixel-diff", obj.get("reason").?.string));
     try expect(obj.get("diffCount").?.integer > 0);
-    try expect(obj.get("diffPercentage").?.float > 0.0);
+    try expectDiffPercentages(obj, 510, 234);
+}
+
+test "server: pixel diff keeps two-decimal percentage and emits the exact ratio" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    std.Io.Dir.cwd().access(io, odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = try std.process.spawn(io, .{
+        .argv = &.{ odiff_path, "--server" },
+        .stdin = .pipe,
+        .stdout = .pipe,
+        .stderr = .pipe,
+    });
+    defer child.kill(io);
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    // 25 differing pixels on a 510x234 image:
+    // 100 * 25 / (510 * 234) = 0.020948550360315066, which rounds to 0.02.
+    const request =
+        \\{"requestId":30,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff_exact.png","options":{"threshold":0.5}}
+        \\
+    ;
+    try stdin.writeStreamingAll(io, request);
+
+    var response_buf: [1024]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 30);
+    try expect(obj.get("match").?.bool == false);
+    try expect(std.mem.eql(u8, "pixel-diff", obj.get("reason").?.string));
+    try expect(obj.get("diffCount").?.integer == 25);
+    try expectDiffPercentages(obj, 510, 234);
+
+    const rounded = try jsonNumber(obj.get("diffPercentage").?);
+    const exact = try jsonNumber(obj.get("diffPercentageExact").?);
+    try testing.expectApproxEqAbs(@as(f64, 0.02), rounded, 1e-12);
+    try expect(exact != rounded);
+}
+
+test "server: diff lines and cols include the unrounded percentage" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const odiff_path = try getOdiffPath(allocator);
+    defer allocator.free(odiff_path);
+
+    std.Io.Dir.cwd().access(io, odiff_path, .{}) catch |err| {
+        std.debug.print("odiff binary not found at {s}: {}\n", .{ odiff_path, err });
+        return error.SkipZigTest;
+    };
+
+    var child = try std.process.spawn(io, .{
+        .argv = &.{ odiff_path, "--server" },
+        .stdin = .pipe,
+        .stdout = .pipe,
+        .stderr = .pipe,
+    });
+    defer child.kill(io);
+
+    const stdin = child.stdin.?;
+    const stdout = child.stdout.?;
+
+    var ready_buf: [256]u8 = undefined;
+    _ = try readLineFromPipe(stdout, &ready_buf);
+
+    const request =
+        \\{"requestId":31,"base":"test/png/orange.png","compare":"test/png/orange_changed.png","output":"images/gen/test_diff_exact_lines.png","options":{"threshold":0.5,"captureDiffLines":true,"captureDiffCols":true}}
+        \\
+    ;
+    try stdin.writeStreamingAll(io, request);
+
+    var response_buf: [8192]u8 = undefined;
+    const response = try readLineFromPipe(stdout, &response_buf);
+
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, response, .{});
+    defer parsed.deinit();
+
+    const obj = parsed.value.object;
+    try expect(obj.get("requestId").?.integer == 31);
+    try expect(obj.get("match").?.bool == false);
+    try expect(std.mem.eql(u8, "pixel-diff", obj.get("reason").?.string));
+    try expect(obj.get("diffCount").?.integer == 25);
+    try expect(obj.get("diffLines").?.array.items.len > 0);
+    try expect(obj.get("diffCols").?.array.items.len > 0);
+    try expectDiffPercentages(obj, 510, 234);
+
+    const rounded = try jsonNumber(obj.get("diffPercentage").?);
+    const exact = try jsonNumber(obj.get("diffPercentageExact").?);
+    try testing.expectApproxEqAbs(@as(f64, 0.02), rounded, 1e-12);
+    try expect(exact != rounded);
+}
+
+fn jsonNumber(value: std.json.Value) !f64 {
+    return switch (value) {
+        .float => |f| f,
+        .integer => |i| @floatFromInt(i),
+        else => error.ExpectedNumber,
+    };
+}
+
+fn expectDiffPercentages(obj: std.json.ObjectMap, width: u64, height: u64) !void {
+    const diff_count: u64 = @intCast(obj.get("diffCount").?.integer);
+    const exact = try jsonNumber(obj.get("diffPercentageExact").?);
+    const rounded = try jsonNumber(obj.get("diffPercentage").?);
+    const expected_exact = 100.0 * @as(f64, @floatFromInt(diff_count)) /
+        (@as(f64, @floatFromInt(width)) * @as(f64, @floatFromInt(height)));
+    try testing.expectApproxEqAbs(expected_exact, exact, 1e-12);
+
+    var rounded_buf: [64]u8 = undefined;
+    const rounded_text = try std.fmt.bufPrint(&rounded_buf, "{d:.2}", .{expected_exact});
+    const expected_rounded = try std.fmt.parseFloat(f64, rounded_text);
+    try testing.expectApproxEqAbs(expected_rounded, rounded, 1e-12);
 }
 
 test "server: ignore regions support" {

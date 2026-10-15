@@ -198,8 +198,10 @@ export type ODiffResult =
       reason: "pixel-diff";
       /** Amount of different pixels */
       diffCount: number;
-      /** Percentage of different pixels in the whole image */
+      /** Percentage of different pixels in the whole image, rounded to two decimal places. */
       diffPercentage: number;
+      /** Unrounded percentage of different pixels. Equal to `100 * diffCount / (width * height)`. */
+      diffPercentageExact: number;
       /** Individual line indexes containing different pixels. Guaranteed to be ordered and distinct.  */
       diffLines?: number[];
       /** Individual column indexes containing different pixels. Guaranteed to be ordered and distinct.  */
