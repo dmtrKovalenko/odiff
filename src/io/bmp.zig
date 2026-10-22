@@ -91,10 +91,10 @@ inline fn convertBGR24ToARGB_Vec4(bgr_data: []const u8, data_offset: usize, argb
     const r3 = bgr_data[data_offset + 11];
 
     // Create RGBA values (A=255, R, G, B)
-    argb_data[pixel_idx + 0] = (255 << 24) | (@as(u32, r0) << 16) | (@as(u32, g0) << 8) | @as(u32, b0);
-    argb_data[pixel_idx + 1] = (255 << 24) | (@as(u32, r1) << 16) | (@as(u32, g1) << 8) | @as(u32, b1);
-    argb_data[pixel_idx + 2] = (255 << 24) | (@as(u32, r2) << 16) | (@as(u32, g2) << 8) | @as(u32, b2);
-    argb_data[pixel_idx + 3] = (255 << 24) | (@as(u32, r3) << 16) | (@as(u32, g3) << 8) | @as(u32, b3);
+    argb_data[pixel_idx + 0] = (255 << 24) | (@as(u32, b0) << 16) | (@as(u32, g0) << 8) | @as(u32, r0);
+    argb_data[pixel_idx + 1] = (255 << 24) | (@as(u32, b1) << 16) | (@as(u32, g1) << 8) | @as(u32, r1);
+    argb_data[pixel_idx + 2] = (255 << 24) | (@as(u32, b2) << 16) | (@as(u32, g2) << 8) | @as(u32, r2);
+    argb_data[pixel_idx + 3] = (255 << 24) | (@as(u32, b3) << 16) | (@as(u32, g3) << 8) | @as(u32, r3);
 }
 
 // Vectorized BGRA to ARGB conversion for 32-bit BMP
@@ -112,8 +112,8 @@ inline fn convertBGRA32ToARGB_Vec4(bgra_data: []const u8, data_offset: usize, ar
         const r = bgra_bytes[i * 4 + 2];
         const a = bgra_bytes[i * 4 + 3];
 
-        // Convert BGRA to ARGB
-        argb_data[pixel_idx + i] = (@as(u32, a) << 24) | (@as(u32, r) << 16) | (@as(u32, g) << 8) | @as(u32, b);
+        // Convert BGRA to RGBA, the byte order every other loader produces
+        argb_data[pixel_idx + i] = (@as(u32, a) << 24) | (@as(u32, b) << 16) | (@as(u32, g) << 8) | @as(u32, r);
     }
 }
 
@@ -151,9 +151,9 @@ fn loadImage24Data(data: []const u8, offset: usize, width: u32, height: u32, all
                 const g_byte = data[data_offset + 1];
                 const r_byte = data[data_offset + 2];
 
-                const r = (@as(u32, r_byte) & 255) << 16;
+                const r = (@as(u32, r_byte) & 255) << 0;
                 const g = (@as(u32, g_byte) & 255) << 8;
-                const b = (@as(u32, b_byte) & 255) << 0;
+                const b = (@as(u32, b_byte) & 255) << 16;
                 const a = comptime @as(u32, 255) << 24;
 
                 argb_data[pixel_index] = a | b | g | r;
@@ -196,9 +196,9 @@ fn loadImage32Data(data: []const u8, offset: usize, width: u32, height: u32, all
                 const r_byte = data[data_offset + 2];
                 const a_byte = data[data_offset + 3];
 
-                const r = (@as(u32, r_byte) & 255) << 16;
+                const r = (@as(u32, r_byte) & 255) << 0;
                 const g = (@as(u32, g_byte) & 255) << 8;
-                const b = (@as(u32, b_byte) & 255) << 0;
+                const b = (@as(u32, b_byte) & 255) << 16;
                 const a = (@as(u32, a_byte) & 255) << 24;
 
                 argb_data[pixel_index] = a | b | g | r;

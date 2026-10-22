@@ -24,7 +24,7 @@ test "BMP: finds difference between 2 images" {
     defer if (diff_output) |*img| img.deinit(testing_allocator);
     defer if (diff_lines) |*lines| lines.deinit();
 
-    try testing.expectEqual(@as(u32, 192), diff_count);
+    try testing.expectEqual(@as(u32, 191), diff_count);
     try testing.expectApproxEqRel(@as(f64, 0.077), diff_percentage, 0.01);
 }
 
@@ -53,8 +53,34 @@ test "BMP: diff of mask and no mask are equal" {
     try testing.expectApproxEqRel(no_mask_diff_percentage, with_mask_diff_percentage, 0.001);
 }
 
-// Skip this test for now - there may be differences in pixel format between BMP and PNG
-// The basic BMP reading functionality works correctly
 test "BMP: creates correct diff output image" {
-    return error.SkipZigTest;
+    var img1 = try loadImage("test/bmp/clouds.bmp");
+    defer img1.deinit(testing_allocator);
+    var img2 = try loadImage("test/bmp/clouds-2.bmp");
+    defer img2.deinit(testing_allocator);
+
+    var diff_output, _, _, var diff_lines, _ = try diff.compare(&img1, &img2, .{}, testing_allocator);
+    defer if (diff_output) |*img| img.deinit(testing_allocator);
+    defer if (diff_lines) |*lines| lines.deinit();
+
+    try testing.expect(diff_output != null);
+
+    var original_diff = try loadImage("test/bmp/clouds-diff.png");
+    defer original_diff.deinit(testing_allocator);
+
+    var diff_of_diff, const diff_of_diff_count, const diff_of_diff_percentage, var diff_of_diff_lines, _ = try diff.compare(&original_diff, &diff_output.?, .{}, testing_allocator);
+    defer if (diff_of_diff) |*img| img.deinit(testing_allocator);
+    defer if (diff_of_diff_lines) |*lines| lines.deinit();
+
+    try testing.expectEqual(@as(u32, 0), diff_of_diff_count);
+    try testing.expectApproxEqRel(@as(f64, 0.0), diff_of_diff_percentage, 0.001);
+}
+
+test "BMP: reads the same pixels as a PNG of the same image" {
+    var bmp_img = try loadImage("test/bmp/colors.bmp");
+    defer bmp_img.deinit(testing_allocator);
+    var png_img = try loadImage("test/bmp/colors.png");
+    defer png_img.deinit(testing_allocator);
+
+    try testing.expectEqualSlices(u32, png_img.slice(), bmp_img.slice());
 }
