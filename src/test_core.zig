@@ -64,6 +64,32 @@ test "antialiasing: tests different sized AA images" {
     try expectApproxEqRel(@as(f64, 1.0425), diff_percentage, 0.01); // diffPercentage
 }
 
+test "antialiasing: a sibling needs equal neighbours in both images" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    // Pixel (4, 2) turns from black to red. Its darkest sibling has 3 equal neighbours
+    // only in the base image and its brightest only in the compared one, so it is a
+    // real change, not anti-aliasing.
+    var img1 = try loadTestImage("test/aa/siblings-base.png", allocator);
+    defer img1.deinit(allocator);
+
+    var img2 = try loadTestImage("test/aa/siblings-comp.png", allocator);
+    defer img2.deinit(allocator);
+
+    const options = diff.DiffOptions{
+        .antialiasing = true,
+        .output_diff_mask = false,
+    };
+
+    var diff_output, const diff_count, _, var diff_lines, _ = try diff.compare(&img1, &img2, options, allocator);
+    defer if (diff_output) |*img| img.deinit(allocator);
+    defer if (diff_lines) |*lines| lines.deinit();
+
+    try expectEqual(@as(u32, 5), diff_count);
+}
+
 test "threshold: uses provided threshold" {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();

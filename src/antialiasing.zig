@@ -91,7 +91,7 @@ pub inline fn detect(pixel_offset: usize, base_img: *const Image, comp_img: *con
         const min_has_siblings_comp = hasManySiblingsWithSameColor(min_sibling_coord.x, min_sibling_coord.y, comp_img.width, comp_img.height, comp_img);
         const max_has_siblings_comp = hasManySiblingsWithSameColor(max_sibling_coord.x, max_sibling_coord.y, comp_img.width, comp_img.height, comp_img);
 
-        return (min_has_siblings_base or max_has_siblings_base) and
-            (min_has_siblings_comp or max_has_siblings_comp);
+        return (min_has_siblings_base and min_has_siblings_comp) or
+            (max_has_siblings_base and max_has_siblings_comp);
     }
 }
